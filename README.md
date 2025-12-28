@@ -1,249 +1,236 @@
-# 📘 TonTin -- Detailed Project README
+# 📘 TonTin v2 — Rotation Management Platform
 
 ## 📝 Overview
 
-**TonTin** is a full-stack web platform that digitizes the traditional
-Moroccan rotating savings system known as **"Dâr"**.\
-The platform provides organization, tracking, communication, and
-rotation management for groups participating in a shared savings cycle
---- without handling real financial transactions.
+TonTin v2 is a full-stack web platform designed to manage **rotation-based group systems** inspired by the Moroccan concept of *Dâr*, without focusing on savings or money handling.
 
-TonTin aims to bring transparency, structure, and ease of use to a
-system widely used across Morocco.
+The platform helps groups organize members, manage turns, coordinate cycles, and communicate transparently — **no financial transactions are processed or tracked**.
 
-------------------------------------------------------------------------
+TonTin v2 focuses on organization, fairness, and visibility, making it suitable for community groups, associations, cooperatives, or any structured rotation-based collaboration.
 
-# 🎯 Objectives
+---
 
--   Digitalize the management of Moroccan "Dâr" groups.
--   Provide a clear dashboard for organizers and members.
--   Offer a secure authentication system and role access management.
--   Provide communication tools inside each group.
--   Track member participation and monthly rotations effectively.
+## 🎯 Objectives
 
-------------------------------------------------------------------------
+- Digitize the management of rotation-based groups
+- Provide transparent rotation and cycle tracking
+- Enable role-based group coordination
+- Improve internal communication
+- Ensure fair and non-repetitive turn assignment
 
-# 🚀 Core Features
+---
 
-## 🔐 1. User Management
+## 🚀 Core Features
 
--   Registration & login (JWT-based)
--   Profile management
--   View all Dârs the user belongs to
--   A user can be:
-    -   Organizer in one Dar
-    -   Member in another
-    -   Member & Organizer across multiple Dârs
+### 🔐 1. User Management
 
-------------------------------------------------------------------------
+- User registration & login (JWT-based)
+- Profile management
+- View all groups the user participates in
+- A user can be:
+  - Organizer in one group
+  - Member in another
+  - Organizer & Member across multiple groups
 
-## 🏘️ 2. Dar Management
+---
 
--   Create and configure a Dâr with:
-    -   Amount per cycle
-    -   Number of members
-    -   Start date
-    -   Tour generation mode (automatic / manual)
--   Invite members via code or link
--   Manage join requests
--   Activate / pause the Dâr
+### 🏘️ 2. Group Management
 
-------------------------------------------------------------------------
+- Create and configure a group with:
+  - Number of participants
+  - Cycle duration
+  - Start date
+  - Rotation generation mode (automatic / manual)
+- Invite members via code or link
+- Manage join requests
+- Activate or pause a group
 
-## 👥 3. Member Management
+---
 
--   Users can request to join a Dâr
--   Organizers can approve or reject requests
--   Remove / ban members (based on rules)
--   Track each member's status inside each Dâr
+### 👥 3. Member Management
 
-------------------------------------------------------------------------
+- Request to join a group
+- Organizer approval or rejection
+- Remove or suspend members
+- Track member status per group
 
-## 🔄 4. Tour (Rotation) Management
+---
 
--   Automatic tour generation for all members
--   Manual editing for special cases
--   Guaranteed non-repetition
--   Store previous and future tour assignments
--   Clear view of monthly beneficiary
+### 🔄 4. Rotation Management
 
-------------------------------------------------------------------------
+- Automatic rotation generation
+- Manual editing for exceptions
+- Guaranteed non-repetition
+- Track previous, current, and future turns
+- Clear visibility of assigned participants per cycle
 
-## 💬 5. Communication
+---
 
--   Internal chat per Dâr
--   Announcements from organizers
--   Notifications for:
-    -   Join request accepted
-    -   New cycle started
-    -   Beneficiary announcement
+### 💬 5. Communication
 
-------------------------------------------------------------------------
+- Group chat
+- Organizer announcements
+- Notifications for:
+  - Join request updates
+  - Cycle start
+  - Turn assignments
+  - Group state changes
 
-## 📊 6. Dashboard
+---
 
--   Dar overview
--   Member list
--   Tour calendar
--   Activity timeline
--   Progress tracking
+### 📊 6. Dashboard
 
-------------------------------------------------------------------------
+- Group overview
+- Member list
+- Rotation calendar
+- Activity timeline
+- Cycle progress tracking
 
-# 🏛️ System Architecture
+---
 
-## 🖥 Backend -- Spring Boot
+## 🏛️ System Architecture
 
--   Spring Boot 3
--   Spring Security (JWT)
--   JPA / Hibernate
--   PostgreSQL
--   DTO / Services / Controllers layered architecture
--   Centralized exception handling
--   Role-based authorization
+### 🖥 Backend — Spring Boot
 
-------------------------------------------------------------------------
+- Spring Boot 3
+- Spring Security (JWT)
+- JPA / Hibernate
+- PostgreSQL
+- Layered architecture (Controller / Service / DTO / Repository)
+- Centralized exception handling
+- Group-based role authorization
 
-## 💻 Frontend -- Angular
+---
 
--   Angular 17
--   Angular Material / PrimeNG UI components
--   RxJS state management
--   Modular architecture
--   Reusable shared components
--   Responsive design
+### 💻 Frontend — Angular
 
-------------------------------------------------------------------------
+- Angular 17
+- Angular Material / PrimeNG
+- RxJS state management
+- Modular architecture
+- Reusable shared components
+- Responsive UI
 
-# 🧱 Database Structure
+---
 
-## Main Tables:
+## 🧱 Database Structure
 
--   **Users**
--   **Dars**
--   **DarMembers** (relation table with roles per Dar)
--   **Tours**
--   **Messages**
--   **Notifications**
+### Main Tables
 
-### Example of role handling:
+- Users
+- Groups
+- GroupMembers
+- Rotations
+- Messages
+- Notifications
 
-A user's permission is determined **per Dâr**, not globally.
+User permissions are defined **per group**, not globally.
 
-------------------------------------------------------------------------
+---
 
-# 📂 Project Structure
+## 📂 Project Structure
 
-    TonTin/
-     ├── backend/
-     │    ├── src/
-     │    ├── pom.xml
-     │    └── application.properties
-     │
-     ├── frontend/
-     │    ├── src/
-     │    ├── angular.json
-     │    └── package.json
-     │
-     └── README.md
+TonTin/
+ ├── backend/
+ │    ├── src/
+ │    ├── pom.xml
+ │    └── application.properties
+ │
+ ├── frontend/
+ │    ├── src/
+ │    ├── angular.json
+ │    └── package.json
+ │
+ └── README.md
 
-------------------------------------------------------------------------
+---
 
-# ⚙️ Installation & Setup
+## ⚙️ Installation & Setup
 
-## Backend Setup
+### Backend
 
-``` bash
-cd backend
-mvn clean install
-mvn spring-boot:run
-```
+cd backend  
+mvn clean install  
+mvn spring-boot:run  
 
-**Default backend port:** 8080
+Default port: 8080
 
-------------------------------------------------------------------------
+---
 
-## Frontend Setup
+### Frontend
 
-``` bash
-cd frontend
-npm install
-ng serve
-```
+cd frontend  
+npm install  
+ng serve  
 
-**Default frontend port:** 4200
+Default port: 4200
 
-------------------------------------------------------------------------
+---
 
-# 🔍 Testing
+## 🔍 Testing
 
-## Backend Tests
+### Backend
 
--   JUnit 5\
--   Mockito\
-    Run tests:
+- JUnit 5
+- Mockito
 
-``` bash
 mvn test
-```
 
-## Frontend Tests
+---
 
--   Jasmine\
--   Karma\
-    Run tests:
+### Frontend
 
-``` bash
+- Jasmine
+- Karma
+
 ng test
-```
 
-------------------------------------------------------------------------
+---
 
-# 🚀 Deployment Options
+## 🚀 Deployment
 
--   Docker containers\
--   Railway / Render / Heroku\
--   VPS + Nginx reverse proxy\
--   Spring Boot JAR deployment
+- Docker
+- Railway / Render / Heroku
+- VPS with Nginx
+- Spring Boot JAR deployment
 
-------------------------------------------------------------------------
+---
 
-# 📘 API Documentation
+## 📘 API Documentation
 
-Swagger UI available at:
+Swagger UI:
 
-    /swagger-ui.html
+/swagger-ui.html
 
-Exposes all endpoints with models and responses.
+---
 
-------------------------------------------------------------------------
+## 🛡️ Security
 
-# 🛡️ Security
+- JWT authentication
+- Group-based role access
+- Input validation
+- OWASP best practices
+- No financial processing
 
--   JWT Authentication
--   Role-based access control (Admin, Organizer, Member)
--   Input validation
--   OWASP protection standards
+---
 
-------------------------------------------------------------------------
+## 🤝 Contribution
 
-# 🤝 Contribution Guidelines
+- Fork the repository
+- Create a feature branch
+- Commit changes
+- Open a pull request
 
-1.  Fork the repository\
-2.  Create a feature branch\
-3.  Commit your updates\
-4.  Open a pull request
+---
 
-------------------------------------------------------------------------
+## 🖊️ Author
 
-# 🖊️ Author
-
-**TonTin Project**\
-Full-stack Web Application\
+TonTin Project — v2  
+Rotation Management Platform  
 Spring Boot + Angular
 
-------------------------------------------------------------------------
+---
 
-# 📄 License
+## 📄 License
 
-This project is licensed under the **MIT License**.
+MIT License
