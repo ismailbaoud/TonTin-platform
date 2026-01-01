@@ -1,4 +1,4 @@
-# 📘 TonTin v2 — Rotation Management Platform
+# 📘 TonTin - Rotation Management Platform
 
 ## 📝 Overview
 
