@@ -1,12 +1,14 @@
 # 📘 TonTin - Rotation Management Platform
 
+[TontTin specifications](https://1drv.ms/w/c/f4fee283c02594e2/IQAcW0ZWdf7_QLAgHjDEWnOxAVboQS-zoPOA4mpw47VxErU?e=xCDVtN)
+
 ## 📝 Overview
 
-TonTin v2 is a full-stack web platform designed to manage **rotation-based group systems** inspired by the Moroccan concept of *Dâr*, without focusing on savings or money handling.
+TonTin is a full-stack web platform designed to manage **rotation-based group systems** inspired by the Moroccan concept of *Dâr*, without focusing on savings or money handling.
 
 The platform helps groups organize members, manage turns, coordinate cycles, and communicate transparently — **no financial transactions are processed or tracked**.
 
-TonTin v2 focuses on organization, fairness, and visibility, making it suitable for community groups, associations, cooperatives, or any structured rotation-based collaboration.
+TonTin focuses on organization, fairness, and visibility, making it suitable for community groups, associations, cooperatives, or any structured rotation-based collaboration.
 
 ---
 
@@ -230,7 +232,6 @@ Rotation Management Platform
 Spring Boot + Angular
 
 ---
-
 ## 📄 License
 
 MIT License
