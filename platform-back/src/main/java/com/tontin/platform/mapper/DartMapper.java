@@ -1,10 +1,10 @@
-package com.tontin.platform.mapper.user;
+package com.tontin.platform.mapper;
 
 import org.mapstruct.Mapper;
 
 import com.tontin.platform.domain.Dart;
-import com.tontin.platform.dto.Dart.request.DartRequest;
-import com.tontin.platform.dto.Dart.response.DartResponse;
+import com.tontin.platform.dto.dart.request.DartRequest;
+import com.tontin.platform.dto.dart.response.DartResponse;
 
 @Mapper(componentModel = "spring")
 public interface DartMapper {

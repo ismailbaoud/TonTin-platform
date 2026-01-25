@@ -1,10 +1,8 @@
 package com.tontin.platform.service;
 
+import com.tontin.platform.dto.dart.request.DartRequest;
+import com.tontin.platform.dto.dart.response.DartResponse;
 import java.util.UUID;
-
-
-import com.tontin.platform.dto.Dart.request.DartRequest;
-import com.tontin.platform.dto.Dart.response.DartResponse;
 
 public interface DartService {
     DartResponse createDart(DartRequest request);
