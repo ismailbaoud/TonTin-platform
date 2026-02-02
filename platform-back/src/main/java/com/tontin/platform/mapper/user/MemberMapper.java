@@ -9,5 +9,5 @@ import com.tontin.platform.dto.member.response.MemberResponse;
 @Mapper(componentModel = "spring")
 public interface MemberMapper {
     Member toEntity(MemberRequest request);
-    MemberResponse toEntity(Member member);
+    MemberResponse toDto(Member member);
 }
