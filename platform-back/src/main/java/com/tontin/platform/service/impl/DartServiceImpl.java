@@ -12,8 +12,10 @@ import com.tontin.platform.domain.enums.dart.DartStatus;
 import com.tontin.platform.domain.enums.member.MemberStatus;
 import com.tontin.platform.dto.Dart.request.DartRequest;
 import com.tontin.platform.dto.Dart.response.DartResponse;
+import com.tontin.platform.dto.member.response.MemberResponse;
 import com.tontin.platform.mapper.user.DartMapper;
 import com.tontin.platform.repository.DartRepository;
+import com.tontin.platform.repository.MemberRepository;
 import com.tontin.platform.service.DartService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class DartServiceImpl implements DartService {
 
     private final DartRepository dartRepository;
+    private final MemberServiceImpl memberService;
     private final DartMapper dartMapper;
 
     @Override
@@ -31,12 +34,11 @@ public class DartServiceImpl implements DartService {
         Dart dart = dartMapper.toEntity(request);
         dart.setStatus(DartStatus.PENDING);
         dart.setStartDate(LocalDateTime.now());
+        dart.setMember(null);
         DartResponse dartRes = dartMapper.toDto(dartRepository.save(dart));
-        Member member = Member.builder()
-        .joinedAt(LocalDateTime.now())
-        .permession(DartPermession.ORGANIZER)
-        .status(MemberStatus.PENDING)
-        .build();
+
+        memberService.createMember(DartPermession.ORGANIZER, MemberStatus.ACTIVE, dart);
+
         return dartRes;
 
     }
