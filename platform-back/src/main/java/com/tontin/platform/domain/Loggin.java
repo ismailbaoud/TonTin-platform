@@ -7,6 +7,8 @@ import com.tontin.platform.domain.enums.logs.LogsLevel;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,6 +27,8 @@ public class Loggin {
     private UUID id;
 
     private LocalDateTime timestamp;
+
+    @Enumerated(EnumType.STRING)
     private LogsLevel level;
     private String service;
     private String env;
