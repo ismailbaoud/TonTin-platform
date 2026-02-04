@@ -1,0 +1,293 @@
+<!-- Auth Navbar -->
+<app-auth-navbar></app-auth-navbar>
+
+<div
+  class="font-display bg-background-light dark:bg-background-dark min-h-screen flex flex-col items-center justify-center p-4 pt-24"
+>
+  <div
+    class="w-full max-w-[480px] bg-white dark:bg-[#1a2c20] rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#e7f3eb] dark:border-[#2a4030] overflow-hidden transition-colors duration-200"
+  >
+    <!-- Header -->
+    <div class="px-8 pt-10 pb-6 flex flex-col items-center text-center">
+      <h1
+        class="text-[#0d1b12] dark:text-gray-100 text-[26px] font-bold leading-tight"
+      >
+        Create your account
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">
+        Join TonTin to manage your Dârs and savings
+      </p>
+    </div>
+
+    <!-- Form -->
+    <div class="px-8 pb-10">
+      <!-- Error Message -->
+      <div
+        *ngIf="errorMessage"
+        class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+      >
+        <p
+          class="text-red-600 dark:text-red-400 text-sm flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined" style="font-size: 18px"
+            >error</span
+          >
+          {{ errorMessage }}
+        </p>
+      </div>
+
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="onSubmit()"
+        class="flex flex-col gap-5"
+      >
+        <!-- Username -->
+        <label class="flex flex-col w-full">
+          <p
+            class="text-[#0d1b12] dark:text-gray-200 text-sm font-medium leading-normal pb-2"
+          >
+            Username
+          </p>
+          <input
+            formControlName="userName"
+            class="form-input flex w-full min-w-0 resize-none overflow-hidden rounded-lg text-[#0d1b12] dark:text-white border transition-all"
+            [class.border-red-500]="userName?.invalid && userName?.touched"
+            [class.border-[#cfe7d7]]="!userName?.invalid || !userName?.touched"
+            [class.dark:border-red-500]="userName?.invalid && userName?.touched"
+            [class.dark:border-[#2A3C30]]="
+              !userName?.invalid || !userName?.touched
+            "
+            class="bg-[#f8fcf9] dark:bg-[#132018] focus:border-primary focus:ring-1 focus:ring-primary h-12 placeholder:text-[#4c9a66] dark:placeholder:text-[#3d6e50] px-4 text-base font-normal leading-normal"
+            placeholder="Enter your username"
+            type="text"
+            autocomplete="username"
+          />
+          <p
+            *ngIf="userName?.invalid && userName?.touched"
+            class="text-red-500 text-xs mt-2 flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined" style="font-size: 14px"
+              >error</span
+            >
+            <span *ngIf="userName?.errors?.['required']"
+              >Username is required.</span
+            >
+            <span *ngIf="userName?.errors?.['minlength']"
+              >Must be at least 3 characters long.</span
+            >
+          </p>
+        </label>
+
+        <!-- Email -->
+        <label class="flex flex-col w-full">
+          <p
+            class="text-[#0d1b12] dark:text-gray-200 text-sm font-medium leading-normal pb-2"
+          >
+            Email
+          </p>
+          <input
+            formControlName="email"
+            class="form-input flex w-full min-w-0 resize-none overflow-hidden rounded-lg text-[#0d1b12] dark:text-white border transition-all"
+            [class.border-red-500]="email?.invalid && email?.touched"
+            [class.border-[#cfe7d7]]="!email?.invalid || !email?.touched"
+            [class.dark:border-red-500]="email?.invalid && email?.touched"
+            [class.dark:border-[#2A3C30]]="!email?.invalid || !email?.touched"
+            class="bg-[#f8fcf9] dark:bg-[#132018] focus:border-primary focus:ring-1 focus:ring-primary h-12 placeholder:text-[#4c9a66] dark:placeholder:text-[#3d6e50] px-4 text-base font-normal leading-normal"
+            placeholder="Enter your email"
+            type="email"
+            autocomplete="email"
+          />
+          <p
+            *ngIf="email?.invalid && email?.touched"
+            class="text-red-500 text-xs mt-2 flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined" style="font-size: 14px"
+              >error</span
+            >
+            <span *ngIf="email?.errors?.['required']">Email is required.</span>
+            <span *ngIf="email?.errors?.['email']"
+              >Please enter a valid email address.</span
+            >
+          </p>
+        </label>
+
+        <!-- Password -->
+        <label class="flex flex-col w-full">
+          <p
+            class="text-[#0d1b12] dark:text-gray-200 text-sm font-medium leading-normal pb-2"
+          >
+            Password
+          </p>
+          <div class="relative flex w-full items-stretch rounded-lg w">
+            <input
+              formControlName="password"
+              [type]="showPassword ? 'text' : 'password'"
+              class="form-input flex w-full min-w-0 resize-none overflow-hidden rounded-lg text-[#0d1b12] dark:text-white border transition-all"
+              [class.border-red-500]="password?.invalid && password?.touched"
+              [class.border-[#cfe7d7]]="
+                !password?.invalid || !password?.touched
+              "
+              [class.dark:border-red-500]="
+                password?.invalid && password?.touched
+              "
+              [class.dark:border-[#2A3C30]]="
+                !password?.invalid || !password?.touched
+              "
+              class="w-full bg-[#f8fcf9] dark:bg-[#132018] focus:border-primary focus:ring-1 focus:ring-primary h-12 placeholder:text-[#4c9a66] dark:placeholder:text-[#3d6e50] px-4 pr-12 text-base font-normal leading-normal"
+              placeholder="Create a password"
+              autocomplete="new-password"
+            />
+            <button
+              (click)="togglePasswordVisibility('password')"
+              class="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center text-[#4c9a66] hover:text-primary transition-colors cursor-pointer"
+              type="button"
+              [attr.aria-label]="
+                showPassword ? 'Hide password' : 'Show password'
+              "
+            >
+              <span class="material-symbols-outlined" style="font-size: 20px">
+                {{ showPassword ? "visibility_off" : "visibility" }}
+              </span>
+            </button>
+          </div>
+          <p
+            *ngIf="password?.invalid && password?.touched"
+            class="text-red-500 text-xs mt-2 flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined" style="font-size: 14px"
+              >error</span
+            >
+            <span *ngIf="password?.errors?.['required']"
+              >Password is required.</span
+            >
+            <span *ngIf="password?.errors?.['minlength']"
+              >Password must be at least 8 characters long.</span
+            >
+          </p>
+        </label>
+
+        <!-- Confirm Password -->
+        <label class="flex flex-col w-full">
+          <p
+            class="text-[#0d1b12] dark:text-gray-200 text-sm font-medium leading-normal pb-2"
+          >
+            Confirm Password
+          </p>
+          <div class="relative flex w-full items-stretch rounded-lg">
+            <input
+              formControlName="confirmPassword"
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              class="form-input flex w-full min-w-0 resize-none overflow-hidden rounded-lg text-[#0d1b12] dark:text-white border transition-all"
+              [class.border-red-500]="
+                (confirmPassword?.invalid && confirmPassword?.touched) ||
+                hasPasswordMismatch
+              "
+              [class.border-[#cfe7d7]]="
+                (!confirmPassword?.invalid || !confirmPassword?.touched) &&
+                !hasPasswordMismatch
+              "
+              [class.dark:border-red-500]="
+                (confirmPassword?.invalid && confirmPassword?.touched) ||
+                hasPasswordMismatch
+              "
+              [class.dark:border-[#2A3C30]]="
+                (!confirmPassword?.invalid || !confirmPassword?.touched) &&
+                !hasPasswordMismatch
+              "
+              class="w-full bg-[#f8fcf9] dark:bg-[#132018] focus:border-primary focus:ring-1 focus:ring-primary h-12 placeholder:text-[#4c9a66] dark:placeholder:text-[#3d6e50] px-4 pr-12 text-base font-normal leading-normal"
+              placeholder="Confirm your password"
+              autocomplete="new-password"
+            />
+            <button
+              (click)="togglePasswordVisibility('confirmPassword')"
+              class="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center text-[#4c9a66] hover:text-primary transition-colors cursor-pointer"
+              type="button"
+              [attr.aria-label]="
+                showConfirmPassword ? 'Hide password' : 'Show password'
+              "
+            >
+              <span class="material-symbols-outlined" style="font-size: 20px">
+                {{ showConfirmPassword ? "visibility_off" : "visibility" }}
+              </span>
+            </button>
+          </div>
+          <p
+            *ngIf="confirmPassword?.invalid && confirmPassword?.touched"
+            class="text-red-500 text-xs mt-2 flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined" style="font-size: 14px"
+              >error</span
+            >
+            <span *ngIf="confirmPassword?.errors?.['required']"
+              >Please confirm your password.</span
+            >
+          </p>
+          <p
+            *ngIf="hasPasswordMismatch"
+            class="text-red-500 text-xs mt-2 flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined" style="font-size: 14px"
+              >error</span
+            >
+            Passwords do not match.
+          </p>
+        </label>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          [disabled]="isSubmitting"
+          class="mt-4 w-full bg-primary hover:bg-[#10c94d] text-[#0d1b12] text-base font-bold h-12 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span *ngIf="!isSubmitting">Create Account</span>
+          <span *ngIf="isSubmitting">Creating Account...</span>
+          <span
+            *ngIf="!isSubmitting"
+            class="material-symbols-outlined"
+            style="font-size: 20px"
+            >person_add</span
+          >
+          <span
+            *ngIf="isSubmitting"
+            class="material-symbols-outlined animate-spin"
+            style="font-size: 20px"
+            >progress_activity</span
+          >
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="relative my-8">
+        <div class="absolute inset-0 flex items-center">
+          <div
+            class="w-full border-t border-gray-100 dark:border-[#2a4030]"
+          ></div>
+        </div>
+        <div class="relative flex justify-center text-xs uppercase">
+          <span
+            class="bg-white dark:bg-[#1a2c20] px-2 text-gray-400 dark:text-gray-500"
+            >Or</span
+          >
+        </div>
+      </div>
+
+      <!-- Login Link -->
+      <div class="text-center">
+        <p class="text-gray-600 dark:text-gray-400 text-sm">
+          Already have an account?
+          <a
+            routerLink="/auth/login"
+            class="font-bold text-primary hover:text-[#10c94d] ml-1 hover:underline cursor-pointer"
+          >
+            Log in
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-8 text-center text-xs text-gray-400 dark:text-gray-600">
+    © 2023 TonTin Savings. All rights reserved.
+  </footer>
+</div>
