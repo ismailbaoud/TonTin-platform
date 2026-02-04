@@ -1,0 +1,48 @@
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+}
+
+// Override default form input styles for better dark mode support
+.form-input {
+  &::placeholder {
+    opacity: 0.6;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  // Error state
+  &.border-red-500 {
+    border-color: #ef4444 !important;
+
+    &:focus {
+      ring-color: #ef4444 !important;
+    }
+  }
+}
+
+// Material Icons alignment
+.material-symbols-outlined {
+  vertical-align: middle;
+  user-select: none;
+}
+
+// Smooth transitions
+button,
+a {
+  transition: all 0.2s ease-in-out;
+}
+
+// Loading state animation
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
