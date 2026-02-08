@@ -1,0 +1,339 @@
+<div class="flex h-screen w-full">
+  <!-- Side Navigation -->
+  <aside
+    class="w-64 h-full hidden md:flex flex-col border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0 transition-colors duration-200"
+  >
+    <div class="p-6 flex items-center justify-center">
+      <img src="assets/logo.png" alt="TonTin Logo" class="h-36 w-36" />
+    </div>
+    <nav class="flex-1 px-4 py-4 gap-2 flex flex-col overflow-y-auto">
+      <a
+        routerLink="/dashboard/client"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+      >
+        <span class="material-symbols-outlined">dashboard</span>
+        <span class="text-sm font-semibold">Dashboard</span>
+      </a>
+      <div class="pt-4 pb-2">
+        <p
+          class="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider"
+        >
+          Dâr Management
+        </p>
+      </div>
+      <a
+        routerLink="/dashboard/client/my-dars"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >groups</span
+        >
+        <span class="text-sm font-medium">My Dârs</span>
+      </a>
+      <a
+        routerLink="/dashboard/client/create-dar"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >add_circle</span
+        >
+        <span class="text-sm font-medium">Create Dâr</span>
+      </a>
+      <a
+        routerLink="/dashboard/client/reports"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >bar_chart</span
+        >
+        <span class="text-sm font-medium">Reports</span>
+      </a>
+      <div class="pt-4 pb-2">
+        <p
+          class="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider"
+        >
+          Account
+        </p>
+      </div>
+      <a
+        routerLink="/dashboard/client/notifications"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >notifications</span
+        >
+        <span class="text-sm font-medium">Notifications</span>
+        <span
+          class="ml-auto inline-flex items-center justify-center rounded-full bg-red-500 text-white px-1.5 py-0.5 text-xs font-bold min-w-[1.25rem]"
+          >4</span
+        >
+      </a>
+      <a
+        routerLink="/dashboard/client/trust-rankings"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >leaderboard</span
+        >
+        <span class="text-sm font-medium">Trust Rankings</span>
+      </a>
+      <a
+        routerLink="/dashboard/client/profile"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >person</span
+        >
+        <span class="text-sm font-medium">Profile</span>
+      </a>
+    </nav>
+    <div class="p-4 border-t border-gray-200 dark:border-gray-800">
+      <button
+        (click)="onLogout()"
+        [disabled]="isLoading"
+        class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-gray-500">logout</span>
+        <span class="text-sm font-medium text-gray-900 dark:text-gray-300"
+          >Log Out</span
+        >
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main
+    class="flex-1 flex flex-col h-full overflow-hidden relative bg-gray-50 dark:bg-gray-950"
+  >
+    <!-- Top Header -->
+    <header
+      class="h-16 flex items-center justify-between px-6 lg:px-10 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-10"
+    >
+      <div class="flex items-center gap-4 md:hidden">
+        <button
+          (click)="toggleMobileMenu()"
+          class="text-gray-900 dark:text-white p-1"
+        >
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+        <span class="text-lg font-bold">TonTin</span>
+      </div>
+      <div class="hidden md:flex items-center flex-1 max-w-lg">
+        <div class="relative w-full">
+          <span
+            class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"
+          >
+            <span class="material-symbols-outlined">search</span>
+          </span>
+          <input
+            class="w-full py-2 pl-10 pr-4 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-gray-900 dark:text-white placeholder-gray-500"
+            placeholder="Search Dârs, transactions..."
+            type="text"
+          />
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button
+          routerLink="/dashboard/client/notifications"
+          class="relative p-2 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        >
+          <span class="material-symbols-outlined">notifications</span>
+          <span
+            class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-900"
+          ></span>
+        </button>
+        <button
+          class="p-2 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        >
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+        <div class="h-8 w-[1px] bg-gray-200 dark:bg-gray-700 mx-1"></div>
+        <div
+          class="flex items-center gap-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg p-2 -m-2 transition-colors"
+          *ngIf="currentUser"
+          routerLink="/dashboard/client/profile"
+        >
+          <div
+            class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-green-600 flex items-center justify-center text-white font-bold text-sm shadow-sm"
+          >
+            {{ getUserInitials() }}
+          </div>
+          <div class="hidden lg:block">
+            <p
+              class="text-sm font-bold text-gray-900 dark:text-white leading-none"
+            >
+              {{ currentUser.userName }}
+            </p>
+            <p class="text-xs text-gray-500 mt-1 leading-none">
+              {{ getDisplayRole() }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div
+      *ngIf="isMobileMenuOpen"
+      class="fixed inset-0 bg-black/50 z-40 md:hidden"
+      (click)="closeMobileMenu()"
+    ></div>
+
+    <!-- Mobile Sidebar -->
+    <aside
+      [class.translate-x-0]="isMobileMenuOpen"
+      class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-900 transform -translate-x-full transition-transform duration-300 ease-in-out z-50 md:hidden flex flex-col border-r border-gray-200 dark:border-gray-800"
+    >
+      <div class="p-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="bg-primary/20 p-2 rounded-lg text-primary">
+            <span class="material-symbols-outlined text-3xl">savings</span>
+          </div>
+          <div class="flex flex-col">
+            <h1
+              class="text-xl font-bold tracking-tight text-gray-900 dark:text-white"
+            >
+              TonTin
+            </h1>
+            <p class="text-gray-500 text-xs font-medium">Financial Manager</p>
+          </div>
+        </div>
+        <button
+          (click)="closeMobileMenu()"
+          class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <nav class="flex-1 px-4 py-4 gap-2 flex flex-col overflow-y-auto">
+        <a
+          routerLink="/dashboard/client"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="text-sm font-semibold">Dashboard</span>
+        </a>
+        <div class="pt-4 pb-2">
+          <p
+            class="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider"
+          >
+            Dâr Management
+          </p>
+        </div>
+        <a
+          routerLink="/dashboard/client/my-dars"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >groups</span
+          >
+          <span class="text-sm font-medium">My Dârs</span>
+        </a>
+        <a
+          routerLink="/dashboard/client/create-dar"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >add_circle</span
+          >
+          <span class="text-sm font-medium">Create Dâr</span>
+        </a>
+        <a
+          routerLink="/dashboard/client/reports"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >bar_chart</span
+          >
+          <span class="text-sm font-medium">Reports</span>
+        </a>
+        <div class="pt-4 pb-2">
+          <p
+            class="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider"
+          >
+            Account
+          </p>
+        </div>
+        <a
+          routerLink="/dashboard/client/notifications"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >notifications</span
+          >
+          <span class="text-sm font-medium">Notifications</span>
+        </a>
+        <a
+          routerLink="/dashboard/client/trust-rankings"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >leaderboard</span
+          >
+          <span class="text-sm font-medium">Trust Rankings</span>
+        </a>
+        <a
+          routerLink="/dashboard/client/profile"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >person</span
+          >
+          <span class="text-sm font-medium">Profile</span>
+        </a>
+      </nav>
+      <div class="p-4 border-t border-gray-200 dark:border-gray-800">
+        <button
+          (click)="onLogout()"
+          [disabled]="isLoading"
+          class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+        >
+          <span class="material-symbols-outlined text-gray-500">logout</span>
+          <span class="text-sm font-medium text-gray-900 dark:text-gray-300"
+            >Log Out</span
+          >
+        </button>
+      </div>
+    </aside>
+
+    <!-- Page Content -->
+    <div class="flex-1 overflow-y-auto">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
