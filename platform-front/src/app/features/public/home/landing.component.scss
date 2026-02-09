@@ -1,0 +1,102 @@
+// Landing Page Styles
+
+:host {
+  display: block;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+// Glass effect
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(16, 185, 129, 0.07);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+// Text gradient
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(to right, #10b981, #059669, #34d399);
+}
+
+// Blob animations
+.blob {
+  filter: blur(80px);
+  z-index: -1;
+  animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+// Smooth scroll
+html {
+  scroll-behavior: smooth;
+}
+
+// Custom animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+// Hover effects
+button, a {
+  transition: all 0.3s ease;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .blob {
+    width: 300px !important;
+    height: 300px !important;
+  }
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #10b981;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #059669;
+}

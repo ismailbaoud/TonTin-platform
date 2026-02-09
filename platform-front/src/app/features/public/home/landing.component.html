@@ -1,0 +1,552 @@
+<!-- Landing Page -->
+<div class="min-h-screen bg-[#f8fafc] text-slate-900 overflow-x-hidden">
+  <!-- Background Blobs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div
+      class="blob absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full"
+      style="filter: blur(80px); z-index: -1"
+    ></div>
+    <div
+      class="blob absolute bottom-[10%] right-[-5%] w-[400px] h-[400px] bg-accent/10 rounded-full"
+      style="filter: blur(80px); z-index: -1"
+    ></div>
+  </div>
+
+  <!-- Header -->
+  <app-public-navbar></app-public-navbar>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6">
+      <div class="mx-auto max-w-7xl grid lg:grid-cols-2 gap-16 items-center">
+        <div class="flex flex-col gap-8">
+          <div
+            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 w-fit"
+          >
+            <span
+              class="flex h-2 w-2 rounded-full bg-primary animate-pulse"
+            ></span>
+            <span
+              class="text-xs font-bold uppercase tracking-wider text-primary"
+              >Next-Gen Dâr Management</span
+            >
+          </div>
+          <h1
+            class="text-6xl lg:text-8xl font-extrabold leading-[0.95] tracking-tighter text-slate-950"
+          >
+            The New <br />
+            <span
+              class="bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-600 to-accent"
+              >Standard</span
+            >
+            <br />
+            for Dârs.
+          </h1>
+          <p class="text-xl text-slate-600 leading-relaxed max-w-xl">
+            Experience a professional-grade platform designed to streamline,
+            secure, and scale your communal Dâr groups with absolute
+            transparency.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <button
+              (click)="navigateToRegister()"
+              class="h-16 px-10 rounded-2xl bg-primary text-white font-bold text-lg shadow-2xl shadow-primary/30 hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
+            >
+              Start a New Dâr
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+            <button
+              (click)="scrollToSection('ecosystem')"
+              class="h-16 px-10 rounded-2xl bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(16,185,129,0.07)] font-bold text-lg hover:bg-white transition-all flex items-center justify-center"
+            >
+              Explore Groups
+            </button>
+          </div>
+          <div class="flex items-center gap-6 pt-4">
+            <div class="flex -space-x-3">
+              <img
+                alt="User"
+                class="w-10 h-10 rounded-full border-2 border-white bg-slate-100"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDf_Jx6n4BNyKiMB8YANRHrMizHz_N0M_BbQAazdi-CH6HFD-rH35xP9bCqt_iY11GY_GVICDVtZGU5sOdklTIyWRS1DqOJOKrjYQBPMwv-J9s1DazP44d8yeQcUsh2_ryj9rWPZdRQE-fK0FLuIIg_m-7wbtn-jzAzOtLfanQNIrgCgS0YBbcyGdO7r-bEzI4RxZAmrovTX1VfTJHqToPhTziSbnwj5Aq1dRb9r36szMYSfaLk7c_g1MoFqIFw5Fov3Q9odylxlfQ"
+              />
+              <img
+                alt="User"
+                class="w-10 h-10 rounded-full border-2 border-white bg-slate-100"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsRKUWsJnG9EdeWlLZZnrhGf6iJLd17Us0lS-78CjfsEobt8QLiFZimyPhlCXdGxArWf8o0b8ehgmF5IinwmD6sxUFFokOM2dDvzPdoEgNpNnRflD_MMLXVc7WKeTYUPwmOqt8_OC633inlFDFqBPrYEp3JGb7zedrR-lpb_5OtOmjVGW3pVimkx24Cbu3pa_Oyqx8TpUuNzezq8nPIYvnbR18Kk-Wq2H6yjlQ9w7Cmw8slbYbHt_jx6wPTTENOMfoeaRdpkCs3eo"
+              />
+              <img
+                alt="User"
+                class="w-10 h-10 rounded-full border-2 border-white bg-slate-100"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTA2sED7QjzeC-dIrFjDHU6mXgomnJTWOkkSuei0EsdGehz9mmtR-o4PDlDR6kkHB3uBvckZJt-f8EWbeCTKBTc5AnLezBl9W4MIWqwZqQ2Ea3ru4Qro_TzlC2wXtnzFGlh86k2M46Ey5GbmXaIjrfUbuVm3eJUUSs5FKW9PJHAAZDbheY8uqDhmjsPEYfPdlvx8C3XQIrDjkPARgY0LKN81mfMp6uwvZmDkYiRokFgTW7ttix6JivZ1WKM_3f9nsBc0U5pXWNmnk"
+              />
+              <div
+                class="w-10 h-10 rounded-full border-2 border-white bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white uppercase tracking-tighter"
+              >
+                +5k
+              </div>
+            </div>
+            <p class="text-sm font-medium text-slate-500">
+              Trusted by thousands of <br />active communities.
+            </p>
+          </div>
+        </div>
+        <div class="relative perspective-1000">
+          <div
+            class="relative z-10 w-full aspect-square flex items-center justify-center"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-accent/20 rounded-full animate-[spin_20s_linear_infinite] blur-3xl opacity-50"
+            ></div>
+            <div
+              class="relative w-full h-full bg-white/10 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(16,185,129,0.07)] rounded-[3rem] p-8 overflow-hidden group"
+            >
+              <div
+                class="absolute inset-0"
+                style="
+                  background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuCJU5GtFfIEmyUAr1EkkdYP2SSgGJ0LJSIn6vNchct9FKsnpMiMkXt-e2AEMiLPu7wmSY5uvMraN6oCGLNoALhpJyAQZurASrxA1MdX6ixkckU79FGw0g4Z7xuKfKA4CdSTQKNM8wHvNetWO5D7W3cMS2-SSi9hyEIVHT8uPBiZ7f3lMefQjDVOa_HmzlBPKcfxfy9FCz2uG_oY3UrQVk1qr7JBRWYE3IX_3wkcprJzlUWqm1JEfdQd-p4sOtkHEJ7J5nojFIe2w1g&quot;);
+                  background-size: cover;
+                  background-position: center;
+                "
+              ></div>
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-emerald-800/80 via-transparent to-transparent"
+              ></div>
+              <div
+                class="absolute top-10 right-10 w-48 bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(16,185,129,0.07)] p-4 rounded-2xl animate-bounce shadow-2xl"
+              >
+                <div class="flex justify-between items-center mb-3">
+                  <div class="h-2 w-12 bg-primary/20 rounded-full"></div>
+                  <div class="h-2 w-2 bg-emerald-500 rounded-full"></div>
+                </div>
+                <div class="space-y-2">
+                  <div class="h-4 w-full bg-slate-100 rounded-lg"></div>
+                  <div class="h-4 w-3/4 bg-slate-100 rounded-lg"></div>
+                </div>
+              </div>
+              <div
+                class="absolute bottom-8 left-8 right-8 bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(16,185,129,0.07)] p-6 rounded-2xl"
+              >
+                <p
+                  class="text-xs font-bold text-primary mb-2 uppercase tracking-widest"
+                >
+                  Total Managed Capital
+                </p>
+                <div class="text-3xl font-extrabold text-slate-900">
+                  $2,450,000.00
+                </div>
+                <div class="mt-4 flex gap-1">
+                  <div class="h-1 flex-1 bg-primary rounded-full"></div>
+                  <div class="h-1 flex-1 bg-primary rounded-full"></div>
+                  <div class="h-1 flex-1 bg-primary rounded-full"></div>
+                  <div class="h-1 flex-1 bg-slate-200 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust Badges -->
+    <section class="py-12 border-y border-slate-200 bg-emerald-50/30">
+      <div class="mx-auto max-w-7xl px-6">
+        <div
+          class="flex flex-wrap justify-center items-center gap-12 lg:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500"
+        >
+          <div
+            class="flex items-center gap-2 hover:text-primary transition-colors"
+          >
+            <span class="material-symbols-outlined text-3xl"
+              >verified_user</span
+            >
+            <span class="font-bold tracking-tight text-xl">SOC2 COMPLIANT</span>
+          </div>
+          <div
+            class="flex items-center gap-2 hover:text-primary transition-colors"
+          >
+            <span class="material-symbols-outlined text-3xl">lock</span>
+            <span class="font-bold tracking-tight text-xl">256-BIT AES</span>
+          </div>
+          <div
+            class="flex items-center gap-2 hover:text-primary transition-colors"
+          >
+            <span class="material-symbols-outlined text-3xl">gavel</span>
+            <span class="font-bold tracking-tight text-xl"
+              >LEGAL FRAMEWORK</span
+            >
+          </div>
+          <div
+            class="flex items-center gap-2 hover:text-primary transition-colors"
+          >
+            <span class="material-symbols-outlined text-3xl"
+              >shield_person</span
+            >
+            <span class="font-bold tracking-tight text-xl">ISO CERTIFIED</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Platform Features -->
+    <section id="platform" class="py-24 lg:py-40 px-6">
+      <div class="mx-auto max-w-7xl">
+        <div class="max-w-3xl mb-24">
+          <h2
+            class="text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-950 mb-6"
+          >
+            Seamless <br /><span class="text-primary">End-to-End</span> Flow
+          </h2>
+          <p class="text-lg text-slate-600">
+            We've digitized the age-old communal savings practice, making it
+            efficient for the modern world.
+          </p>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-12 relative">
+          <div class="relative group">
+            <div
+              class="mb-8 w-20 h-20 rounded-[2rem] bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white shadow-xl shadow-primary/20 group-hover:-rotate-6 transition-transform"
+            >
+              <span class="material-symbols-outlined text-4xl">hub</span>
+            </div>
+            <div
+              class="bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(16,185,129,0.07)] p-8 rounded-[2rem] h-full relative z-10 border-b-4 border-b-primary/10 group-hover:border-b-primary transition-all"
+            >
+              <span class="text-xs font-black text-primary/40 mb-4 block"
+                >PHASE 01</span
+              >
+              <h3 class="text-2xl font-extrabold text-slate-950 mb-4">
+                Initialize & Invite
+              </h3>
+              <p class="text-slate-600 leading-relaxed">
+                Create your Dâr parameters—frequency, amount, and duration.
+                Securely invite members via private encrypted links.
+              </p>
+            </div>
+          </div>
+          <div class="relative group">
+            <div
+              class="mb-8 w-20 h-20 rounded-[2rem] bg-gradient-to-br from-accent to-emerald-500 flex items-center justify-center text-white shadow-xl shadow-accent/20 group-hover:rotate-6 transition-transform"
+            >
+              <span class="material-symbols-outlined text-4xl">sync_alt</span>
+            </div>
+            <div
+              class="bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(16,185,129,0.07)] p-8 rounded-[2rem] h-full relative z-10 border-b-4 border-b-primary/10 group-hover:border-b-primary transition-all"
+            >
+              <span class="text-xs font-black text-emerald-600 mb-4 block"
+                >PHASE 02</span
+              >
+              <h3 class="text-2xl font-extrabold text-slate-950 mb-4">
+                Smart Contributions
+              </h3>
+              <p class="text-slate-600 leading-relaxed">
+                Funds are automatically collected through our secure gateway.
+                Track all group statuses in real-time with zero manual entry.
+              </p>
+            </div>
+          </div>
+          <div class="relative group">
+            <div
+              class="mb-8 w-20 h-20 rounded-[2rem] bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center text-white shadow-xl shadow-slate-900/20 group-hover:-rotate-6 transition-transform"
+            >
+              <span class="material-symbols-outlined text-4xl"
+                >celebration</span
+              >
+            </div>
+            <div
+              class="bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(16,185,129,0.07)] p-8 rounded-[2rem] h-full relative z-10 border-b-4 border-b-primary/10 group-hover:border-b-primary transition-all"
+            >
+              <span class="text-xs font-black text-slate-400 mb-4 block"
+                >PHASE 03</span
+              >
+              <h3 class="text-2xl font-extrabold text-slate-950 mb-4">
+                Guaranteed Payout
+              </h3>
+              <p class="text-slate-600 leading-relaxed">
+                Receive the full pot when it's your turn. Our smart rotation
+                system ensures 100% payout reliability for every member.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security Section -->
+    <section
+      id="security"
+      class="py-24 bg-slate-950 text-white rounded-[4rem] mx-6 mb-24 overflow-hidden relative"
+    >
+      <div
+        class="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[120px]"
+      ></div>
+      <div class="mx-auto max-w-7xl px-8 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-20 items-center">
+          <div>
+            <h2 class="text-5xl font-extrabold tracking-tight mb-8">
+              Uncompromising <br />Security Standards.
+            </h2>
+            <div class="space-y-10">
+              <div class="flex gap-6 group">
+                <div
+                  class="h-12 w-12 shrink-0 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors"
+                >
+                  <span class="material-symbols-outlined text-primary"
+                    >verified</span
+                  >
+                </div>
+                <div>
+                  <h4 class="text-xl font-bold mb-2">Verified Ecosystem</h4>
+                  <p class="text-slate-400">
+                    Every member undergoes identity verification to ensure the
+                    highest trust level within the TonTin network.
+                  </p>
+                </div>
+              </div>
+              <div class="flex gap-6 group">
+                <div
+                  class="h-12 w-12 shrink-0 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors"
+                >
+                  <span class="material-symbols-outlined text-primary"
+                    >security</span
+                  >
+                </div>
+                <div>
+                  <h4 class="text-xl font-bold mb-2">Non-Custodial Escrow</h4>
+                  <p class="text-slate-400">
+                    Funds are held in secure, bank-grade escrow accounts,
+                    protected from third-party risks.
+                  </p>
+                </div>
+              </div>
+              <div class="flex gap-6 group">
+                <div
+                  class="h-12 w-12 shrink-0 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors"
+                >
+                  <span class="material-symbols-outlined text-primary"
+                    >account_balance</span
+                  >
+                </div>
+                <div>
+                  <h4 class="text-xl font-bold mb-2">Full Legal Compliance</h4>
+                  <p class="text-slate-400">
+                    Operating under strict financial guidelines to protect your
+                    community's collective interests.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="relative">
+            <div
+              class="bg-slate-900/10 backdrop-blur-md border border-white/20 p-1 rounded-[3rem] overflow-hidden"
+            >
+              <div class="bg-slate-900 rounded-[2.8rem] p-10">
+                <div class="flex justify-between items-center mb-10">
+                  <div class="text-3xl font-bold">Security Hub</div>
+                  <div
+                    class="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold"
+                  >
+                    LIVE STATUS
+                  </div>
+                </div>
+                <div class="space-y-6">
+                  <div
+                    class="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10"
+                  >
+                    <span class="text-slate-300">Encryption Layer</span>
+                    <span class="text-primary font-bold">Active</span>
+                  </div>
+                  <div
+                    class="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10"
+                  >
+                    <span class="text-slate-300">Fraud Detection</span>
+                    <span class="text-primary font-bold">99.9%</span>
+                  </div>
+                  <div
+                    class="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/10"
+                  >
+                    <span class="text-slate-300">Identity Guard</span>
+                    <span class="text-primary font-bold">Secure</span>
+                  </div>
+                </div>
+                <button
+                  class="w-full mt-10 py-4 bg-white text-slate-950 font-black rounded-2xl hover:bg-primary hover:text-white transition-colors"
+                >
+                  View Audit Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="ecosystem" class="py-24 px-6 text-center">
+      <div
+        class="mx-auto max-w-4xl bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(16,185,129,0.07)] p-16 rounded-[4rem] relative overflow-hidden"
+      >
+        <div
+          class="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl"
+        ></div>
+        <div class="relative z-10">
+          <h2
+            class="text-4xl lg:text-6xl font-extrabold tracking-tight text-slate-950 mb-8 leading-tight"
+          >
+            Ready to Lead <br />Your Community?
+          </h2>
+          <p class="text-xl text-slate-600 mb-12 max-w-xl mx-auto">
+            Join the elite circle of Dâr managers who use TonTin to provide
+            professional financial structures to their peers.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              (click)="navigateToRegister()"
+              class="bg-primary text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-xl shadow-primary/30 hover:scale-105 transition-transform"
+            >
+              Create Your First Dâr
+            </button>
+            <button
+              class="bg-white border border-slate-200 text-slate-900 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-emerald-50 hover:border-primary transition-colors"
+            >
+              Request Demo
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white pt-24 pb-12 border-t border-slate-100">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="grid lg:grid-cols-4 gap-12 mb-16">
+        <div class="col-span-2">
+          <div class="flex items-center gap-3 mb-8">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white"
+            >
+              <span class="material-symbols-outlined text-2xl"
+                >account_balance_wallet</span
+              >
+            </div>
+            <span class="text-2xl font-extrabold tracking-tight text-slate-900"
+              >TonTin</span
+            >
+          </div>
+          <p class="text-slate-500 text-lg max-w-sm mb-8">
+            The world's most advanced platform for communal financial
+            management. Built for trust, scale, and longevity.
+          </p>
+          <div class="flex gap-4">
+            <a
+              class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition-all"
+              href="https://twitter.com/tontin"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path
+                  d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.599 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"
+                ></path>
+              </svg>
+            </a>
+            <a
+              class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white transition-all"
+              href="https://linkedin.com/company/tontin"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path
+                  d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+                ></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div>
+          <h5 class="font-bold text-slate-900 mb-6">Product</h5>
+          <ul class="space-y-4 text-sm text-slate-500 font-medium">
+            <li>
+              <a
+                routerLink="/dashboard"
+                class="hover:text-primary transition-colors cursor-pointer"
+                >Group Management</a
+              >
+            </li>
+            <li>
+              <a
+                routerLink="/about"
+                class="hover:text-primary transition-colors cursor-pointer"
+                >Security Protocol</a
+              >
+            </li>
+            <li>
+              <a
+                routerLink="/dashboard"
+                class="hover:text-primary transition-colors cursor-pointer"
+                >API Access</a
+              >
+            </li>
+            <li>
+              <a
+                routerLink="/dashboard"
+                class="hover:text-primary transition-colors cursor-pointer"
+                >Token Rewards</a
+              >
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h5 class="font-bold text-slate-900 mb-6">Company</h5>
+          <ul class="space-y-4 text-sm text-slate-500 font-medium">
+            <li>
+              <a
+                routerLink="/about"
+                class="hover:text-primary transition-colors cursor-pointer"
+                >About</a
+              >
+            </li>
+            <li>
+              <a
+                routerLink="/about"
+                class="hover:text-primary transition-colors cursor-pointer"
+                >Privacy</a
+              >
+            </li>
+            <li>
+              <a
+                routerLink="/about"
+                class="hover:text-primary transition-colors cursor-pointer"
+                >Compliance</a
+              >
+            </li>
+            <li>
+              <a
+                routerLink="/contact"
+                class="hover:text-primary transition-colors cursor-pointer"
+                >Contact</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest"
+      >
+        <p>© 2024 TonTin Platform. Engineered for Trust.</p>
+        <div class="flex gap-8">
+          <a routerLink="/about" class="hover:text-primary transition-colors"
+            >Status:
+            <span class="text-emerald-500">All Systems Operational</span></a
+          >
+          <a routerLink="/about" class="hover:text-primary transition-colors"
+            >System Version 4.2.0</a
+          >
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>

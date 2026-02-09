@@ -1,0 +1,28 @@
+// Contact component styles
+:host {
+  display: block;
+}
+
+// Spinner animation for submit button
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+// Custom form field focus styles
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+// Smooth transitions for all interactive elements
+button,
+input,
+textarea {
+  transition: all 0.2s ease-in-out;
+}

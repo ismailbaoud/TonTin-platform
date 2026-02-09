@@ -1,0 +1,11 @@
+// About component styles
+:host {
+  display: block;
+}
+
+.bg-grid-slate-100 {
+  background-image:
+    linear-gradient(to right, rgb(241 245 249 / 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(241 245 249 / 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
