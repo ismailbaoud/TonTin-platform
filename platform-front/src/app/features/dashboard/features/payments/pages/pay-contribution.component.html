@@ -1,0 +1,417 @@
+<!-- Main Content -->
+<main class="flex-grow flex justify-center py-8 px-4 md:px-8">
+  <div class="w-full max-w-[1080px] flex flex-col gap-8">
+    <!-- Page Header -->
+    <div class="flex flex-col gap-2">
+      <h1
+        class="text-text-primary text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]"
+      >
+        Make a Contribution
+      </h1>
+      <p class="text-text-secondary text-base font-normal">
+        Select a circle and fulfill your commitment for this cycle.
+      </p>
+    </div>
+
+    <!-- Main Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Left Column: Dâr Selection & Info -->
+      <div class="lg:col-span-5 flex flex-col gap-6">
+        <!-- Dâr Selection -->
+        <div class="flex flex-col gap-2">
+          <label class="text-text-primary text-base font-medium pb-1">
+            Select Dâr Circle
+          </label>
+          <div class="relative">
+            <select
+              [(ngModel)]="selectedDarId"
+              (change)="onDarChange($event)"
+              class="appearance-none w-full cursor-pointer rounded-lg border border-border-light bg-surface-light text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent h-14 pl-4 pr-10 text-base font-normal shadow-sm"
+            >
+              <option value="family">Family Savings Circle</option>
+              <option value="office" selected>Office Tech Enthusiasts</option>
+              <option value="travel">Summer 2024 Travel</option>
+            </select>
+            <div
+              class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-secondary"
+            >
+              <span class="material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Cycle Info Card -->
+        <div
+          class="rounded-xl bg-surface-light border border-border-light p-5 shadow-sm relative overflow-hidden group"
+        >
+          <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p
+                class="text-text-secondary text-xs uppercase font-bold tracking-wider mb-1"
+              >
+                Current Cycle
+              </p>
+              <h3 class="text-text-primary text-xl font-bold">
+                Cycle #4 of 12
+              </h3>
+            </div>
+            <span
+              class="px-3 py-1 rounded-full bg-primary/10 text-primary-dark text-xs font-bold border border-primary/20"
+            >
+              Active
+            </span>
+          </div>
+
+          <!-- Beneficiary Info -->
+          <div
+            class="flex items-center gap-4 mb-6 p-3 rounded-lg bg-background-light border border-border-light"
+          >
+            <div
+              class="bg-center bg-no-repeat bg-cover rounded-full size-12 border border-border-light"
+              style="
+                background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuDpNEpNPXnbAOh-bUuDv5eqN9zi0fY8meOKwqC5l4VdoX1AuuWBnDPL0U_nDbO5QqPZR7mVJmAe_CyTSXn2B0SW-4MRRg-HOGAAl339zjuvl5u_MeGC-8uTMd68D-X3HgQR3ILK1xG_Rfg4NfrDueWXrLHAb3Ta0Q_p1Nq91clJB4ZcxSdd8WPLbiK6jIvVIuz-zr-2iMfMFBo4nLCNEFRn-bU__Shi5Lfa6zHlXVtK9PgGoSW6Aezra9S1jccxvRNG5o6crwY4jbE&quot;);
+              "
+            ></div>
+            <div class="flex flex-col">
+              <p class="text-text-secondary text-xs">Beneficiary</p>
+              <p class="text-text-primary font-bold">Sarah Jenkins</p>
+            </div>
+            <div class="ml-auto text-right">
+              <p class="text-text-secondary text-xs">Pot Size</p>
+              <p class="text-primary-dark font-bold text-lg">$6,000</p>
+            </div>
+          </div>
+
+          <!-- Cycle Details -->
+          <div class="space-y-3">
+            <div class="flex justify-between text-sm">
+              <span class="text-text-secondary">Due Date</span>
+              <span class="text-text-primary font-medium">Oct 24th, 2023</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-text-secondary">Status</span>
+              <span class="text-amber-500 font-medium flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]"
+                  >schedule</span
+                >
+                Pending
+              </span>
+            </div>
+            <div class="w-full bg-background-light rounded-full h-2 mt-2">
+              <div class="bg-primary h-2 rounded-full" style="width: 33%"></div>
+            </div>
+            <p class="text-xs text-text-secondary text-center mt-1">
+              4 of 12 members have contributed
+            </p>
+          </div>
+        </div>
+
+        <!-- Early Contribution Bonus -->
+        <div
+          class="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 p-4 flex gap-3 items-start"
+        >
+          <span class="material-symbols-outlined text-blue-500 mt-0.5"
+            >info</span
+          >
+          <div>
+            <p class="text-blue-900 dark:text-blue-100 text-sm font-medium">
+              Early Contribution
+            </p>
+            <p class="text-blue-700 dark:text-blue-200 text-xs mt-1">
+              Contributing 3 days before the due date boosts your trust score by
+              +5 points.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Payment Form -->
+      <div class="lg:col-span-7">
+        <div
+          class="rounded-xl bg-surface-light border border-border-light p-6 md:p-8 shadow-md"
+        >
+          <!-- Contribution Amount -->
+          <div class="mb-8">
+            <label class="text-text-primary text-base font-medium pb-2 block">
+              Contribution Amount
+            </label>
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary font-bold text-xl"
+              >
+                $
+              </span>
+              <input
+                [(ngModel)]="contributionAmount"
+                class="w-full rounded-lg border border-border-light bg-background-light text-text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent h-16 pl-10 pr-4 text-2xl font-bold placeholder:text-text-secondary/50"
+                type="number"
+                value="500.00"
+              />
+              <div class="absolute right-4 top-1/2 -translate-y-1/2">
+                <span
+                  class="text-xs font-medium text-primary-dark bg-primary/10 px-2 py-1 rounded border border-primary/20"
+                >
+                  USD
+                </span>
+              </div>
+            </div>
+            <p class="text-xs text-text-secondary mt-2 text-right">
+              Fixed cycle amount
+            </p>
+          </div>
+
+          <!-- Payment Method Selection -->
+          <div class="mb-8">
+            <label class="text-text-primary text-base font-medium pb-3 block">
+              Payment Method
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <!-- TonTin Wallet -->
+              <label class="cursor-pointer relative">
+                <input
+                  [(ngModel)]="selectedPaymentMethod"
+                  value="wallet"
+                  class="peer sr-only"
+                  name="payment_method"
+                  type="radio"
+                  checked
+                />
+                <div
+                  class="rounded-lg border border-border-light bg-background-light p-4 flex flex-col items-center gap-2 hover:border-primary/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:ring-1 peer-checked:ring-primary h-full"
+                >
+                  <span
+                    class="material-symbols-outlined text-3xl text-text-secondary peer-checked:text-primary-dark"
+                  >
+                    account_balance_wallet
+                  </span>
+                  <span class="text-sm font-bold text-text-primary"
+                    >TonTin Wallet</span
+                  >
+                  <span class="text-xs text-text-secondary"
+                    >Bal: $1,250.00</span
+                  >
+                </div>
+                <div
+                  class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 text-primary-dark"
+                >
+                  <span class="material-symbols-outlined text-lg fill-1"
+                    >check_circle</span
+                  >
+                </div>
+              </label>
+
+              <!-- Mobile Money -->
+              <label class="cursor-pointer relative">
+                <input
+                  [(ngModel)]="selectedPaymentMethod"
+                  value="mobile"
+                  class="peer sr-only"
+                  name="payment_method"
+                  type="radio"
+                />
+                <div
+                  class="rounded-lg border border-border-light bg-background-light p-4 flex flex-col items-center gap-2 hover:border-primary/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:ring-1 peer-checked:ring-primary h-full"
+                >
+                  <span
+                    class="material-symbols-outlined text-3xl text-text-secondary peer-checked:text-primary-dark"
+                  >
+                    smartphone
+                  </span>
+                  <span class="text-sm font-bold text-text-primary"
+                    >Mobile Money</span
+                  >
+                  <span class="text-xs text-text-secondary">Instant</span>
+                </div>
+                <div
+                  class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 text-primary-dark"
+                >
+                  <span class="material-symbols-outlined text-lg fill-1"
+                    >check_circle</span
+                  >
+                </div>
+              </label>
+
+              <!-- Bank Transfer -->
+              <label class="cursor-pointer relative">
+                <input
+                  [(ngModel)]="selectedPaymentMethod"
+                  value="bank"
+                  class="peer sr-only"
+                  name="payment_method"
+                  type="radio"
+                />
+                <div
+                  class="rounded-lg border border-border-light bg-background-light p-4 flex flex-col items-center gap-2 hover:border-primary/50 transition-all peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:ring-1 peer-checked:ring-primary h-full"
+                >
+                  <span
+                    class="material-symbols-outlined text-3xl text-text-secondary peer-checked:text-primary-dark"
+                  >
+                    account_balance
+                  </span>
+                  <span class="text-sm font-bold text-text-primary"
+                    >Bank Transfer</span
+                  >
+                  <span class="text-xs text-text-secondary">1-2 Days</span>
+                </div>
+                <div
+                  class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 text-primary-dark"
+                >
+                  <span class="material-symbols-outlined text-lg fill-1"
+                    >check_circle</span
+                  >
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Payment Summary -->
+          <div
+            class="mb-8 border-t border-dashed border-border-light pt-6 space-y-3"
+          >
+            <div
+              class="flex justify-between items-center text-sm text-text-secondary"
+            >
+              <span>Subtotal</span>
+              <span>$500.00</span>
+            </div>
+            <div
+              class="flex justify-between items-center text-sm text-text-secondary"
+            >
+              <span>Platform Fee (0.5%)</span>
+              <span>$2.50</span>
+            </div>
+            <div
+              class="flex justify-between items-center text-text-primary font-bold text-lg pt-2"
+            >
+              <span>Total Payment</span>
+              <span class="text-primary-dark">$502.50</span>
+            </div>
+          </div>
+
+          <!-- Pay Button -->
+          <button
+            (click)="onPayNow()"
+            class="w-full h-14 bg-primary hover:bg-green-400 text-white text-lg font-bold rounded-lg shadow-[0_4px_14px_0_rgba(19,236,91,0.39)] transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 group"
+          >
+            <span>Pay Now</span>
+            <span
+              class="material-symbols-outlined group-hover:translate-x-1 transition-transform"
+            >
+              arrow_forward
+            </span>
+          </button>
+
+          <!-- Security Badge -->
+          <div
+            class="flex items-center justify-center gap-2 mt-4 text-text-secondary text-xs"
+          >
+            <span class="material-symbols-outlined text-sm">lock</span>
+            <span>Secure 256-bit SSL Encrypted Transaction</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="mt-4">
+      <h3 class="text-text-primary text-lg font-bold mb-4">
+        Recent Activity for this Dâr
+      </h3>
+      <div
+        class="bg-surface-light border border-border-light rounded-xl overflow-hidden shadow-sm"
+      >
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr
+                class="bg-background-light border-b border-border-light text-text-secondary text-xs uppercase tracking-wider"
+              >
+                <th class="p-4 font-medium">Date</th>
+                <th class="p-4 font-medium">Cycle</th>
+                <th class="p-4 font-medium">Beneficiary</th>
+                <th class="p-4 font-medium">Status</th>
+                <th class="p-4 font-medium text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody
+              class="text-sm text-text-primary divide-y divide-border-light"
+            >
+              <tr class="hover:bg-background-light transition-colors">
+                <td class="p-4">Sep 24, 2023</td>
+                <td class="p-4">#3 of 12</td>
+                <td class="p-4 flex items-center gap-2">
+                  <div
+                    class="size-6 rounded-full bg-cover"
+                    style="
+                      background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuBbwFqpEHLbUXKa5qxNnBICQ2DB0tDsr2lrTW1Trrdt-QcSk6flrh9pnABdADyOGbnYjw7cWrJTURgPoC9oMvxzfcZ7R6boaRHduIfBuTgSvIoncT6Cwdhhl5I2DBHFhOSnrc5MrcvHgdqJWi_G5_pTTnFL4EZvx20ilF-EUkFCCQWR-Wn1lSQn3bvej5rlnsPbCUyfiWD09uxcSBB2p3F3MH_KCFg65DUOgTEQR7WM-lseOyM8hidQJA4_ihDUQg9wujudD43QOXs&quot;);
+                    "
+                  ></div>
+                  Michael B.
+                </td>
+                <td class="p-4">
+                  <span
+                    class="inline-flex items-center gap-1 text-primary-dark bg-primary/10 px-2 py-0.5 rounded text-xs font-bold border border-primary/20"
+                  >
+                    Completed
+                  </span>
+                </td>
+                <td class="p-4 text-right font-mono">$500.00</td>
+              </tr>
+              <tr class="hover:bg-background-light transition-colors">
+                <td class="p-4">Aug 24, 2023</td>
+                <td class="p-4">#2 of 12</td>
+                <td class="p-4 flex items-center gap-2">
+                  <div
+                    class="size-6 rounded-full bg-cover"
+                    style="
+                      background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuDbP0R0eW4sTV0PfSE--P-W9C7mk47QrxoifaKlBeCDLnexbeDI_5tOQrG61vtiXlcgeHpk-r8_t67eX0wIK8GnTfZHgk2dDn4cN7BVuwDgtDOz1m4F0XYfTqr2Q-V65GFtzfbpCCx_aj1t7r3A7XMJdD-b19LzHNr1y84jJhQR36F1vT0LVkdguyMaKsiL7rj_0LTwlYL3XG3TkaOlj_TR0th2CaBzsvO41N3h5dJWjZBLcynm5mq5qHXLgYCDezX2PUOI8RWibDw&quot;);
+                    "
+                  ></div>
+                  Amara K.
+                </td>
+                <td class="p-4">
+                  <span
+                    class="inline-flex items-center gap-1 text-primary-dark bg-primary/10 px-2 py-0.5 rounded text-xs font-bold border border-primary/20"
+                  >
+                    Completed
+                  </span>
+                </td>
+                <td class="p-4 text-right font-mono">$500.00</td>
+              </tr>
+              <tr class="hover:bg-background-light transition-colors">
+                <td class="p-4">Jul 24, 2023</td>
+                <td class="p-4">#1 of 12</td>
+                <td class="p-4 flex items-center gap-2">
+                  <div
+                    class="size-6 rounded-full bg-cover"
+                    style="
+                      background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuCDbAFe_orMUTMf0gYZD5360B1ZxfW3n5EsuUm8_gsqvf0kJvjn36SU8x9FLfZB80XaXeBgP4ktCNeu1XWFqA1VX4gPtOLQaW8NQebPvfP4puGa3hUJX_ki8RNYJ-f2ESmzGlsAW1Tsv8xnELAPxHzQ0T5aKI2jIT76UgxvDNvGY2T3ymx6caY4uRIKgTzHzFWBOXfPoQJo17AiAZ5A4ZxyTl1X--Ci-M1A8QCmMyude6bzImOyR9v5w7M_8jtwuSllvgu2oBrLQhc&quot;);
+                    "
+                  ></div>
+                  John D.
+                </td>
+                <td class="p-4">
+                  <span
+                    class="inline-flex items-center gap-1 text-primary-dark bg-primary/10 px-2 py-0.5 rounded text-xs font-bold border border-primary/20"
+                  >
+                    Completed
+                  </span>
+                </td>
+                <td class="p-4 text-right font-mono">$500.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="p-3 text-center border-t border-border-light">
+          <button
+            (click)="onViewAllHistory()"
+            class="text-sm text-text-secondary hover:text-text-primary font-medium transition-colors"
+          >
+            View All History
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

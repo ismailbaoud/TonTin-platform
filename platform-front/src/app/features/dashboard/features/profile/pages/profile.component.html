@@ -1,0 +1,340 @@
+<div class="bg-gray-50 dark:bg-gray-950 p-6 lg:p-10">
+  <div class="w-full max-w-7xl mx-auto">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Sidebar Navigation -->
+      <aside class="w-full lg:w-72 flex-shrink-0 space-y-6">
+        <!-- User Summary Card -->
+        <div class="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+          <div class="flex flex-col items-center text-center gap-3">
+            <div class="relative">
+              <div
+                *ngIf="userProfile.avatar"
+                class="size-20 rounded-full bg-cover bg-center border-4 border-gray-50 dark:border-gray-950 shadow-sm"
+                [style.background-image]="'url(' + userProfile.avatar + ')'"
+              ></div>
+              <div
+                *ngIf="!userProfile.avatar"
+                class="size-20 rounded-full bg-primary/10 border-4 border-gray-50 dark:border-gray-950 shadow-sm flex items-center justify-center"
+              >
+                <span class="text-2xl font-bold text-primary">{{ initials }}</span>
+              </div>
+              <div class="absolute bottom-0 right-0 bg-primary text-gray-900 rounded-full p-1 border-2 border-gray-50 dark:border-gray-950">
+                <span class="material-symbols-outlined text-sm font-bold">check</span>
+              </div>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ fullName }}</h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ userProfile.email }}</p>
+            </div>
+            <!-- Trust Points Badge -->
+            <div class="mt-2 flex items-center gap-2 bg-primary/10 dark:bg-primary/20 px-4 py-2 rounded-full border border-primary/20">
+              <span class="material-symbols-outlined text-primary text-xl">verified_user</span>
+              <div class="flex flex-col items-start">
+                <span class="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-wider font-bold">Trust Points</span>
+                <span class="text-primary font-black leading-none text-lg">{{ userProfile.trustPoints }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex flex-col gap-2">
+          <a
+            (click)="setTab('profile')"
+            [ngClass]="{
+              'bg-primary text-gray-900 font-medium shadow-sm ring-1 ring-primary/50': activeTab === 'profile',
+              'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium': activeTab !== 'profile'
+            }"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined" [class.fill-1]="activeTab === 'profile'">person</span>
+            Edit Profile
+          </a>
+          <a
+            (click)="setTab('security')"
+            [ngClass]="{
+              'bg-primary text-gray-900 font-medium shadow-sm ring-1 ring-primary/50': activeTab === 'security',
+              'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium': activeTab !== 'security'
+            }"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined">lock</span>
+            Security
+          </a>
+          <a
+            (click)="setTab('notifications')"
+            [ngClass]="{
+              'bg-primary text-gray-900 font-medium shadow-sm ring-1 ring-primary/50': activeTab === 'notifications',
+              'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium': activeTab !== 'notifications'
+            }"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined">notifications</span>
+            Notifications
+          </a>
+          <a
+            (click)="setTab('appearance')"
+            [ngClass]="{
+              'bg-primary text-gray-900 font-medium shadow-sm ring-1 ring-primary/50': activeTab === 'appearance',
+              'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium': activeTab !== 'appearance'
+            }"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined">palette</span>
+            Appearance
+          </a>
+          <a
+            (click)="onSignOut()"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium mt-4 cursor-pointer"
+          >
+            <span class="material-symbols-outlined">logout</span>
+            Sign Out
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main Content Area -->
+      <div class="flex-1 space-y-6">
+        <!-- Page Header -->
+        <div class="flex flex-col gap-1 pb-4 border-b border-gray-200 dark:border-gray-800">
+          <h1 class="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Profile Settings</h1>
+          <p class="text-gray-600 dark:text-gray-400">Manage your account details and preferences to keep your account secure.</p>
+        </div>
+
+        <!-- Personal Information Form -->
+        <section
+          *ngIf="activeTab === 'profile'"
+          class="bg-white dark:bg-gray-900 rounded-xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-sm"
+        >
+          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">badge</span>
+            Personal Information
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Avatar Upload -->
+            <div class="col-span-1 md:col-span-2 flex items-center gap-6 mb-2">
+              <div
+                *ngIf="userProfile.avatar"
+                class="size-24 rounded-full bg-cover bg-center border border-gray-200 dark:border-gray-700"
+                [style.background-image]="'url(' + userProfile.avatar + ')'"
+              ></div>
+              <div
+                *ngIf="!userProfile.avatar"
+                class="size-24 rounded-full bg-primary/10 border border-gray-200 dark:border-gray-700 flex items-center justify-center"
+              >
+                <span class="text-3xl font-bold text-primary">{{ initials }}</span>
+              </div>
+              <div class="flex flex-col gap-2">
+                <h3 class="font-medium text-gray-900 dark:text-white">Profile Picture</h3>
+                <div class="flex gap-3">
+                  <button
+                    (click)="onChangePhoto()"
+                    class="px-4 py-2 bg-primary/10 hover:bg-primary/20 text-green-700 dark:text-primary rounded-lg text-sm font-semibold transition-colors"
+                  >
+                    Change Photo
+                  </button>
+                  <button
+                    (click)="onRemoveAvatar()"
+                    *ngIf="userProfile.avatar"
+                    class="px-4 py-2 text-gray-600 hover:text-red-500 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">First Name</label>
+              <input
+                [(ngModel)]="userProfile.firstName"
+                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
+                type="text"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Last Name</label>
+              <input
+                [(ngModel)]="userProfile.lastName"
+                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
+                type="text"
+              />
+            </div>
+
+            <div class="space-y-1.5 md:col-span-2">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Email Address</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400">mail</span>
+                <input
+                  [(ngModel)]="userProfile.email"
+                  class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
+                  type="email"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-1.5 md:col-span-2">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Phone Number</label>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400">call</span>
+                <input
+                  [(ngModel)]="userProfile.phone"
+                  class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
+                  type="tel"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Security Section -->
+        <section
+          *ngIf="activeTab === 'security'"
+          class="bg-white dark:bg-gray-900 rounded-xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-sm"
+        >
+          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">lock_reset</span>
+            Password & Security
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-1.5 md:col-span-2">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Current Password</label>
+              <input
+                [(ngModel)]="securitySettings.currentPassword"
+                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
+                placeholder="••••••••"
+                type="password"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">New Password</label>
+              <input
+                [(ngModel)]="securitySettings.newPassword"
+                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
+                type="password"
+                placeholder="At least 8 characters"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Confirm New Password</label>
+              <input
+                [(ngModel)]="securitySettings.confirmPassword"
+                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
+                type="password"
+                placeholder="Re-enter new password"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Notifications Settings -->
+        <section
+          *ngIf="activeTab === 'notifications'"
+          class="bg-white dark:bg-gray-900 rounded-xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-sm"
+        >
+          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">notifications_active</span>
+            Notification Preferences
+          </h2>
+          <div class="space-y-6">
+            <!-- Toggle Item -->
+            <div class="flex items-center justify-between">
+              <div class="flex flex-col">
+                <span class="font-semibold text-gray-900 dark:text-white">Email Notifications</span>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Receive monthly Dâr summaries and updates.</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  [(ngModel)]="appSettings.emailNotifications"
+                  type="checkbox"
+                  class="sr-only peer"
+                />
+                <div class="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+            <hr class="border-gray-200 dark:border-gray-800" />
+
+            <!-- Toggle Item -->
+            <div class="flex items-center justify-between">
+              <div class="flex flex-col">
+                <span class="font-semibold text-gray-900 dark:text-white">New Dâr Invites</span>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Allow others to invite you to new savings circles.</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  [(ngModel)]="appSettings.darInvites"
+                  type="checkbox"
+                  class="sr-only peer"
+                />
+                <div class="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Appearance Settings -->
+        <section
+          *ngIf="activeTab === 'appearance'"
+          class="bg-white dark:bg-gray-900 rounded-xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-sm"
+        >
+          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">palette</span>
+            Appearance Settings
+          </h2>
+          <div class="space-y-6">
+            <!-- Toggle Item (Dark Mode) -->
+            <div class="flex items-center justify-between">
+              <div class="flex flex-col">
+                <span class="font-semibold text-gray-900 dark:text-white">Dark Mode</span>
+                <span class="text-sm text-gray-600 dark:text-gray-400">Adjust the appearance of the application.</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  [(ngModel)]="appSettings.darkMode"
+                  (change)="toggleDarkMode()"
+                  type="checkbox"
+                  class="sr-only peer"
+                />
+                <div class="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Action Bar -->
+        <div class="sticky bottom-4 z-40 bg-white dark:bg-gray-900 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 flex items-center justify-between md:justify-end gap-4">
+          <span class="text-sm text-gray-600 dark:text-gray-400 hidden md:block mr-auto">{{ getLastSavedText() }}</span>
+          <button
+            (click)="onCancel()"
+            [disabled]="isLoading"
+            class="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="onSaveChanges()"
+            [disabled]="isLoading"
+            class="px-6 py-2.5 rounded-lg bg-primary hover:bg-green-400 text-gray-900 font-bold shadow-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <span *ngIf="isLoading" class="material-symbols-outlined animate-spin">refresh</span>
+            <span>{{ isLoading ? 'Saving...' : 'Save Changes' }}</span>
+          </button>
+        </div>
+
+        <!-- Destructive Area -->
+        <div class="pt-8">
+          <button
+            (click)="onDeleteAccount()"
+            class="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+          >
+            <span class="material-symbols-outlined text-lg">delete</span>
+            Delete Account
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,255 @@
+// Trust Rankings Component Styles
+
+:host {
+  display: block;
+}
+
+// Podium glow effect
+.podium-glow {
+  box-shadow: 0 0 40px -10px rgba(19, 236, 91, 0.3);
+}
+
+// Crown bounce animation
+.crown-bounce {
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+// Material Icons filled variant
+.material-symbols-outlined.fill-1 {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+// Rank badge animations
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.rank-badge {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: shine 3s infinite;
+  }
+}
+
+// Avatar hover effects
+.avatar-hover {
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Leaderboard row animation
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.leaderboard-row {
+  animation: slideIn 0.3s ease-out;
+}
+
+// Trend indicator animations
+@keyframes pulseUp {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.trend-up {
+  animation: pulseUp 1.5s ease-in-out infinite;
+}
+
+// Gold medal shine effect
+@keyframes goldShine {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+}
+
+.gold-shine {
+  animation: goldShine 2s ease-in-out infinite;
+}
+
+// Scrollbar customization
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+// Dark mode scrollbar
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+// Button ripple effect
+button {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+  }
+
+  &:active::after {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+// Glow effect for top 3
+.top-user-glow {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(
+      135deg,
+      rgba(19, 236, 91, 0.5),
+      rgba(19, 236, 91, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+// Responsive utilities
+@media (max-width: 768px) {
+  .leaderboard-row {
+    padding: 12px;
+  }
+
+  .podium-glow {
+    box-shadow: 0 0 20px -5px rgba(19, 236, 91, 0.2);
+  }
+}
+
+// Smooth transitions
+* {
+  transition-property: background-color, border-color, color, fill, stroke,
+    box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+// Empty state animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.empty-state {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+// Loading skeleton
+@keyframes skeleton {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0px,
+    #f8f8f8 40px,
+    #f0f0f0 80px
+  );
+  background-size: 200px 100%;
+  animation: skeleton 1.2s ease-in-out infinite;
+}

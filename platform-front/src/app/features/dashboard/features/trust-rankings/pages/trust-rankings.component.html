@@ -1,0 +1,199 @@
+<div class="bg-gray-50 dark:bg-gray-950 min-h-screen flex flex-col pb-32">
+  <!-- Main Content -->
+  <main class="flex-1 flex justify-center w-full px-4 md:px-6 py-6">
+    <div class="flex flex-col max-w-[960px] w-full gap-6">
+      <!-- Page Heading -->
+      <div class="flex flex-wrap justify-between items-end gap-4">
+        <div class="flex flex-col gap-2">
+          <h1 class="text-gray-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Trust Rankings</h1>
+          <p class="text-gray-600 dark:text-gray-400 text-base font-normal leading-normal max-w-lg">
+            Earn points by contributing to your Dârs on time to climb the leaderboard and unlock higher loan limits.
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls: Search & Filter -->
+      <div class="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-gray-900 p-2 rounded-xl border border-gray-200 dark:border-gray-800">
+        <!-- Search Bar -->
+        <div class="w-full md:w-auto md:min-w-[320px]">
+          <label class="flex w-full items-center rounded-lg bg-gray-100 dark:bg-gray-800 h-10 md:h-12 focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+            <div class="flex items-center justify-center pl-4 text-gray-500 dark:text-gray-400">
+              <span class="material-symbols-outlined">search</span>
+            </div>
+            <input
+              [(ngModel)]="searchQuery"
+              (input)="onSearch($event)"
+              class="w-full bg-transparent border-none text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-0 px-3 text-sm"
+              placeholder="Find a user by name or handle..."
+            />
+          </label>
+        </div>
+
+        <!-- Segmented Buttons -->
+        <div class="w-full md:w-auto">
+          <div class="flex h-10 md:h-12 w-full items-center rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+            <label class="cursor-pointer h-full flex-1 md:w-24 flex items-center justify-center rounded-md transition-all text-gray-600 dark:text-gray-400 text-sm font-medium" [ngClass]="{'bg-white dark:bg-gray-950 text-primary shadow-sm': selectedPeriod === 'weekly'}">
+              <span class="truncate">Weekly</span>
+              <input (change)="setPeriod('weekly')" [checked]="selectedPeriod === 'weekly'" class="hidden" name="filter-period" type="radio" value="weekly" />
+            </label>
+            <label class="cursor-pointer h-full flex-1 md:w-24 flex items-center justify-center rounded-md transition-all text-gray-600 dark:text-gray-400 text-sm font-medium" [ngClass]="{'bg-white dark:bg-gray-950 text-primary shadow-sm': selectedPeriod === 'monthly'}">
+              <span class="truncate">Monthly</span>
+              <input (change)="setPeriod('monthly')" [checked]="selectedPeriod === 'monthly'" class="hidden" name="filter-period" type="radio" value="monthly" />
+            </label>
+            <label class="cursor-pointer h-full flex-1 md:w-24 flex items-center justify-center rounded-md transition-all text-gray-600 dark:text-gray-400 text-sm font-medium" [ngClass]="{'bg-white dark:bg-gray-950 text-primary shadow-sm': selectedPeriod === 'alltime'}">
+              <span class="truncate">All-Time</span>
+              <input (change)="setPeriod('alltime')" [checked]="selectedPeriod === 'alltime'" class="hidden" name="filter-period" type="radio" value="alltime" />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 3 Podium -->
+      <div class="relative py-8 px-4 mb-4">
+        <!-- Decorative background glow -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-primary/10 blur-[100px] rounded-full pointer-events-none"></div>
+
+        <div class="flex items-end justify-center gap-4 md:gap-12 text-center relative z-10">
+          <!-- Rank 2 -->
+          <div *ngIf="topThree[1]" class="flex flex-col items-center gap-3 w-1/3 max-w-[140px] order-1 md:order-1">
+            <div class="relative group cursor-pointer" (click)="viewUserProfile(topThree[1].id)">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">#2</div>
+              <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-slate-400 p-1 bg-white dark:bg-gray-900 transition-transform group-hover:-translate-y-1 shadow-lg">
+                <div class="w-full h-full rounded-full bg-cover bg-center" [style.background-image]="'url(' + topThree[1].avatar + ')'"></div>
+              </div>
+            </div>
+            <div>
+              <p class="text-gray-900 dark:text-white text-sm md:text-base font-bold leading-tight truncate w-full">{{ topThree[1].name }}</p>
+              <p class="text-gray-600 dark:text-gray-400 text-xs md:text-sm font-medium">{{ formatPoints(topThree[1].points) }} pts</p>
+              <div *ngIf="topThree[1].trend !== 0" class="flex items-center justify-center gap-0.5 text-primary text-xs mt-1">
+                <span class="material-symbols-outlined text-[14px]">{{ topThree[1].trend > 0 ? 'arrow_drop_up' : 'arrow_drop_down' }}</span>
+                <span>{{ Math.abs(topThree[1].trend) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rank 1 -->
+          <div *ngIf="topThree[0]" class="flex flex-col items-center gap-3 w-1/3 max-w-[160px] order-2 -mt-8 md:-mt-12 podium-glow rounded-full p-4">
+            <div class="relative group cursor-pointer" (click)="viewUserProfile(topThree[0].id)">
+              <div class="absolute -top-8 left-1/2 -translate-x-1/2 text-[#FFD700] crown-bounce">
+                <span class="material-symbols-outlined text-4xl fill-1">crown</span>
+              </div>
+              <div class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-[#FFD700] p-1 bg-white dark:bg-gray-900 shadow-[0_0_20px_rgba(255,215,0,0.3)] transition-transform group-hover:-translate-y-2">
+                <div class="w-full h-full rounded-full bg-cover bg-center" [style.background-image]="'url(' + topThree[0].avatar + ')'"></div>
+              </div>
+              <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-primary text-gray-900 font-black text-sm px-3 py-1 rounded-full shadow-lg">#1</div>
+            </div>
+            <div class="mt-2">
+              <p class="text-gray-900 dark:text-white text-base md:text-xl font-bold leading-tight truncate">{{ topThree[0].name }}</p>
+              <p class="text-primary text-sm md:text-base font-bold">{{ formatPoints(topThree[0].points) }} pts</p>
+            </div>
+          </div>
+
+          <!-- Rank 3 -->
+          <div *ngIf="topThree[2]" class="flex flex-col items-center gap-3 w-1/3 max-w-[140px] order-3">
+            <div class="relative group cursor-pointer" (click)="viewUserProfile(topThree[2].id)">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">#3</div>
+              <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-[#CD7F32] p-1 bg-white dark:bg-gray-900 transition-transform group-hover:-translate-y-1 shadow-lg">
+                <div class="w-full h-full rounded-full bg-cover bg-center" [style.background-image]="'url(' + topThree[2].avatar + ')'"></div>
+              </div>
+            </div>
+            <div>
+              <p class="text-gray-900 dark:text-white text-sm md:text-base font-bold leading-tight truncate w-full">{{ topThree[2].name }}</p>
+              <p class="text-gray-600 dark:text-gray-400 text-xs md:text-sm font-medium">{{ formatPoints(topThree[2].points) }} pts</p>
+              <div *ngIf="topThree[2].trend !== 0" class="flex items-center justify-center gap-0.5 text-primary text-xs mt-1">
+                <span class="material-symbols-outlined text-[14px]">{{ topThree[2].trend > 0 ? 'arrow_drop_up' : 'arrow_drop_down' }}</span>
+                <span>{{ Math.abs(topThree[2].trend) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaderboard List Header -->
+      <div class="hidden md:grid grid-cols-12 gap-4 px-6 text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+        <div class="col-span-1 text-center">Rank</div>
+        <div class="col-span-6">User</div>
+        <div class="col-span-3 text-right">Trust Points</div>
+        <div class="col-span-2 text-right">Trend</div>
+      </div>
+
+      <!-- Leaderboard List Items -->
+      <div class="flex flex-col gap-3">
+        <div
+          *ngFor="let user of remainingRankings"
+          (click)="viewUserProfile(user.id)"
+          class="group flex flex-col md:grid md:grid-cols-12 gap-4 items-center bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-xl p-4 border border-gray-200 dark:border-gray-800 cursor-pointer"
+        >
+          <!-- Rank -->
+          <div class="w-full md:col-span-1 flex md:justify-center items-center gap-3 md:gap-0">
+            <span class="md:hidden text-gray-600 dark:text-gray-400 text-sm font-medium">Rank</span>
+            <span class="text-gray-900 dark:text-white font-bold text-lg">#{{ user.rank }}</span>
+          </div>
+
+          <!-- User Info -->
+          <div class="w-full md:col-span-6 flex items-center gap-4">
+            <div class="size-10 md:size-12 rounded-full bg-cover bg-center shrink-0 border-2" [ngClass]="getRankBadgeColor(user.rank)" [style.background-image]="'url(' + user.avatar + ')'"></div>
+            <div class="flex flex-col">
+              <span class="text-gray-900 dark:text-white font-bold text-base">{{ user.name }}</span>
+              <span class="text-gray-600 dark:text-gray-400 text-xs">{{ user.username }}</span>
+            </div>
+          </div>
+
+          <!-- Points -->
+          <div class="w-full md:col-span-3 flex justify-between md:justify-end items-center">
+            <span class="md:hidden text-gray-600 dark:text-gray-400 text-sm">Points</span>
+            <div class="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-gray-900 dark:text-gray-400 font-bold text-sm border border-gray-200 dark:border-gray-700 group-hover:border-primary/20 group-hover:text-primary transition-colors">
+              {{ formatPoints(user.points) }} pts
+            </div>
+          </div>
+
+          <!-- Trend -->
+          <div class="w-full md:col-span-2 flex justify-between md:justify-end items-center font-medium text-sm" [ngClass]="getTrendColor(user.trendDirection)">
+            <span class="md:hidden text-gray-600 dark:text-gray-400 text-sm">Weekly Trend</span>
+            <div class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-lg">{{ getTrendIcon(user.trendDirection) }}</span>
+              <span>{{ user.trend === 0 ? '0' : (user.trend > 0 ? '+' : '') + user.trend }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load More Button -->
+      <div class="flex justify-center mt-4">
+        <button (click)="loadMoreRankings()" class="text-gray-600 dark:text-gray-400 hover:text-primary text-sm font-medium flex items-center gap-2 transition-colors">
+          <span>Show more rankings</span>
+          <span class="material-symbols-outlined text-lg">expand_more</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Sticky User Stats Footer -->
+  <div class="fixed bottom-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-primary/20 p-4 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
+    <div class="max-w-[960px] mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3 md:gap-6">
+        <div class="flex flex-col">
+          <span class="text-xs text-gray-600 dark:text-gray-400 font-medium uppercase tracking-wider">Your Rank</span>
+          <div class="flex items-baseline gap-1">
+            <span class="text-2xl font-black text-gray-900 dark:text-white">#{{ currentUserRank }}</span>
+            <span class="text-primary text-xs font-bold flex items-center">
+              <span class="material-symbols-outlined text-[14px]">arrow_drop_up</span> {{ currentUserTrend }}
+            </span>
+          </div>
+        </div>
+        <div class="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
+        <div class="flex items-center gap-3">
+          <div class="size-10 rounded-full bg-cover bg-center border border-gray-200 dark:border-gray-700 hidden md:block" [style.background-image]="'url(' + currentUserAvatar + ')'"></div>
+          <div class="flex flex-col">
+            <span class="text-sm font-bold text-gray-900 dark:text-white">You</span>
+            <span class="text-xs text-gray-600 dark:text-gray-400">{{ formatPoints(currentUserPoints) }} pts</span>
+          </div>
+        </div>
+      </div>
+      <button (click)="viewMyStats()" class="bg-primary hover:bg-green-400 text-gray-900 font-bold text-sm px-5 py-2.5 rounded-lg transition-colors shadow-lg flex items-center gap-2">
+        <span>View My Stats</span>
+        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,218 @@
+<div class="bg-gray-50 dark:bg-gray-950 min-h-screen flex flex-col">
+  <!-- Main Content -->
+  <main class="flex-1 w-full max-w-[1200px] mx-auto px-4 py-8 md:px-10">
+    <!-- Page Heading -->
+    <div class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Notifications</h1>
+      <p class="text-gray-600 dark:text-gray-400 text-base md:text-lg">Stay updated on your Dârs circles, savings goals, and account activity.</p>
+    </div>
+
+    <!-- Controls & Tabs -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-300 dark:border-gray-700 mb-6 gap-4">
+      <!-- Tabs -->
+      <div class="flex gap-8 overflow-x-auto pb-[1px] -mb-[1px]">
+        <button (click)="setTab('all')" [ngClass]="{'border-primary text-gray-900 dark:text-white font-bold': activeTab === 'all', 'border-transparent text-gray-600 dark:text-gray-400 hover:border-primary/30 hover:text-gray-900 dark:hover:text-white font-medium': activeTab !== 'all'}" class="whitespace-nowrap pb-3 border-b-[3px] text-sm tracking-wide transition-colors">
+          All
+          <span class="ml-1 inline-flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-primary font-bold">{{ totalCount }}</span>
+        </button>
+        <button (click)="setTab('unread')" [ngClass]="{'border-primary text-gray-900 dark:text-white font-bold': activeTab === 'unread', 'border-transparent text-gray-600 dark:text-gray-400 hover:border-primary/30 hover:text-gray-900 dark:hover:text-white font-medium': activeTab !== 'unread'}" class="whitespace-nowrap pb-3 border-b-[3px] text-sm tracking-wide transition-colors">
+          Unread
+          <span *ngIf="unreadCount > 0" class="ml-1 inline-flex items-center justify-center rounded-full bg-primary text-white dark:text-black px-1.5 py-0.5 text-xs font-bold min-w-[1.25rem]">{{ unreadCount }}</span>
+        </button>
+        <button (click)="setTab('action')" [ngClass]="{'border-primary text-gray-900 dark:text-white font-bold': activeTab === 'action', 'border-transparent text-gray-600 dark:text-gray-400 hover:border-primary/30 hover:text-gray-900 dark:hover:text-white font-medium': activeTab !== 'action'}" class="whitespace-nowrap pb-3 border-b-[3px] text-sm tracking-wide transition-colors">
+          Action Required
+          <span *ngIf="actionRequiredCount > 0" class="ml-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white px-1.5 py-0.5 text-xs font-bold min-w-[1.25rem]">{{ actionRequiredCount }}</span>
+        </button>
+        <button (click)="setTab('archived')" [ngClass]="{'border-primary text-gray-900 dark:text-white font-bold': activeTab === 'archived', 'border-transparent text-gray-600 dark:text-gray-400 hover:border-primary/30 hover:text-gray-900 dark:hover:text-white font-medium': activeTab !== 'archived'}" class="whitespace-nowrap pb-3 border-b-[3px] text-sm tracking-wide transition-colors">
+          Archived
+        </button>
+      </div>
+
+      <!-- Bulk Actions -->
+      <div class="flex items-center gap-2 pb-2 md:pb-0">
+        <button (click)="markAllAsRead()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <span class="material-symbols-outlined text-[18px]">done_all</span>
+          <span class="hidden sm:inline">Mark all read</span>
+        </button>
+        <button (click)="openNotificationSettings()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <span class="material-symbols-outlined text-[18px]">settings</span>
+          <span class="hidden sm:inline">Settings</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredNotifications.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
+      <div class="size-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-gray-400 text-[40px]">notifications_off</span>
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No notifications</h3>
+      <p class="text-gray-600 dark:text-gray-400">You're all caught up! Check back later for updates.</p>
+    </div>
+
+    <!-- Notification List -->
+    <div *ngIf="filteredNotifications.length > 0" class="flex flex-col gap-4">
+      <!-- Today Section -->
+      <ng-container *ngIf="notificationsByCategory.today.length > 0">
+        <div class="flex items-center gap-4 py-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Today</span>
+          <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+        </div>
+
+        <div *ngFor="let notification of notificationsByCategory.today" (click)="onNotificationClick(notification)" [ngClass]="{
+          'bg-white dark:bg-gray-900 border-l-primary': !notification.isRead,
+          'bg-white/60 dark:bg-gray-900/60 hover:bg-white dark:hover:bg-gray-900': notification.isRead
+        }" class="group relative flex flex-col sm:flex-row gap-4 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 border-l-4 hover:shadow-md transition-all cursor-pointer">
+          <!-- Unread indicator (mobile) -->
+          <div *ngIf="!notification.isRead" class="absolute right-4 top-4 sm:hidden">
+            <div class="size-2 rounded-full bg-primary"></div>
+          </div>
+
+          <!-- Content -->
+          <div class="flex items-start gap-4 flex-1">
+            <!-- Icon -->
+            <div [ngClass]="getIconBackgroundClass(notification)" class="flex items-center justify-center rounded-full shrink-0 size-12" [class]="notification.iconColor">
+              <span class="material-symbols-outlined text-[24px]">{{ notification.icon }}</span>
+            </div>
+
+            <!-- Text Content -->
+            <div class="flex flex-col justify-center gap-1">
+              <div class="flex items-center gap-2">
+                <p class="text-gray-900 dark:text-white text-base font-bold leading-tight">{{ notification.title }}</p>
+                <span *ngIf="!notification.isRead" class="hidden sm:block size-2 rounded-full bg-primary animate-pulse"></span>
+              </div>
+              <p [innerHTML]="notification.message" class="text-gray-600 dark:text-gray-400 text-sm leading-normal"></p>
+              <p class="text-xs text-gray-500 dark:text-gray-500 font-medium mt-1">{{ getRelativeTime(notification.timestamp) }}</p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div *ngIf="notification.actionButton || notification.secondaryButton" class="flex items-center sm:self-center shrink-0 pt-2 sm:pt-0 pl-[64px] sm:pl-0" [ngClass]="{'gap-3': notification.secondaryButton}">
+            <button *ngIf="notification.secondaryButton" (click)="onActionButtonClick($event, notification, 'secondary')" class="text-gray-600 dark:text-gray-400 hover:text-red-500 text-sm font-medium transition-colors">
+              {{ notification.secondaryButton.label }}
+            </button>
+            <button *ngIf="notification.actionButton" (click)="onActionButtonClick($event, notification, 'primary')" [ngClass]="{
+              'bg-primary hover:bg-green-400 text-black shadow-sm': notification.type === 'action',
+              'bg-transparent border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-white': notification.type !== 'action'
+            }" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors w-fit">
+              {{ notification.actionButton.label }}
+            </button>
+          </div>
+
+          <!-- More Options Button -->
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
+            <button (click)="$event.stopPropagation(); deleteNotification(notification.id)" class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+              <span class="material-symbols-outlined text-[20px]">more_horiz</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Yesterday Section -->
+      <ng-container *ngIf="notificationsByCategory.yesterday.length > 0">
+        <div class="flex items-center gap-4 py-2 mt-4">
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Yesterday</span>
+          <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+        </div>
+
+        <div *ngFor="let notification of notificationsByCategory.yesterday" (click)="onNotificationClick(notification)" [ngClass]="{
+          'bg-white dark:bg-gray-900 border-l-primary': !notification.isRead,
+          'bg-white/60 dark:bg-gray-900/60 hover:bg-white dark:hover:bg-gray-900': notification.isRead
+        }" class="group relative flex flex-col sm:flex-row gap-4 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 border-l-4 hover:shadow-md transition-all cursor-pointer">
+          <!-- Unread indicator (mobile) -->
+          <div *ngIf="!notification.isRead" class="absolute right-4 top-4 sm:hidden">
+            <div class="size-2 rounded-full bg-primary"></div>
+          </div>
+
+          <!-- Content -->
+          <div class="flex items-start gap-4 flex-1">
+            <!-- Icon -->
+            <div [ngClass]="getIconBackgroundClass(notification)" class="flex items-center justify-center rounded-full shrink-0 size-12" [class]="notification.iconColor">
+              <span class="material-symbols-outlined text-[24px]">{{ notification.icon }}</span>
+            </div>
+
+            <!-- Text Content -->
+            <div class="flex flex-col justify-center gap-1">
+              <div class="flex items-center gap-2">
+                <p class="text-gray-900 dark:text-white text-base font-bold leading-tight">{{ notification.title }}</p>
+                <span *ngIf="!notification.isRead" class="hidden sm:block size-2 rounded-full bg-primary"></span>
+              </div>
+              <p [innerHTML]="notification.message" class="text-gray-600 dark:text-gray-400 text-sm leading-normal"></p>
+              <p class="text-xs text-gray-500 dark:text-gray-500 font-medium mt-1">{{ getRelativeTime(notification.timestamp) }}</p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div *ngIf="notification.actionButton || notification.secondaryButton" class="flex items-center sm:self-center shrink-0 pt-2 sm:pt-0 pl-[64px] sm:pl-0" [ngClass]="{'gap-3': notification.secondaryButton}">
+            <button *ngIf="notification.secondaryButton" (click)="onActionButtonClick($event, notification, 'secondary')" class="text-gray-600 dark:text-gray-400 hover:text-red-500 text-sm font-medium transition-colors">
+              {{ notification.secondaryButton.label }}
+            </button>
+            <button *ngIf="notification.actionButton" (click)="onActionButtonClick($event, notification, 'primary')" [ngClass]="{
+              'bg-primary hover:bg-green-400 text-black shadow-sm': notification.type === 'action',
+              'bg-transparent border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-white': notification.type !== 'action'
+            }" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors w-fit">
+              {{ notification.actionButton.label }}
+            </button>
+          </div>
+
+          <!-- More Options Button -->
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
+            <button (click)="$event.stopPropagation(); deleteNotification(notification.id)" class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+              <span class="material-symbols-outlined text-[20px]">more_horiz</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Older Section -->
+      <ng-container *ngIf="notificationsByCategory.older.length > 0">
+        <div class="flex items-center gap-4 py-2 mt-4">
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Older</span>
+          <div class="h-px flex-1 bg-gray-200 dark:bg-gray-700"></div>
+        </div>
+
+        <div *ngFor="let notification of notificationsByCategory.older" (click)="onNotificationClick(notification)" [ngClass]="{
+          'bg-white dark:bg-gray-900 border-l-primary': !notification.isRead,
+          'bg-white/60 dark:bg-gray-900/60 hover:bg-white dark:hover:bg-gray-900': notification.isRead
+        }" class="group relative flex flex-col sm:flex-row gap-4 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 border-l-4 hover:shadow-md transition-all cursor-pointer">
+          <!-- Content -->
+          <div class="flex items-start gap-4 flex-1">
+            <!-- Icon -->
+            <div [ngClass]="getIconBackgroundClass(notification)" class="flex items-center justify-center rounded-full shrink-0 size-12" [class]="notification.iconColor">
+              <span class="material-symbols-outlined text-[24px]">{{ notification.icon }}</span>
+            </div>
+
+            <!-- Text Content -->
+            <div class="flex flex-col justify-center gap-1">
+              <p class="text-gray-900 dark:text-white text-base font-bold leading-tight">{{ notification.title }}</p>
+              <p [innerHTML]="notification.message" class="text-gray-600 dark:text-gray-400 text-sm leading-normal"></p>
+              <p class="text-xs text-gray-500 dark:text-gray-500 font-medium mt-1">{{ getRelativeTime(notification.timestamp) }}</p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div *ngIf="notification.actionButton" class="flex items-center sm:self-center shrink-0 pt-2 sm:pt-0 pl-[64px] sm:pl-0">
+            <button (click)="onActionButtonClick($event, notification, 'primary')" class="bg-transparent border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors w-fit">
+              {{ notification.actionButton.label }}
+            </button>
+          </div>
+
+          <!-- More Options Button -->
+          <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
+            <button (click)="$event.stopPropagation(); deleteNotification(notification.id)" class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+              <span class="material-symbols-outlined text-[20px]">more_horiz</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Load More -->
+    <div *ngIf="filteredNotifications.length > 0" class="mt-8 flex justify-center">
+      <button (click)="loadOlderNotifications()" class="text-gray-600 dark:text-gray-400 hover:text-primary text-sm font-semibold transition-colors flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+        <span class="material-symbols-outlined text-[20px]">expand_more</span>
+        Load older notifications
+      </button>
+    </div>
+  </main>
+</div>

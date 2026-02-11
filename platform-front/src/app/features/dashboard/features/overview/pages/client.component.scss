@@ -1,0 +1,53 @@
+// Client Dashboard Styles
+// Most styling is handled by Tailwind CSS classes in the template
+// This file contains only custom styles that can't be achieved with Tailwind
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+// Custom scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+// Dark mode scrollbar
+:host-context(.dark) ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+:host-context(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+// Smooth transitions
+* {
+  transition-property: background-color, border-color, color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+// Loading spinner animation
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

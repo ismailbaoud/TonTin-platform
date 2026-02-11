@@ -1,0 +1,371 @@
+<div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div class="flex flex-col gap-1">
+      <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+        Overview
+      </h1>
+      <p class="text-slate-600 text-base">
+        Detailed insights into your Dâr circles and personal savings.
+      </p>
+    </div>
+    <button
+      (click)="exportReport()"
+      class="flex items-center justify-center gap-2 bg-slate-900 hover:bg-gray-800 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow-lg"
+    >
+      <span class="material-symbols-outlined text-xl">download</span>
+      <span>Export Report</span>
+    </button>
+  </div>
+
+  <!-- Tabs Section -->
+  <div class="border-b border-slate-200">
+    <div class="flex gap-8">
+      <a
+        (click)="setActiveTab('dar-circles')"
+        [class.text-primary]="activeTab === 'dar-circles'"
+        [class.border-primary]="activeTab === 'dar-circles'"
+        [class.text-slate-600]="activeTab !== 'dar-circles'"
+        [class.border-transparent]="activeTab !== 'dar-circles'"
+        class="relative flex items-center gap-2 pb-4 border-b-2 cursor-pointer hover:text-slate-900 transition-colors"
+      >
+        <span class="material-symbols-outlined">diversity_3</span>
+        <span class="text-sm font-bold tracking-wide">Dâr Circles</span>
+      </a>
+      <a
+        (click)="setActiveTab('personal-savings')"
+        [class.text-primary]="activeTab === 'personal-savings'"
+        [class.border-primary]="activeTab === 'personal-savings'"
+        [class.text-slate-600]="activeTab !== 'personal-savings'"
+        [class.border-transparent]="activeTab !== 'personal-savings'"
+        class="relative flex items-center gap-2 pb-4 border-b-2 cursor-pointer hover:text-slate-900 transition-colors"
+      >
+        <span class="material-symbols-outlined">savings</span>
+        <span class="text-sm font-bold tracking-wide">Personal Savings</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+        Date Range
+      </label>
+      <div class="relative">
+        <select
+          [(ngModel)]="dateRange"
+          class="w-full bg-gray-50 text-slate-900 border border-slate-200 rounded-lg py-2.5 pl-3 pr-10 text-sm focus:ring-primary focus:border-primary appearance-none"
+        >
+          <option>This Month</option>
+          <option>Last Month</option>
+          <option>Last 3 Months</option>
+          <option>This Year</option>
+        </select>
+        <span
+          class="material-symbols-outlined absolute right-3 top-2.5 text-slate-600 pointer-events-none"
+        >
+          calendar_month
+        </span>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+        Dâr Group
+      </label>
+      <div class="relative">
+        <select
+          [(ngModel)]="selectedDar"
+          class="w-full bg-gray-50 text-slate-900 border border-slate-200 rounded-lg py-2.5 pl-3 pr-10 text-sm focus:ring-primary focus:border-primary appearance-none"
+        >
+          <option>All Groups</option>
+          <option>Family Tontine</option>
+          <option>Work Colleagues</option>
+          <option>Neighbors Circle</option>
+        </select>
+        <span
+          class="material-symbols-outlined absolute right-3 top-2.5 text-slate-600 pointer-events-none"
+        >
+          expand_more
+        </span>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+        Status
+      </label>
+      <div class="relative">
+        <select
+          [(ngModel)]="selectedStatus"
+          class="w-full bg-gray-50 text-slate-900 border border-slate-200 rounded-lg py-2.5 pl-3 pr-10 text-sm focus:ring-primary focus:border-primary appearance-none"
+        >
+          <option>All Statuses</option>
+          <option>Completed</option>
+          <option>Pending</option>
+          <option>Overdue</option>
+        </select>
+        <span
+          class="material-symbols-outlined absolute right-3 top-2.5 text-slate-600 pointer-events-none"
+        >
+          filter_list
+        </span>
+      </div>
+    </div>
+
+    <div class="flex items-end">
+      <button
+        (click)="applyFilters()"
+        class="filter-button w-full bg-white hover:bg-gray-50 text-slate-900 font-semibold py-2.5 px-4 rounded-lg transition-colors border border-slate-200 shadow-sm"
+      >
+        Apply Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div
+      *ngFor="let card of statCards"
+      class="stat-card bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4"
+    >
+      <div class="flex justify-between items-start">
+        <div
+          [class]="card.bgColor + ' ' + card.borderColor"
+          class="p-3 rounded-lg border"
+        >
+          <span
+            [class]="card.iconColor"
+            class="material-symbols-outlined text-2xl"
+          >
+            {{ card.icon }}
+          </span>
+        </div>
+        <span
+          [class]="card.badgeBg + ' ' + card.badgeText"
+          class="text-xs font-bold px-2 py-1 rounded-full"
+        >
+          {{ card.badge }}
+        </span>
+      </div>
+      <div>
+        <p class="text-slate-600 text-sm font-medium">{{ card.title }}</p>
+        <h3 class="text-slate-900 text-3xl font-bold mt-1">{{ card.value }}</h3>
+        <p *ngIf="card.subtext" class="text-xs text-slate-500 mt-1">
+          {{ card.subtext }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Contribution History Chart -->
+    <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-slate-900 text-lg font-bold">Contribution History</h3>
+        <button
+          class="text-primary hover:text-emerald-700 text-sm flex items-center gap-1 font-medium"
+        >
+          View Full Report
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </button>
+      </div>
+
+      <!-- Bar Chart -->
+      <div class="w-full h-64 relative flex items-end justify-between px-2 gap-2">
+        <!-- Grid lines -->
+        <div
+          class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50"
+        >
+          <div class="w-full border-t border-gray-100"></div>
+          <div class="w-full border-t border-gray-100"></div>
+          <div class="w-full border-t border-gray-100"></div>
+          <div class="w-full border-t border-gray-100"></div>
+          <div class="w-full border-t border-gray-100"></div>
+        </div>
+
+        <!-- Chart bars -->
+        <div
+          *ngFor="let data of chartData; let i = index"
+          [style.height.%]="data.height"
+          [class.bg-primary]="data.month === 'Jun'"
+          [class.bg-gray-100]="data.month !== 'Jun'"
+          class="chart-bar w-1/12 rounded-t-sm hover:bg-green-200 transition-all cursor-pointer relative group"
+          [class.shadow-lg]="data.month === 'Jun'"
+          [class.shadow-green-100]="data.month === 'Jun'"
+        >
+          <div
+            class="tooltip absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+          >
+            ${{ data.value }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Month labels -->
+      <div class="flex justify-between text-xs text-slate-600 mt-4 px-2">
+        <span *ngFor="let data of chartData" [class.text-primary]="data.month === 'Jun'" [class.font-bold]="data.month === 'Jun'">
+          {{ data.month }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Payment Status Donut Chart -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+      <h3 class="text-slate-900 text-lg font-bold mb-6">Payment Status</h3>
+
+      <!-- Donut Chart -->
+      <div class="flex-1 flex items-center justify-center relative">
+        <div
+          class="donut-chart relative w-48 h-48 rounded-full"
+          style="background: conic-gradient(#13ec5b 0% 65%, #f1f5f9 65% 85%, #fbbf24 85% 100%)"
+        >
+          <div
+            class="absolute inset-4 bg-white rounded-full flex items-center justify-center flex-col shadow-inner"
+          >
+            <span class="text-2xl font-bold text-slate-900">65%</span>
+            <span class="text-xs text-slate-600">On Time</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-col gap-3 mt-6">
+        <div
+          *ngFor="let status of paymentStatus"
+          class="flex justify-between items-center text-sm"
+        >
+          <div class="flex items-center gap-2">
+            <div [class]="status.color" class="w-3 h-3 rounded-full"></div>
+            <span class="text-slate-900">{{ status.label }}</span>
+          </div>
+          <span class="text-slate-600">{{ status.percentage }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Transactions Table -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <!-- Table Header -->
+    <div
+      class="px-6 py-5 border-b border-slate-200 flex justify-between items-center flex-wrap gap-4"
+    >
+      <h3 class="text-slate-900 text-lg font-bold">Recent Transactions</h3>
+      <div class="flex gap-2 no-print">
+        <button
+          (click)="downloadCSV()"
+          class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-gray-50 border border-slate-200 rounded hover:text-slate-900 hover:bg-gray-100 transition-colors"
+        >
+          Download CSV
+        </button>
+        <button
+          (click)="printReport()"
+          class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-gray-50 border border-slate-200 rounded hover:text-slate-900 hover:bg-gray-100 transition-colors"
+        >
+          Print
+        </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50 border-b border-slate-200">
+            <th
+              class="p-4 text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/4"
+            >
+              Dâr Group
+            </th>
+            <th
+              class="p-4 text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/5"
+            >
+              Date
+            </th>
+            <th
+              class="p-4 text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/5"
+            >
+              Type
+            </th>
+            <th
+              class="p-4 text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/5"
+            >
+              Amount
+            </th>
+            <th
+              class="p-4 text-xs font-semibold text-slate-600 uppercase tracking-wider w-1/6"
+            >
+              Status
+            </th>
+            <th class="p-4 text-xs font-semibold text-slate-600 uppercase tracking-wider w-[50px] no-print"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          <tr
+            *ngFor="let transaction of transactions"
+            class="table-row group hover:bg-gray-50 transition-colors"
+          >
+            <td class="p-4">
+              <div class="flex items-center gap-3">
+                <div
+                  [class]="transaction.darColor"
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                >
+                  {{ transaction.darInitials }}
+                </div>
+                <span class="text-slate-900 font-medium">{{ transaction.darName }}</span>
+              </div>
+            </td>
+            <td class="p-4 text-sm text-slate-600">{{ transaction.date }}</td>
+            <td class="p-4 text-sm text-slate-900">{{ transaction.type }}</td>
+            <td class="p-4 text-sm font-bold" [class.text-primary]="isPositiveAmount(transaction.type)" [class.text-slate-900]="!isPositiveAmount(transaction.type)">
+              {{ formatAmount(transaction.amount, transaction.type) }}
+            </td>
+            <td class="p-4">
+              <span
+                [class]="getStatusClass(transaction.status)"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+              >
+                {{ getStatusLabel(transaction.status) }}
+              </span>
+            </td>
+            <td class="p-4 no-print">
+              <button class="text-slate-600 hover:text-slate-900">
+                <span class="material-symbols-outlined text-lg">more_vert</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div
+      class="p-4 border-t border-slate-200 flex justify-between items-center text-sm text-slate-600 no-print"
+    >
+      <p>{{ paginationInfo }}</p>
+      <div class="flex gap-2">
+        <button
+          (click)="previousPage()"
+          [disabled]="!canGoPrevious"
+          class="px-3 py-1 border border-slate-200 rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        <button
+          (click)="nextPage()"
+          [disabled]="!canGoNext"
+          class="px-3 py-1 border border-slate-200 rounded hover:bg-gray-50 transition-colors text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom spacing -->
+  <div class="h-8"></div>
+</div>

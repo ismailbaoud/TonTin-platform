@@ -1,0 +1,664 @@
+<!-- Main Content -->
+<main class="flex-grow flex flex-col py-8 px-4 sm:px-6 lg:px-8">
+  <div class="w-full max-w-7xl mx-auto flex flex-col gap-8">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <div
+        class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
+      ></div>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">
+        Loading Dâr details...
+      </p>
+    </div>
+
+    <!-- Error State -->
+    <div
+      *ngIf="error && !isLoading"
+      class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-100 dark:border-red-900/40 flex items-start gap-4"
+    >
+      <div class="bg-red-100 dark:bg-red-800 p-2 rounded-full shrink-0">
+        <span class="material-symbols-outlined text-red-600 dark:text-red-300"
+          >error</span
+        >
+      </div>
+      <div class="flex-1">
+        <h4 class="text-sm font-bold text-red-900 dark:text-red-100 mb-1">
+          Error
+        </h4>
+        <p class="text-sm text-red-800 dark:text-red-200">{{ error }}</p>
+      </div>
+      <button
+        (click)="error = null; loadDarDetails()"
+        class="text-red-400 hover:text-red-600"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="darDetails && !isLoading" class="flex flex-col gap-6">
+      <!-- Breadcrumbs -->
+      <nav class="flex flex-wrap gap-2 items-center text-sm">
+        <a
+          class="text-primary hover:text-primary/80 font-medium"
+          [routerLink]="['/dashboard/client']"
+          >Home</a
+        >
+        <span class="text-gray-400 font-medium">/</span>
+        <a
+          class="text-primary hover:text-primary/80 font-medium"
+          [routerLink]="['/dashboard/client/my-dars']"
+          >My Dârs</a
+        >
+        <span class="text-gray-400 font-medium">/</span>
+        <span class="text-text-light dark:text-text-dark font-medium">{{
+          darDetails.name
+        }}</span>
+      </nav>
+
+      <!-- Dâr Header Card -->
+      <div
+        class="bg-white dark:bg-[#15281e] rounded-xl shadow-sm border border-border-light dark:border-border-dark p-6"
+      >
+        <div
+          class="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between"
+        >
+          <div class="flex gap-5 w-full">
+            <!-- Dâr Image -->
+            <div class="relative shrink-0">
+              <div
+                class="h-24 w-24 rounded-lg bg-cover bg-center shadow-inner"
+                [style.background-image]="'url(' + darDetails.image + ')'"
+              ></div>
+              <div
+                class="absolute -bottom-2 -right-2 bg-white dark:bg-[#15281e] p-1 rounded-full border border-white dark:border-gray-700"
+              >
+                <div class="bg-primary/10 p-1 rounded-full text-primary">
+                  <span class="material-symbols-outlined text-[20px]"
+                    >savings</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="flex flex-col justify-center gap-1">
+              <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="text-2xl font-bold text-text-light dark:text-white">
+                  {{ darDetails.name }}
+                </h1>
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border"
+                  [ngClass]="{
+                    'bg-primary/10 text-green-700 dark:text-green-400 border-primary/20':
+                      darDetails.status === 'active',
+                    'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-600/20':
+                      darDetails.status === 'pending',
+                    'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border-blue-600/20':
+                      darDetails.status === 'completed',
+                  }"
+                >
+                  {{ darDetails.status | titlecase }}
+                </span>
+              </div>
+              <div
+                class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1"
+              >
+                <span class="material-symbols-outlined text-[18px]"
+                  >person</span
+                >
+                <span
+                  >Organized by
+                  <span class="font-semibold text-text-light dark:text-white">{{
+                    darDetails.organizer
+                  }}</span></span
+                >
+                <span class="mx-1">•</span>
+                <span>Started {{ darDetails.startDate }}</span>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="w-full max-w-xs mt-3">
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-gray-500 dark:text-gray-400">Progress</span>
+                  <span class="font-medium text-text-light dark:text-white"
+                    >{{ darDetails.currentCycle }}/{{
+                      darDetails.totalCycles
+                    }}
+                    Months</span
+                  >
+                </div>
+                <div
+                  class="w-full bg-gray-200 dark:bg-white/10 rounded-full h-2"
+                >
+                  <div
+                    class="bg-primary h-2 rounded-full transition-all"
+                    [style.width.%]="darDetails.progress"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div
+            class="flex w-full md:w-auto flex-row md:flex-col gap-3 shrink-0"
+          >
+            <button
+              (click)="inviteMember()"
+              class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-black shadow-sm hover:bg-green-500 transition-colors"
+            >
+              <span class="material-symbols-outlined text-[20px]"
+                >person_add</span
+              >
+              Invite Member
+            </button>
+            <button
+              (click)="shareLink()"
+              class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-white dark:bg-white/5 border border-border-light dark:border-border-dark px-5 py-2.5 text-sm font-semibold text-text-light dark:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
+            >
+              <span class="material-symbols-outlined text-[20px]">share</span>
+              Share Link
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div
+          class="bg-white dark:bg-[#15281e] rounded-xl p-5 border border-border-light dark:border-border-dark shadow-sm flex items-center gap-4"
+        >
+          <div
+            class="p-3 rounded-lg bg-primary/10 text-primary dark:text-primary"
+          >
+            <span class="material-symbols-outlined">group</span>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Total Members
+            </p>
+            <p
+              class="text-2xl font-bold text-text-light dark:text-white tracking-tight"
+            >
+              {{ darDetails.totalMembers }}
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#15281e] rounded-xl p-5 border border-border-light dark:border-border-dark shadow-sm flex items-center gap-4"
+        >
+          <div
+            class="p-3 rounded-lg bg-primary/10 text-primary dark:text-primary"
+          >
+            <span class="material-symbols-outlined">payments</span>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Monthly Pot
+            </p>
+            <p
+              class="text-2xl font-bold text-text-light dark:text-white tracking-tight"
+            >
+              ${{ darDetails.monthlyPot | number: "1.2-2" }}
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-[#15281e] rounded-xl p-5 border border-border-light dark:border-border-dark shadow-sm flex items-center gap-4"
+        >
+          <div
+            class="p-3 rounded-lg bg-primary/10 text-primary dark:text-primary"
+          >
+            <span class="material-symbols-outlined">calendar_month</span>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Next Payout
+            </p>
+            <p
+              class="text-2xl font-bold text-text-light dark:text-white tracking-tight"
+            >
+              {{ darDetails.nextPayout }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content Layout -->
+      <div class="flex flex-col gap-6">
+        <!-- Tab Navigation -->
+        <div
+          class="border-b border-border-light dark:border-border-dark overflow-x-auto"
+        >
+          <nav aria-label="Tabs" class="-mb-px flex space-x-8">
+            <button
+              (click)="setTab('members')"
+              class="whitespace-nowrap border-b-[3px] py-4 px-1 text-sm font-bold flex items-center gap-2 transition-colors"
+              [ngClass]="{
+                'border-primary text-text-light dark:text-white':
+                  activeTab === 'members',
+                'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200':
+                  activeTab !== 'members',
+              }"
+            >
+              <span class="material-symbols-outlined text-[20px]">groups</span>
+              Members
+              <span
+                class="bg-primary/10 text-green-700 dark:text-green-400 py-0.5 px-2 rounded-full text-xs ml-1"
+                >{{ darDetails.totalMembers }}</span
+              >
+            </button>
+
+            <button
+              (click)="setTab('tours')"
+              class="whitespace-nowrap border-b-[3px] py-4 px-1 text-sm font-medium flex items-center gap-2 transition-colors"
+              [ngClass]="{
+                'border-primary text-text-light dark:text-white':
+                  activeTab === 'tours',
+                'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200':
+                  activeTab !== 'tours',
+              }"
+            >
+              <span class="material-symbols-outlined text-[20px]"
+                >history_edu</span
+              >
+              Tours
+            </button>
+
+            <button
+              (click)="setTab('messages')"
+              class="whitespace-nowrap border-b-[3px] py-4 px-1 text-sm font-medium flex items-center gap-2 transition-colors"
+              [ngClass]="{
+                'border-primary text-text-light dark:text-white':
+                  activeTab === 'messages',
+                'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200':
+                  activeTab !== 'messages',
+              }"
+            >
+              <span class="material-symbols-outlined text-[20px]">chat</span>
+              Messages
+            </button>
+
+            <button
+              (click)="setTab('settings')"
+              class="whitespace-nowrap border-b-[3px] py-4 px-1 text-sm font-medium flex items-center gap-2 transition-colors"
+              [ngClass]="{
+                'border-primary text-text-light dark:text-white':
+                  activeTab === 'settings',
+                'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200':
+                  activeTab !== 'settings',
+              }"
+            >
+              <span class="material-symbols-outlined text-[20px]"
+                >settings</span
+              >
+              Settings
+            </button>
+          </nav>
+        </div>
+
+        <!-- Active Tab Content: Members -->
+        <div
+          *ngIf="activeTab === 'members'"
+          class="bg-white dark:bg-[#15281e] shadow-sm rounded-xl border border-border-light dark:border-border-dark overflow-hidden"
+        >
+          <!-- Toolbar -->
+          <div
+            class="p-5 border-b border-border-light dark:border-border-dark flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          >
+            <h2 class="text-lg font-bold text-text-light dark:text-white">
+              Dâr Participants
+            </h2>
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <span
+                  class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]"
+                  >search</span
+                >
+                <input
+                  class="pl-9 pr-4 py-2 text-sm border border-border-light dark:border-border-dark rounded-lg bg-input-bg-light dark:bg-input-bg-dark text-text-light dark:text-white focus:ring-primary focus:border-primary w-full sm:w-64"
+                  placeholder="Filter members..."
+                  type="text"
+                  [(ngModel)]="searchQuery"
+                  (input)="onSearch($event)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm whitespace-nowrap">
+              <thead
+                class="bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-400 uppercase font-medium text-xs"
+              >
+                <tr>
+                  <th class="px-6 py-4" scope="col">Member</th>
+                  <th class="px-6 py-4" scope="col">Role</th>
+                  <th class="px-6 py-4" scope="col">Turn Date</th>
+                  <th class="px-6 py-4 text-center" scope="col">Status</th>
+                  <th class="px-6 py-4 text-right" scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody
+                class="divide-y divide-border-light dark:divide-border-dark"
+              >
+                <tr
+                  *ngFor="let member of filteredMembers"
+                  class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group"
+                  [ngClass]="{
+                    'bg-primary/5': member.paymentStatus === 'pending',
+                  }"
+                >
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-4">
+                      <div
+                        class="h-10 w-10 rounded-full bg-cover bg-center border border-gray-200 dark:border-gray-700"
+                        [style.background-image]="'url(' + member.avatar + ')'"
+                        [ngClass]="{
+                          'border-2 border-primary':
+                            member.role === 'organizer',
+                        }"
+                      ></div>
+                      <div>
+                        <div class="font-bold text-text-light dark:text-white">
+                          {{ member.name }}
+                        </div>
+                        <div class="text-xs text-gray-500">
+                          {{ member.email }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span
+                      *ngIf="member.role === 'organizer'"
+                      class="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-900/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300 ring-1 ring-inset ring-purple-700/10"
+                      >Organizer</span
+                    >
+                    <span
+                      *ngIf="member.role === 'member'"
+                      class="inline-flex items-center rounded-md bg-gray-50 dark:bg-gray-700/30 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-500/10"
+                      >Member</span
+                    >
+                  </td>
+                  <td class="px-6 py-4 text-text-light dark:text-gray-300">
+                    {{ member.turnDate }}
+                  </td>
+                  <td class="px-6 py-4 text-center">
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
+                      [ngClass]="getStatusClass(member.paymentStatus)"
+                    >
+                      <span class="material-symbols-outlined text-[14px]">{{
+                        getStatusIcon(member.paymentStatus)
+                      }}</span>
+                      {{ getStatusText(member.paymentStatus) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <button
+                        *ngIf="member.paymentStatus === 'pending'"
+                        (click)="remindMember(member.id)"
+                        class="text-xs font-medium text-primary hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        Remind
+                      </button>
+                      <button
+                        (click)="openMemberOptions(member.id)"
+                        class="text-gray-400 hover:text-text-light dark:hover:text-white transition-colors"
+                      >
+                        <span class="material-symbols-outlined">more_vert</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tours Tab Content -->
+        <div
+          *ngIf="activeTab === 'tours'"
+          class="bg-white dark:bg-[#15281e] rounded-xl border border-border-light dark:border-border-dark p-6"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h3
+              class="text-lg font-bold text-text-light dark:text-white flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined">history_edu</span>
+              Tours History
+            </h3>
+          </div>
+          <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+            <span class="material-symbols-outlined text-4xl mb-2"
+              >event_note</span
+            >
+            <p>Tours history will be displayed here</p>
+          </div>
+        </div>
+
+        <!-- Messages Tab Content -->
+        <div
+          *ngIf="activeTab === 'messages'"
+          class="bg-white dark:bg-[#15281e] rounded-xl border border-border-light dark:border-border-dark p-6"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h3
+              class="text-lg font-bold text-text-light dark:text-white flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined">chat</span>
+              Messages
+            </h3>
+          </div>
+          <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+            <span class="material-symbols-outlined text-4xl mb-2">forum</span>
+            <p>Messages will be displayed here</p>
+          </div>
+        </div>
+
+        <!-- Settings Tab Content -->
+        <div
+          *ngIf="activeTab === 'settings'"
+          class="bg-white dark:bg-[#15281e] rounded-xl border border-border-light dark:border-border-dark p-6"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h3
+              class="text-lg font-bold text-text-light dark:text-white flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined">settings</span>
+              Dâr Settings
+            </h3>
+          </div>
+          <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+            <span class="material-symbols-outlined text-4xl mb-2">tune</span>
+            <p>Settings will be displayed here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Invite Member Modal -->
+<div
+  *ngIf="showInviteModal"
+  class="fixed inset-0 z-50 overflow-y-auto"
+  aria-labelledby="modal-title"
+  role="dialog"
+  aria-modal="true"
+>
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+    (click)="closeInviteModal()"
+  ></div>
+
+  <!-- Modal Container -->
+  <div
+    class="flex min-h-full items-center justify-center p-4 text-center sm:p-0"
+  >
+    <div
+      class="relative transform overflow-hidden rounded-xl bg-white dark:bg-[#15281e] text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-border-light dark:border-border-dark"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Modal Header -->
+      <div
+        class="px-6 py-4 border-b border-border-light dark:border-border-dark"
+      >
+        <div class="flex items-center justify-between">
+          <h3
+            class="text-lg font-bold text-text-light dark:text-white flex items-center gap-2"
+            id="modal-title"
+          >
+            <span class="material-symbols-outlined text-primary"
+              >person_add</span
+            >
+            Invite Member
+          </h3>
+          <button
+            (click)="closeInviteModal()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="px-6 py-4">
+        <!-- Search Bar -->
+        <div class="mb-4">
+          <label
+            class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
+            for="user-search"
+          >
+            Search by name or email
+          </label>
+          <div class="relative">
+            <span
+              class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              >search</span
+            >
+            <input
+              id="user-search"
+              type="text"
+              class="w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark text-text-light dark:text-white h-12 pl-10 pr-4 focus:border-primary focus:ring-primary placeholder-gray-400 dark:placeholder-gray-500"
+              placeholder="Search for users..."
+              [(ngModel)]="inviteSearchQuery"
+              (input)="searchUsers()"
+            />
+            <div
+              *ngIf="isSearching"
+              class="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+              <div
+                class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="space-y-2 max-h-96 overflow-y-auto">
+          <!-- No search yet -->
+          <div
+            *ngIf="!inviteSearchQuery && searchResults.length === 0"
+            class="text-center py-8 text-gray-500 dark:text-gray-400"
+          >
+            <span class="material-symbols-outlined text-4xl mb-2">search</span>
+            <p class="text-sm">Start typing to search for users</p>
+          </div>
+
+          <!-- No results found -->
+          <div
+            *ngIf="
+              inviteSearchQuery && searchResults.length === 0 && !isSearching
+            "
+            class="text-center py-8"
+          >
+            <div
+              class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 inline-block"
+            >
+              <span
+                class="material-symbols-outlined text-4xl text-orange-600 dark:text-orange-400 mb-2"
+                >person_search</span
+              >
+              <p
+                class="text-sm font-medium text-orange-900 dark:text-orange-100"
+              >
+                User not found
+              </p>
+              <p class="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                Try searching with a different name or email
+              </p>
+            </div>
+          </div>
+
+          <!-- Results List -->
+          <div
+            *ngFor="let user of searchResults"
+            class="flex items-center justify-between p-3 rounded-lg border border-border-light dark:border-border-dark hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="h-10 w-10 rounded-full bg-cover bg-center border border-gray-200 dark:border-gray-700"
+                [style.background-image]="'url(' + user.avatar + ')'"
+              ></div>
+              <div>
+                <div class="font-semibold text-text-light dark:text-white">
+                  {{ user.name }}
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ user.email }}
+                </div>
+              </div>
+            </div>
+            <button
+              (click)="inviteUser(user.id)"
+              [disabled]="invitingUserId === user.id"
+              class="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-primary hover:bg-green-500 text-black font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span
+                *ngIf="invitingUserId !== user.id"
+                class="material-symbols-outlined text-[18px]"
+                >send</span
+              >
+              <span
+                *ngIf="invitingUserId === user.id"
+                class="material-symbols-outlined text-[18px] animate-spin"
+                >hourglass_empty</span
+              >
+              {{ invitingUserId === user.id ? "Inviting..." : "Invite" }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div
+        class="px-6 py-4 border-t border-border-light dark:border-border-dark bg-gray-50 dark:bg-white/5"
+      >
+        <div class="flex justify-between items-center">
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            <span class="material-symbols-outlined text-[14px] align-middle"
+              >info</span
+            >
+            You can invite multiple members
+          </p>
+          <button
+            (click)="closeInviteModal()"
+            class="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
