@@ -1,6 +1,7 @@
 package com.tontin.platform.domain;
 
 import com.tontin.platform.domain.enums.dart.DartStatus;
+import com.tontin.platform.domain.enums.round.OrderMethod;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,90 +35,80 @@ import lombok.Setter;
 public class Dart extends BaseEntity {
 
     @NotBlank(message = "Dart name is required")
-    @Size(
-        min = 3,
-        max = 100,
-        message = "Dart name must be between 3 and 100 characters"
-    )
+    @Size(min = 3, max = 100, message = "Dart name must be between 3 and 100 characters")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @NotNull(message = "Start date is required")
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "start_date", nullable = true)
     private LocalDateTime startDate;
 
     @NotNull(message = "Monthly contribution is required")
-    @DecimalMin(
-        value = "0.01",
-        message = "Monthly contribution must be greater than zero"
-    )
-    @Column(
-        name = "monthly_contribution",
-        nullable = false,
-        precision = 19,
-        scale = 2
-    )
+    @DecimalMin(value = "0.01", message = "Monthly contribution must be greater than zero")
+    @Column(name = "monthly_contribution", nullable = false, precision = 19, scale = 2)
     private BigDecimal monthlyContribution;
 
-    @NotBlank(message = "Allocation method is required")
-    @Column(name = "allocation_method", nullable = false, length = 50)
-    private String allocationMethod;
+    @NotNull(message = "Order Method is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_method", nullable = false, length = 50)
+    private OrderMethod orderMethod;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
     private DartStatus status = DartStatus.PENDING;
 
-    @OneToMany(
-        mappedBy = "dart",
-        cascade = CascadeType.ALL,
-        fetch = FetchType.LAZY,
-        orphanRemoval = true
-    )
+    @Column(name = "custom_rules", nullable = true)
+    private String customRules;
+
+    @Column(name = "description", length = 500)
+    private String description;
+
+    @NotBlank(message = "Payment Frequency is required")
+    @Column(name = "payment_frequency", nullable = false, length = 50)
+    private String paymentFrequency;
+
+    @OneToMany(mappedBy = "dart", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @Builder.Default
     private List<Member> members = new ArrayList<>();
 
     // Business key equals/hashCode based on name and startDate
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Dart dart = (Dart) o;
-        return (
-            name != null &&
-            name.equals(dart.name) &&
-            startDate != null &&
-            startDate.equals(dart.startDate)
-        );
+        return getId() != null && getId().equals(dart.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, startDate);
+        return Objects.hash(getId());
     }
 
     @Override
     public String toString() {
-        return (
-            "Dart{" +
-            "id=" +
-            getId() +
-            ", name='" +
-            name +
-            '\'' +
-            ", startDate=" +
-            startDate +
-            ", monthlyContribution=" +
-            monthlyContribution +
-            ", allocationMethod='" +
-            allocationMethod +
-            '\'' +
-            ", status=" +
-            status +
-            ", membersCount=" +
-            (members != null ? members.size() : 0) +
-            '}'
-        );
+        return ("Dart{" +
+                "id=" +
+                getId() +
+                ", name='" +
+                name +
+                '\'' +
+                ", startDate=" +
+                startDate +
+                ", monthlyContribution=" +
+                monthlyContribution +
+                ", orderMethod='" +
+                orderMethod +
+                ", customRules='" +
+                customRules +
+                '\'' +
+                ", status=" +
+                status +
+                ", membersCount=" +
+                (members != null ? members.size() : 0) +
+                '}');
     }
 
     // Helper methods for bidirectional relationship
@@ -181,18 +172,14 @@ public class Dart extends BaseEntity {
             return new ArrayList<>();
         }
         return members
-            .stream()
-            .filter(
-                member ->
-                    member.getStatus() ==
-                    com.tontin.platform.domain.enums.member.MemberStatus.ACTIVE
-            )
-            .toList();
+                .stream()
+                .filter(
+                        member -> member.getStatus() == com.tontin.platform.domain.enums.member.MemberStatus.ACTIVE)
+                .toList();
     }
 
     public BigDecimal calculateTotalMonthlyContributions() {
         return monthlyContribution.multiply(
-            BigDecimal.valueOf(getMemberCount())
-        );
+                BigDecimal.valueOf(getMemberCount()));
     }
 }

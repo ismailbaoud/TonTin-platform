@@ -48,10 +48,9 @@ public class Member extends BaseEntity {
     @JoinColumn(name = "dart_id", nullable = false)
     private Dart dart;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
-
+@ManyToOne(fetch = FetchType.LAZY, optional = false)
+@JoinColumn(name = "user_id", nullable = false)
+private User user;
     // Business key equals/hashCode based on user and dart
     @Override
     public boolean equals(Object o) {
@@ -96,12 +95,9 @@ public class Member extends BaseEntity {
         this.dart = dart;
     }
 
-    public void setUser(User user) {
-        this.user = user;
-        if (user != null && user.getMember() != this) {
-            user.setMember(this);
-        }
-    }
+public void setUser(User user) {
+    this.user = user;
+}
 
     // Business methods
     public boolean isActive() {
@@ -130,6 +126,16 @@ public class Member extends BaseEntity {
         } else {
             throw new IllegalStateException(
                 "Can only activate a pending member"
+            );
+        }
+    }
+
+    public void reject() {
+        if (this.status == MemberStatus.PENDING) {
+            this.status = MemberStatus.LEAVED;
+        } else {
+            throw new IllegalStateException(
+                "Can only leave if member is active"
             );
         }
     }

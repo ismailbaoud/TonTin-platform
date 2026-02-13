@@ -9,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
@@ -16,6 +17,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -84,14 +87,8 @@ public class User extends BaseEntity {
     @Builder.Default
     private UserStatus status = UserStatus.PENDING;
 
-    @OneToOne(
-        mappedBy = "user",
-        cascade = CascadeType.ALL,
-        fetch = FetchType.LAZY,
-        orphanRemoval = true
-    )
-    private Member member;
-
+@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<Member> members = new ArrayList<>();
     // Business key equals/hashCode based on email (natural key)
     @Override
     public boolean equals(Object o) {
@@ -135,13 +132,15 @@ public class User extends BaseEntity {
         );
     }
 
-    // Helper method to set bidirectional relationship
-    public void setMember(Member member) {
-        this.member = member;
-        if (member != null && member.getUser() != this) {
-            member.setUser(this);
-        }
+public void addMember(Member member) {
+    if (members == null) {
+        members = new ArrayList<>();
     }
+    members.add(member);
+    member.setUser(this);
+}
+
+
 
     // Business methods
     public boolean isVerified() {
