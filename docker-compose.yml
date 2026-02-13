@@ -1,0 +1,98 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: tontin-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tontin_test
+      POSTGRES_USER: happy
+      POSTGRES_PASSWORD: happy
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tontin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U happy -d tontin_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Platform Backend (Spring Boot)
+  platform-back:
+    build:
+      context: ./platform-back
+      dockerfile: Dockerfile
+    container_name: tontin-backend
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tontin_test
+      SPRING_DATASOURCE_USERNAME: happy
+      SPRING_DATASOURCE_PASSWORD: happy
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-noreply@tontin.com}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-defaultpassword}
+      ENV: ${ENV:-development}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tontin-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9090/actuator/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Platform Frontend (Angular)
+  platform-front:
+    build:
+      context: ./platform-front
+      dockerfile: Dockerfile
+    container_name: tontin-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - platform-back
+    networks:
+      - tontin-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/health",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  tontin-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

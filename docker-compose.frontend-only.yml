@@ -1,0 +1,30 @@
+services:
+  # Platform Frontend (Angular) - Standalone
+  platform-front:
+    build:
+      context: ./platform-front
+      dockerfile: Dockerfile
+    container_name: tontin-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - tontin-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/health",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  tontin-network:
+    driver: bridge

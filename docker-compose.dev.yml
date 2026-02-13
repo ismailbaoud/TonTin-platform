@@ -1,0 +1,110 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: tontin-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tontin_test
+      POSTGRES_USER: happy
+      POSTGRES_PASSWORD: happy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - tontin-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U happy -d tontin_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Platform Backend (Spring Boot) - Development Mode with Hot Reload
+  platform-back:
+    build:
+      context: ./platform-back
+      dockerfile: Dockerfile.dev
+    container_name: tontin-backend-dev
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+      - "5005:5005" # Debug port
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tontin_test
+      SPRING_DATASOURCE_USERNAME: happy
+      SPRING_DATASOURCE_PASSWORD: happy
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    volumes:
+      # Mount source code for hot reload (if using Spring DevTools)
+      - ./platform-back/src:/app/src:ro
+      - ./platform-back/target:/app/target
+      - maven_cache:/root/.m2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tontin-network-dev
+
+  # Platform Frontend (Angular) - Development Mode with Hot Reload
+  platform-front:
+    build:
+      context: ./platform-front
+      dockerfile: Dockerfile.dev
+    container_name: tontin-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "4200:4200" # Angular dev server port
+    environment:
+      NODE_ENV: development
+    volumes:
+      # Mount source code for hot reload
+      - ./platform-front/src:/app/src
+      - ./platform-front/public:/app/public
+      - ./platform-front/angular.json:/app/angular.json
+      - ./platform-front/tsconfig.json:/app/tsconfig.json
+      - ./platform-front/tsconfig.app.json:/app/tsconfig.app.json
+      # Prevent node_modules from being overridden
+      - /app/node_modules
+    depends_on:
+      - platform-back
+    networks:
+      - tontin-network-dev
+    command: npm start -- --host 0.0.0.0 --poll 2000
+
+  # pgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tontin-pgadmin-dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@tontin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - tontin-network-dev
+    depends_on:
+      - postgres
+
+networks:
+  tontin-network-dev:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  pgadmin_data:
+    driver: local
+  maven_cache:
+    driver: local
