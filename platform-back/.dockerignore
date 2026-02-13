@@ -1,0 +1,54 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+HELP.md
+README.md
+BEST_PRACTICES.md
+DOMAIN_IMPROVEMENTS.md
+SWAGGER_FIX_SUMMARY.md
+SWAGGER_QUICK_START.md
+
+# Diagrams and images
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+
+# Testing
+src/test/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
