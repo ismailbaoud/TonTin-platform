@@ -10,19 +10,32 @@ import lombok.Builder;
 /**
  * Response DTO for Dart (Tontine/Savings Circle) information.
  *
- * <p>This immutable record represents the complete state of a dart,
- * including its configuration, status, and metadata.</p>
+ * <p>
+ * This immutable record represents the complete state of a dart,
+ * including its configuration, status, and metadata.
+ * </p>
  *
- * @param id                   Unique identifier of the dart
- * @param name                 Name of the dart
- * @param monthlyContribution  Monthly contribution amount per member
- * @param startDate            Date when the dart started or is scheduled to start
- * @param allocationMethod     Method used to allocate funds to members
- * @param status               Current status of the dart
- * @param memberCount          Total number of members in the dart
- * @param totalMonthlyPool     Total monthly pool (contribution × member count)
- * @param createdAt            Timestamp when the dart was created
- * @param updatedAt            Timestamp when the dart was last updated
+ * @param id                  Unique identifier of the dart
+ * @param name                Name of the dart
+ * @param monthlyContribution Monthly contribution amount per member
+ * @param startDate           Date when the dart started or is scheduled to start
+ * @param orderMethod         Method used to allocate funds to members
+ * @param status              Current status of the dart
+ * @param memberCount         Total number of members in the dart
+ * @param totalMonthlyPool    Monthly contribution amount per member (same as monthlyContribution)
+ * @param organizerId         ID of the dart organizer
+ * @param organizerName       Name of the dart organizer
+ * @param organizerAvatar     Avatar URL of the organizer
+ * @param isOrganizer         Whether the current user is the organizer
+ * @param userPermission      Current user's permission level in this dart (ORGANIZER or MEMBER)
+ * @param userMemberStatus    Current user's member status (PENDING, ACTIVE, LEAVED)
+ * @param currentCycle        Current cycle/round number
+ * @param totalCycles         Total number of cycles planned
+ * @param nextPayoutDate      Date of the next scheduled payout
+ * @param image               Cover image URL for the dart
+ * @param customRules         Custom rules and terms for this dart
+ * @param createdAt           Timestamp when the dart was created
+ * @param updatedAt           Timestamp when the dart was last updated
  */
 @Builder
 @Schema(description = "Response object containing dart information")
@@ -50,10 +63,25 @@ public record DartResponse(
 
     @Schema(
         description = "Method used to allocate funds to members",
-        example = "RANDOM",
-        allowableValues = { "RANDOM", "ROUND_ROBIN", "AUCTION", "FIXED_ORDER" }
+        example = "FIXED_ORDER",
+        allowableValues = {
+            "FIXED_ORDER", "RANDOM_ONCE", "BIDDING_MODEL", "DYNAMIQUE_RANDOM",
+        }
     )
-    String allocationMethod,
+    String orderMethod,
+
+    @Schema(
+        description = "Description of the dart",
+        example = "A savings circle for the holidays"
+    )
+    String description,
+
+    @Schema(
+        description = "Frequency of payments",
+        example = "MONTH",
+        allowableValues = { "WEEKLY", "BI-WEEKLY", "MONTH", "QUARTERLY" }
+    )
+    String paymentFrequency,
 
     @Schema(
         description = "Current status of the dart",
@@ -66,10 +94,58 @@ public record DartResponse(
     Integer memberCount,
 
     @Schema(
-        description = "Total monthly pool amount (contribution × member count)",
-        example = "1000.00"
+        description = "Monthly contribution amount per member",
+        example = "100.00"
     )
     BigDecimal totalMonthlyPool,
+
+    @Schema(
+        description = "ID of the dart organizer",
+        example = "123e4567-e89b-12d3-a456-426614174001"
+    )
+    UUID organizerId,
+
+    @Schema(description = "Name of the dart organizer", example = "John Doe")
+    String organizerName,
+
+    @Schema(description = "Avatar URL of the organizer") String organizerAvatar,
+
+    @Schema(
+        description = "Whether the current user is the organizer",
+        example = "true"
+    )
+    Boolean isOrganizer,
+
+    @Schema(
+        description = "Current user's permission level in this dart",
+        example = "MEMBER",
+        allowableValues = { "ORGANIZER", "MEMBER" }
+    )
+    String userPermission,
+
+    @Schema(
+        description = "Current user's member status in this dart",
+        example = "ACTIVE",
+        allowableValues = { "PENDING", "ACTIVE", "LEAVED" }
+    )
+    String userMemberStatus,
+
+    @Schema(description = "Current cycle/round number", example = "3")
+    Integer currentCycle,
+
+    @Schema(description = "Total number of cycles planned", example = "12")
+    Integer totalCycles,
+
+    @Schema(
+        description = "Date of the next scheduled payout",
+        example = "2024-02-15T10:00:00"
+    )
+    LocalDateTime nextPayoutDate,
+
+    @Schema(description = "Cover image URL for the dart") String image,
+
+    @Schema(description = "Custom rules and terms for this dart")
+    String customRules,
 
     @Schema(
         description = "Timestamp when the dart was created",

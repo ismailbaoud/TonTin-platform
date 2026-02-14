@@ -1,6 +1,8 @@
 package com.tontin.platform.dto.dart.request;
 
+import com.tontin.platform.domain.enums.round.OrderMethod;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,12 +12,14 @@ import java.math.BigDecimal;
 /**
  * Request DTO for creating or updating a Dart (Tontine/Savings Circle).
  *
- * <p>This immutable record encapsulates all required information to create
- * a new dart or update an existing one.</p>
+ * <p>
+ * This immutable record encapsulates all required information to create
+ * a new dart or update an existing one.
+ * </p>
  *
- * @param name                 The name of the dart (3-100 characters)
- * @param monthlyContribution  The monthly contribution amount (must be positive)
- * @param allocationMethod     The method used to allocate funds to members
+ * @param name                The name of the dart (3-100 characters)
+ * @param monthlyContribution The monthly contribution amount (must be positive)
+ * @param allocationMethod    The method used to allocate funds to members
  */
 @Schema(description = "Request object for creating or updating a dart")
 public record DartRequest(
@@ -48,20 +52,46 @@ public record DartRequest(
     )
     BigDecimal monthlyContribution,
 
-    @NotNull(message = "Allocation method cannot be null")
-    @NotBlank(message = "Allocation method is required")
+    @NotNull(message = "Order method cannot be null")
+    @Schema(
+        description = "Method used to allocate funds (e.g., FIXED_ORDER, RANDOM_ONCE, BIDDING_MODEL, DYNAMIQUE_RANDOM)",
+        example = "FIXED_ORDER",
+        requiredMode = Schema.RequiredMode.REQUIRED,
+        allowableValues = {
+            "FIXED_ORDER", "RANDOM_ONCE", "BIDDING_MODEL", "DYNAMIQUE_RANDOM",
+        }
+    )
+    OrderMethod orderMethod,
+
+    @Nullable
+    @Schema(
+        description = "custom rules of the dart",
+        example = "1: you should pay on time"
+    )
+    String customRules,
+
+    @Nullable
+    @Size(max = 500, message = "Description must be less than 500 characters")
+    @Schema(
+        description = "Description of the dart",
+        example = "A savings circle for the holidays"
+    )
+    String description,
+
+    @NotNull(message = "Payment Frequency cannot be null")
+    @NotBlank(message = "Payment Frequency is required")
     @Size(
         min = 3,
         max = 50,
-        message = "Allocation method must be between 3 and 50 characters"
+        message = "Payment Frequency must be between 3 and 50 characters"
     )
     @Schema(
-        description = "Method used to allocate funds (e.g., RANDOM, ROUND_ROBIN, AUCTION)",
-        example = "RANDOM",
+        description = "Payment Frequency used to allocate funds (e.g., Weekly, Bi-Weekly, Month, Quarterly)",
+        example = "MONTH",
         requiredMode = Schema.RequiredMode.REQUIRED,
-        allowableValues = { "RANDOM", "ROUND_ROBIN", "AUCTION", "FIXED_ORDER" }
+        allowableValues = { "WEEKLY", "BI-WEEKLY", "MONTH", "QUARTERLY" }
     )
-    String allocationMethod
+    String paymentFrequency
 ) {
     /**
      * Compact constructor for additional validation.
@@ -70,9 +100,6 @@ public record DartRequest(
         // Trim strings
         if (name != null) {
             name = name.trim();
-        }
-        if (allocationMethod != null) {
-            allocationMethod = allocationMethod.trim().toUpperCase();
         }
     }
 
@@ -83,11 +110,11 @@ public record DartRequest(
      */
     public boolean isValidAllocationMethod() {
         return (
-            allocationMethod != null &&
-            (allocationMethod.equals("RANDOM") ||
-                allocationMethod.equals("ROUND_ROBIN") ||
-                allocationMethod.equals("AUCTION") ||
-                allocationMethod.equals("FIXED_ORDER"))
+            orderMethod != null &&
+            (orderMethod == OrderMethod.FIXED_ORDER ||
+                orderMethod == OrderMethod.RANDOM_ONCE ||
+                orderMethod == OrderMethod.BIDDING_MODEL ||
+                orderMethod == OrderMethod.DYNAMIQUE_RANDOM)
         );
     }
 }
