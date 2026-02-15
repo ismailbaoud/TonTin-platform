@@ -1,12 +1,12 @@
-import { DarStatus } from '../enums/dar-status.enum';
-import { DarFrequency } from '../enums/dar-frequency.enum';
+import { DarStatus } from "../enums/dar-status.enum";
+import { DarFrequency } from "../enums/dar-frequency.enum";
 
 /**
  * Represents a Dâr (rotating savings and credit association)
  */
 export interface Dar {
-  /** Unique identifier for the Dâr */
-  id: number;
+  /** Unique identifier for the Dâr (UUID string) */
+  id: string;
 
   /** Name of the Dâr */
   name: string;
@@ -20,8 +20,8 @@ export interface Dar {
   /** Current lifecycle status of the Dâr */
   status: DarStatus;
 
-  /** User ID of the Dâr organizer */
-  organizerId: number;
+  /** User ID of the Dâr organizer (UUID string) */
+  organizerId: string;
 
   /** Display name of the organizer */
   organizerName: string;
@@ -45,19 +45,22 @@ export interface Dar {
   totalCycles: number;
 
   /** Current number of members */
-  totalMembers: number;
+  memberCount: number;
 
   /** Maximum number of members allowed */
   maxMembers: number;
 
   /** Amount each member contributes per cycle */
-  contributionAmount: number;
+  monthlyContribution: number;
 
-  /** Total pot size (contributionAmount * totalMembers) */
-  potSize: number;
+  /** Total pot size (monthlyContribution * memberCount) */
+  totalMonthlyPool: number;
 
   /** How often contributions are made */
-  frequency: DarFrequency;
+  paymentFrequency: DarFrequency;
+
+  /** Order method */
+  orderMethod: string;
 
   /** Date of the next scheduled payout */
   nextPayoutDate?: string;
@@ -71,6 +74,12 @@ export interface Dar {
   /** Whether the current user is a member */
   isMember: boolean;
 
+  /** Current user's permission level in this dart (ORGANIZER or MEMBER) */
+  userPermission?: string;
+
+  /** Current user's member status (PENDING, ACTIVE, LEAVED) */
+  userMemberStatus?: string;
+
   /** Invite code for joining (organizer only) */
   inviteCode?: string;
 
@@ -78,5 +87,14 @@ export interface Dar {
   rules?: string;
 
   /** Visibility level of the Dâr */
-  visibility: 'public' | 'private' | 'invite-only';
+  visibility: "public" | "private" | "invite-only";
+
+  /** Total number of members (alias for memberCount) */
+  totalMembers?: number;
+
+  /** Contribution amount (alias for monthlyContribution) */
+  contributionAmount?: number;
+
+  /** Total pot size (alias for totalMonthlyPool) */
+  potSize?: number;
 }

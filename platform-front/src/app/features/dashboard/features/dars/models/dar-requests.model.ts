@@ -10,20 +10,21 @@ export interface CreateDarRequest {
   /** Optional description of the Dâr's purpose */
   description?: string;
 
-  /** Optional cover image URL */
-  image?: string;
+  /** Monthly contribution amount per member */
+  monthlyContribution: number;
 
-  /** Amount each member contributes per cycle */
-  contributionAmount: number;
+  /** Payment Frequency used to allocate funds */
+  paymentFrequency: string;
 
-  /** How often contributions are made */
-  frequency: DarFrequency;
-
-  /** Method for allocating payouts to members */
-  allocationMethod: "random" | "sequential" | "bidding";
+  /** Method for order payouts to members */
+  orderMethod:
+    | "FIXED_ORDER"
+    | "RANDOM_ONCE"
+    | "BIDDING_MODEL"
+    | "DYNAMIQUE_RANDOM";
 
   /** Optional custom rules and terms */
-  rules?: string;
+  customRules?: string;
 }
 
 /**
@@ -53,13 +54,13 @@ export interface UpdateDarRequest {
  */
 export interface InviteMemberRequest {
   /** ID of the Dâr to invite the member to */
-  darId: number;
+  darId: string;
 
   /** Email address of the person to invite (optional if userId provided) */
   email?: string;
 
   /** User ID of the person to invite (optional if email provided) */
-  userId?: number;
+  userId?: string;
 }
 
 /**
@@ -68,7 +69,7 @@ export interface InviteMemberRequest {
  */
 export interface JoinDarRequest {
   /** ID of the Dâr to join (for public Dârs) */
-  darId?: number;
+  darId?: string;
 
   /** Invite code for joining (for private/invite-only Dârs) */
   inviteCode?: string;
@@ -88,7 +89,7 @@ export interface UpdateTurnOrderRequest {
  */
 export interface MemberOrder {
   /** Member ID */
-  memberId: number;
+  memberId: string;
 
   /** New position in turn order (1-based) */
   order: number;
@@ -99,10 +100,10 @@ export interface MemberOrder {
  */
 export interface ReportMemberRequest {
   /** ID of the Dâr */
-  darId: number;
+  darId: string;
 
   /** ID of the member being reported */
-  memberId: number;
+  memberId: string;
 
   /** Reason for the report */
   reason: string;
