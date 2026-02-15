@@ -138,13 +138,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow specific origins (configure based on your frontend)
+        // Allow specific origins
         configuration.setAllowedOrigins(
             Arrays.asList(
                 "http://localhost:3000",
                 "http://localhost:4200",
                 "http://localhost:8080",
-                "https://tontin.example.com" // Replace with your production domain
+                "http://localhost:80",
+                "https://tontin.example.com"
             )
         );
 
