@@ -16,6 +16,7 @@ public interface MemberService {
         Dart dart,
         User organizer
     );
+
     MemberResponse addMemberToDart(MemberRequest request, UUID id, UUID dartId);
     MemberResponse updateMemberPermission(
         MemberRequest request,
@@ -25,4 +26,21 @@ public interface MemberService {
     MemberResponse getMember(UUID id, UUID dartId);
     List<MemberResponse> getAllMembersOfDart(UUID dartId);
     String deleteMember(UUID id, UUID dartId);
+
+    /**
+     * Accept invitation to join a dart (change member status from PENDING to ACTIVE)
+     *
+     * @param dartId the dart ID
+     * @return the updated member details
+     */
+    MemberResponse acceptInvitation(UUID dartId);
+
+
+    /**
+     * Reject invitation to join a dart (change member status from PENDING to Rejected)
+     *
+     * @param dartId the dart ID
+     * @return the updated member details
+     */
+    MemberResponse rejectInvitation(UUID dartId);
 }
