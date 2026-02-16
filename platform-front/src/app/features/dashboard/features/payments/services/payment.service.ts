@@ -81,7 +81,7 @@ export interface WalletTransaction {
 }
 
 export interface MakePaymentRequest {
-  darId: number;
+  darId: string;
   contributionId?: number;
   amount: number;
   paymentMethodId: number;

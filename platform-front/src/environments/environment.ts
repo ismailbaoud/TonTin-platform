@@ -10,7 +10,7 @@ export const environment = {
   envName: "production",
 
   // API Configuration
-  apiUrl: "https://api.tontin.example.com/api",
+  apiUrl: "http://localhost:9090/api",
   apiTimeout: 30000, // 30 seconds
 
   // Backend Endpoints

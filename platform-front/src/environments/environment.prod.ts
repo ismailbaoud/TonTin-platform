@@ -10,18 +10,22 @@ export const environment = {
   /**
    * API Configuration
    */
-  apiUrl: 'https://api.yourdomain.com/api',
-  apiVersion: 'v1',
+  apiUrl: "http://localhost:9090/api",
+  apiVersion: "v1",
   apiTimeout: 30000, // 30 seconds
 
   /**
    * Authentication Configuration
    */
   auth: {
-    tokenKey: 'auth_token',
-    refreshTokenKey: 'refresh_token',
+    tokenKey: "tontin_token",
+    refreshTokenKey: "tontin_refresh_token",
+    tokenExpiryKey: "tontin_token_expiry",
+    userKey: "tontin_user",
+    tokenPrefix: "Bearer",
     tokenExpirationBuffer: 300, // 5 minutes in seconds
     enableAutoRefresh: true,
+    tokenExpirationMinutes: 60,
   },
 
   /**
@@ -39,31 +43,31 @@ export const environment = {
    * Logging Configuration
    */
   logging: {
-    logLevel: 'WARN', // DEBUG, INFO, WARN, ERROR
+    logLevel: "WARN", // DEBUG, INFO, WARN, ERROR
     enableConsole: false,
     enableRemote: true,
-    remoteLogUrl: 'https://api.yourdomain.com/logs',
+    remoteLogUrl: "https://api.yourdomain.com/logs",
   },
 
   /**
    * Application Configuration
    */
   app: {
-    name: 'Advanced Angular App',
-    version: '1.0.0',
-    defaultLanguage: 'en',
-    supportedLanguages: ['en', 'fr', 'es'],
-    dateFormat: 'yyyy-MM-dd',
-    timeFormat: 'HH:mm:ss',
+    name: "Advanced Angular App",
+    version: "1.0.0",
+    defaultLanguage: "en",
+    supportedLanguages: ["en", "fr", "es"],
+    dateFormat: "yyyy-MM-dd",
+    timeFormat: "HH:mm:ss",
   },
 
   /**
    * Storage Configuration
    */
   storage: {
-    type: 'localStorage', // 'localStorage' or 'sessionStorage'
+    type: "localStorage", // 'localStorage' or 'sessionStorage'
     enableEncryption: true,
-    encryptionKey: 'YOUR_ENCRYPTION_KEY_HERE',
+    encryptionKey: "YOUR_ENCRYPTION_KEY_HERE",
   },
 
   /**
@@ -88,14 +92,14 @@ export const environment = {
    */
   services: {
     google: {
-      apiKey: 'YOUR_GOOGLE_API_KEY',
-      analyticsId: 'YOUR_GA_TRACKING_ID',
+      apiKey: "YOUR_GOOGLE_API_KEY",
+      analyticsId: "YOUR_GA_TRACKING_ID",
     },
     stripe: {
-      publicKey: 'YOUR_STRIPE_PUBLIC_KEY',
+      publicKey: "YOUR_STRIPE_PUBLIC_KEY",
     },
     sentry: {
-      dsn: 'YOUR_SENTRY_DSN',
+      dsn: "YOUR_SENTRY_DSN",
     },
   },
 
@@ -104,7 +108,7 @@ export const environment = {
    */
   websocket: {
     enabled: true,
-    url: 'wss://api.yourdomain.com',
+    url: "wss://api.yourdomain.com",
     reconnectInterval: 5000,
     maxReconnectAttempts: 5,
   },
@@ -114,7 +118,12 @@ export const environment = {
    */
   upload: {
     maxFileSize: 10485760, // 10MB in bytes
-    allowedFileTypes: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'],
-    uploadUrl: 'https://api.yourdomain.com/api/upload',
+    allowedFileTypes: [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+    ],
+    uploadUrl: "https://api.yourdomain.com/api/upload",
   },
 };

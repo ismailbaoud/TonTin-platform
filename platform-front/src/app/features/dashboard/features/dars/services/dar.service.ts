@@ -75,7 +75,7 @@ export { DAR_CONFIG, DAR_MESSAGES, DAR_PAGINATION } from "../constants";
   providedIn: "root",
 })
 export class DarService {
-  private apiUrl = `${environment.apiUrl}/dars`;
+  private apiUrl = `${environment.apiUrl}/v1/dart`;
   private darsSubject = new BehaviorSubject<Dar[]>([]);
   public dars$ = this.darsSubject.asObservable();
 
@@ -101,6 +101,8 @@ export class DarService {
       .get<PaginatedResponse<Dar>>(`${this.apiUrl}/my-dars`, { params })
       .pipe(
         tap((response) => {
+          console.log(response);
+          
           if (page === 0) {
             this.darsSubject.next(response.content);
           }
@@ -111,7 +113,7 @@ export class DarService {
   /**
    * Get Dâr details by ID
    */
-  getDarDetails(darId: number): Observable<DarDetails> {
+  getDarDetails(darId: string): Observable<DarDetails> {
     return this.http.get<DarDetails>(`${this.apiUrl}/${darId}`);
   }
 
@@ -130,14 +132,14 @@ export class DarService {
   /**
    * Update Dâr details (organizer only)
    */
-  updateDar(darId: number, request: UpdateDarRequest): Observable<Dar> {
+  updateDar(darId: string, request: UpdateDarRequest): Observable<Dar> {
     return this.http.put<Dar>(`${this.apiUrl}/${darId}`, request);
   }
 
   /**
    * Delete/Cancel a Dâr (organizer only)
    */
-  deleteDar(darId: number): Observable<void> {
+  deleteDar(darId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${darId}`).pipe(
       tap(() => {
         const currentDars = this.darsSubject.value;
@@ -161,8 +163,8 @@ export class DarService {
   /**
    * Leave a Dâr
    */
-  leaveDar(darId: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${darId}/leave`, {}).pipe(
+  leaveDar(darId: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/v1/member/dart/${darId}/leave`, {}).pipe(
       tap(() => {
         const currentDars = this.darsSubject.value;
         this.darsSubject.next(currentDars.filter((d) => d.id !== darId));
@@ -171,19 +173,44 @@ export class DarService {
   }
 
   /**
+   * Search users by username
+   */
+  searchUsers(username: string): Observable<
+    Array<{
+      id: string;
+      userName: string;
+      email: string;
+      avatar: string | null;
+    }>
+  > {
+    const params = new HttpParams().set("username", username);
+    return this.http.get<
+      Array<{
+        id: string;
+        userName: string;
+        email: string;
+        avatar: string | null;
+      }>
+    >(`${environment.apiUrl}/v1/user/search`, { params });
+  }
+
+  /**
    * Invite member to Dâr (organizer only)
    */
-  inviteMember(request: InviteMemberRequest): Observable<void> {
+  inviteMember(dartId: string, userId: string): Observable<void> {
     return this.http.post<void>(
-      `${this.apiUrl}/${request.darId}/invite`,
-      request,
+      `${environment.apiUrl}/v1/member/dart/${dartId}/user/${userId}`,
+      {
+        permission: "MEMBER",
+        status: "ACTIVE",
+      },
     );
   }
 
   /**
    * Remove member from Dâr (organizer only)
    */
-  removeMember(darId: number, memberId: number): Observable<void> {
+  removeMember(darId: string, memberId: string): Observable<void> {
     return this.http.delete<void>(
       `${this.apiUrl}/${darId}/members/${memberId}`,
     );
@@ -192,14 +219,16 @@ export class DarService {
   /**
    * Get Dâr members
    */
-  getMembers(darId: number): Observable<Member[]> {
-    return this.http.get<Member[]>(`${this.apiUrl}/${darId}/members`);
+  getMembers(darId: string): Observable<Member[]> {
+    return this.http.get<Member[]>(
+      `${environment.apiUrl}/v1/member/dart/${darId}`,
+    );
   }
 
   /**
    * Get Dâr tours (payment schedule)
    */
-  getTours(darId: number): Observable<Tour[]> {
+  getTours(darId: string): Observable<Tour[]> {
     return this.http.get<Tour[]>(`${this.apiUrl}/${darId}/tours`);
   }
 
@@ -207,7 +236,7 @@ export class DarService {
    * Get Dâr transactions
    */
   getTransactions(
-    darId: number,
+    darId: string,
     page: number = 0,
     size: number = DAR_PAGINATION.TRANSACTIONS_PAGE_SIZE,
   ): Observable<PaginatedResponse<Transaction>> {
@@ -225,7 +254,7 @@ export class DarService {
    * Get Dâr messages
    */
   getMessages(
-    darId: number,
+    darId: string,
     page: number = 0,
     size: number = DAR_PAGINATION.MESSAGES_PAGE_SIZE,
   ): Observable<PaginatedResponse<Message>> {
@@ -242,7 +271,7 @@ export class DarService {
   /**
    * Send message to Dâr
    */
-  sendMessage(darId: number, content: string): Observable<Message> {
+  sendMessage(darId: string, content: string): Observable<Message> {
     return this.http.post<Message>(`${this.apiUrl}/${darId}/messages`, {
       content,
     });
@@ -251,7 +280,7 @@ export class DarService {
   /**
    * Generate new invite code (organizer only)
    */
-  generateInviteCode(darId: number): Observable<GenerateInviteCodeResponse> {
+  generateInviteCode(darId: string): Observable<GenerateInviteCodeResponse> {
     return this.http.post<GenerateInviteCodeResponse>(
       `${this.apiUrl}/${darId}/generate-invite-code`,
       {},
@@ -282,14 +311,24 @@ export class DarService {
   /**
    * Start a Dâr (organizer only, when minimum members reached)
    */
-  startDar(darId: number): Observable<Dar> {
+  startDar(darId: string): Observable<Dar> {
     return this.http.post<Dar>(`${this.apiUrl}/${darId}/start`, {});
+  }
+
+  /**
+   * Accept invitation to join a Dâr (change member status from PENDING to ACTIVE)
+   */
+  acceptInvitation(darId: string): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/v1/member/dart/${darId}/accept`,
+      {},
+    );
   }
 
   /**
    * Complete a tour/cycle
    */
-  completeTour(darId: number, tourId: number): Observable<Tour> {
+  completeTour(darId: string, tourId: string): Observable<Tour> {
     return this.http.post<Tour>(
       `${this.apiUrl}/${darId}/tours/${tourId}/complete`,
       {},
@@ -300,8 +339,8 @@ export class DarService {
    * Report a member (for trust score issues)
    */
   reportMember(
-    darId: number,
-    memberId: number,
+    darId: string,
+    memberId: string,
     reason: string,
   ): Observable<void> {
     return this.http.post<void>(
@@ -315,14 +354,14 @@ export class DarService {
   /**
    * Get Dâr statistics (for organizer)
    */
-  getDarStats(darId: number): Observable<any> {
+  getDarStats(darId: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${darId}/stats`);
   }
 
   /**
    * Update member turn order (organizer only)
    */
-  updateTurnOrder(darId: number, memberOrder: MemberOrder[]): Observable<void> {
+  updateTurnOrder(darId: string, memberOrder: MemberOrder[]): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${darId}/turn-order`, {
       memberOrder,
     });
