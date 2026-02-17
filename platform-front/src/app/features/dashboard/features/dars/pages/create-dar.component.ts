@@ -24,7 +24,7 @@ export class CreateDarComponent implements OnDestroy {
   description = "";
   monthlyAmount = 0;
   frequency: DarFrequency = DarFrequency.MONTHLY;
-  allocationMethod: "random" | "sequential" | "bidding" = "random";
+  orderMethod: "FIXED_ORDER" | "RANDOM_ONCE" | "BIDDING_MODEL" | "DYNAMIQUE_RANDOM" = "FIXED_ORDER";
   rules = "";
 
   isSubmitting = false;
@@ -33,7 +33,7 @@ export class CreateDarComponent implements OnDestroy {
   constructor(
     private router: Router,
     private darService: DarService,
-  ) {}
+  ) { }
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -54,21 +54,39 @@ export class CreateDarComponent implements OnDestroy {
       return;
     }
 
-    if (!this.allocationMethod) {
-      this.error = "Please select an allocation method";
+    if (!this.orderMethod) {
+      this.error = "Please select an order method";
       return;
     }
 
     this.error = null;
     this.isSubmitting = true;
 
+    // Map frequency to backend expected format (e.g. 'monthly' -> 'MONTH')
+    let paymentFrequency = "MONTH";
+    switch (this.frequency) {
+      case DarFrequency.WEEKLY:
+        paymentFrequency = "WEEKLY";
+        break;
+      case DarFrequency.BI_WEEKLY:
+        paymentFrequency = "BI-WEEKLY";
+        break;
+      case DarFrequency.MONTHLY:
+        paymentFrequency = "MONTH";
+        break;
+      case DarFrequency.QUARTERLY:
+        paymentFrequency = "QUARTERLY";
+        break;
+      default:
+        paymentFrequency = "MONTH";
+    }
+
     const request: CreateDarRequest = {
       name: this.darName.trim(),
-      description: this.description.trim() || undefined,
-      contributionAmount: this.monthlyAmount,
-      frequency: this.frequency,
-      allocationMethod: this.allocationMethod,
-      rules: this.rules.trim() || undefined,
+      monthlyContribution: this.monthlyAmount,
+      paymentFrequency: paymentFrequency,
+      orderMethod: this.orderMethod,
+      customRules: this.rules.trim() || undefined,
     };
 
     this.darService

@@ -144,7 +144,20 @@
           <div
             class="flex w-full md:w-auto flex-row md:flex-col gap-3 shrink-0"
           >
+            <!-- Start Button (only for organizer when dart is pending) -->
             <button
+              *ngIf="darDetails.status === 'pending' && isOrganizer"
+              (click)="startDart()"
+              class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-green-700 transition-colors"
+            >
+              <span class="material-symbols-outlined text-[20px]"
+                >play_arrow</span
+              >
+              Start Dâr
+            </button>
+
+            <button
+              *ngIf="isOrganizer"
               (click)="inviteMember()"
               class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-black shadow-sm hover:bg-green-500 transition-colors"
             >
@@ -350,7 +363,8 @@
                   *ngFor="let member of filteredMembers"
                   class="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group"
                   [ngClass]="{
-                    'bg-primary/5': member.paymentStatus === 'pending',
+                    'bg-yellow-50 dark:bg-yellow-900/10':
+                      member.status === 'PENDING',
                   }"
                 >
                   <td class="px-6 py-4">
@@ -391,22 +405,22 @@
                   <td class="px-6 py-4 text-center">
                     <span
                       class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
-                      [ngClass]="getStatusClass(member.paymentStatus)"
+                      [ngClass]="getStatusClass(member.status)"
                     >
                       <span class="material-symbols-outlined text-[14px]">{{
-                        getStatusIcon(member.paymentStatus)
+                        getStatusIcon(member.status)
                       }}</span>
-                      {{ getStatusText(member.paymentStatus) }}
+                      {{ getStatusText(member.status) }}
                     </span>
                   </td>
                   <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">
                       <button
-                        *ngIf="member.paymentStatus === 'pending'"
+                        *ngIf="member.status === 'PENDING' && isOrganizer"
                         (click)="remindMember(member.id)"
                         class="text-xs font-medium text-primary hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        Remind
+                        Resend Invite
                       </button>
                       <button
                         (click)="openMemberOptions(member.id)"

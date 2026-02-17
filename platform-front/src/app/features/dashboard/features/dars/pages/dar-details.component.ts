@@ -3,23 +3,27 @@ import { CommonModule } from "@angular/common";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { Subject, takeUntil, finalize } from "rxjs";
+import { DarService } from "../services/dar.service";
+import { AuthService } from "../../../../auth/services/auth.service";
+import { MemberStatus } from "../enums/member-status.enum";
 
-// Interfaces for component data
 interface Member {
-  id: number;
+  id: string;
   name: string;
   email: string;
   avatar: string;
-  role: "organizer" | "member";
+  role: string;
+  status: MemberStatus; // Member participation status (PENDING/ACTIVE/LEAVED)
   turnDate: string;
-  paymentStatus: "paid" | "pending" | "overdue" | "future";
+  // NOTE: paymentStatus removed - should be tracked separately in a Payment entity
+  // For now, we'll use a placeholder based on member status for display purposes only
 }
 
 interface DarDetails {
-  id: number;
+  id: string; // UUID
   name: string;
   image: string;
-  status: "active" | "completed" | "pending";
+  status: "active" | "completed" | "pending" | "finished";
   organizer: string;
   startDate: string;
   currentCycle: number;
@@ -44,7 +48,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   // UI State
   activeTab: "members" | "tours" | "messages" | "settings" = "members";
   searchQuery = "";
-  darId: string | null = null;
+  darId: string | null = null; // UUID from route params
   isLoading = false;
   error: string | null = null;
 
@@ -52,203 +56,54 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   showInviteModal = false;
   inviteSearchQuery = "";
   searchResults: Array<{
-    id: number;
+    id: string;
     name: string;
     email: string;
-    avatar: string;
+    avatar: string | null;
   }> = [];
   isSearching = false;
-  invitingUserId: number | null = null;
+  invitingUserId: string | null = null;
 
   // Data
   darDetails: DarDetails | null = null;
+  isOrganizer = false;
 
-  // Mock users for search (easy to replace with API later)
-  private mockUsers = [
-    {
-      id: 101,
-      name: "John Smith",
-      email: "john.smith@example.com",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBuVdVI9W4xZa3wFEpKvCeSRt4x54u_T7PV9TQi_enyBYh-wEK5tQGVJFTKHAtbadhsH-yk6CYCWAyXUAa2VZYGCpm1_jNVqLSarYBKHTmVDy9m0nwRCYC88Ck9iQBY2le0hsDmHtGldoA4IrCNsR6yRFwKacc-6lIWQSB6GQZ8npZG1ZiPMhTk7miDZi66relrHecNCSSiECSD1gSSThCHQVd17M_g1gRGhMenIfY4MUZQnlGmZ9WO5cyoIR-rPswo9XJYd5CpM_k",
-    },
-    {
-      id: 102,
-      name: "Alice Johnson",
-      email: "alice.j@example.com",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCXFHgZ5GS2ufqUtsOkxSaXbP7nVlMYQ4qNRH_BIOwXDBfAglDPWd6X1JpTyPaVBMPw45GVGhRoPo4RrzV6L9xuSppSyULK4qU2uS82gjgCSXIgV6aPvx4AB1rThReMf_zKfDpMAwexRU6D_wFZnvRKGyFdvB2TcF9hrjioOVwFArzexfNL3yEPLBAuBPkjwhxZYNko4YvnPwRANNcGd2uIuxttmBAnVzJzWI01dDWHI-xHsm46BWjQiKqZsP3vuvFijR2xV6YLzaw",
-    },
-    {
-      id: 103,
-      name: "Bob Williams",
-      email: "bob.w@example.com",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBbmW0NnKreIcj4qRJ7pm-qfDj5L_FUTEpW1HIrKgDTL9gNjrrhw8Ep0hHBlBw4mcLD9KfDmsoiudGzmzfiZ1NWY7YczAtKXHEAnR7sM9uvIXl3eO_UT2vLQGnqCrml0wzMGjaJu2H-ax40LTVbKBqlHe9ElGbmkk-Gxa-1PkmwT9Fmf3B3GI4o6Wsk-gqSsB5uMrsZa-sXhkXz58j5egSgNajPmBPgv0tasDjUaZ5tDoi_Ew6wCafLLURiwBuLFNEfb_877JnlKH0",
-    },
-    {
-      id: 104,
-      name: "Carol Martinez",
-      email: "carol.m@example.com",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuAK5lO6wcPdAIyCU22g_Fh88Y1wctZtZYFrH_-ycXeAQ0JAHmVNk1F4jTlS8KxC4ahBJzVznI2rRzJC8s-sna6jDGDplS4vnT__kTCGPcIFGaSg5o_NwgHgLSS5oyKCatxhinR7yPT-8yg9KGXrBw5y9-ctXM95v6Cm0NsfkvGTH-72sorrMqzpO-cXOs5fhYqZkFFccae3ibshhqr4nzpRJzvldVs4xzs0-qS70tq-Wdeu2MizopS_8VkPX9WOeMMSY_7lSUA85A0",
-    },
-    {
-      id: 105,
-      name: "David Brown",
-      email: "david.brown@example.com",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBuVdVI9W4xZa3wFEpKvCeSRt4x54u_T7PV9TQi_enyBYh-wEK5tQGVJFTKHAtbadhsH-yk6CYCWAyXUAa2VZYGCpm1_jNVqLSarYBKHTmVDy9m0nwRCYC88Ck9iQBY2le0hsDmHtGldoA4IrCNsR6yRFwKacc-6lIWQSB6GQZ8npZG1ZiPMhTk7miDZi66relrHecNCSSiECSD1gSSThCHQVd17M_g1gRGhMenIfY4MUZQnlGmZ9WO5cyoIR-rPswo9XJYd5CpM_k",
-    },
-  ];
+  // No more mock data - using real API
 
   // Static mock data (easy to replace with API later)
-  private mockData: DarDetails = {
-    id: 1,
-    name: "Family Savings 2024",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCBCoz3NomWh-7q6mKCsR4e_tP3VZTKWofatO1Lqo92rcIhtvZ70vQpFH7hOZJVb_uZG3D_yVvrDVQgDxo8HdcZOB1DJMvO2moD4yz08nJuf2XJRUAKYV1JfONNyiNn_Btnrg23jeONbLh36MRHEDl99zZtJ_OMbrC617RD68Yk_GEep6QyRy94DgDSlnmLcq2HnXBvgR7PJw-ymEQhK2H-2R4EECMBvaz6SkhSUcFGlpMsvZ-Dg3zjR4t6xPBZ4J4zEtcEW00ZEFE",
-    status: "active",
-    organizer: "Jane Doe",
-    startDate: "Oct 1, 2023",
-    currentCycle: 2,
-    totalCycles: 12,
-    progress: 16.66,
-    totalMembers: 12,
-    monthlyPot: 1200,
-    nextPayout: "Nov 1",
-    members: [
-      {
-        id: 1,
-        name: "Jane Doe",
-        email: "jane@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuBuVdVI9W4xZa3wFEpKvCeSRt4x54u_T7PV9TQi_enyBYh-wEK5tQGVJFTKHAtbadhsH-yk6CYCWAyXUAa2VZYGCpm1_jNVqLSarYBKHTmVDy9m0nwRCYC88Ck9iQBY2le0hsDmHtGldoA4IrCNsR6yRFwKacc-6lIWQSB6GQZ8npZG1ZiPMhTk7miDZi66relrHecNCSSiECSD1gSSThCHQVd17M_g1gRGhMenIfY4MUZQnlGmZ9WO5cyoIR-rPswo9XJYd5CpM_k",
-        role: "organizer",
-        turnDate: "Dec 1, 2023",
-        paymentStatus: "paid",
-      },
-      {
-        id: 2,
-        name: "Michael Foster",
-        email: "michael@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuCXFHgZ5GS2ufqUtsOkxSaXbP7nVlMYQ4qNRH_BIOwXDBfAglDPWd6X1JpTyPaVBMPw45GVGhRoPo4RrzV6L9xuSppSyULK4qU2uS82gjgCSXIgV6aPvx4AB1rThReMf_zKfDpMAwexRU6D_wFZnvRKGyFdvB2TcF9hrjioOVwFArzexfNL3yEPLBAuBPkjwhxZYNko4YvnPwRANNcGd2uIuxttmBAnVzJzWI01dDWHI-xHsm46BWjQiKqZsP3vuvFijR2xV6YLzaw",
-        role: "member",
-        turnDate: "Nov 1, 2023",
-        paymentStatus: "paid",
-      },
-      {
-        id: 3,
-        name: "Dries Vincent",
-        email: "dries@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuBbmW0NnKreIcj4qRJ7pm-qfDj5L_FUTEpW1HIrKgDTL9gNjrrhw8Ep0hHBlBw4mcLD9KfDmsoiudGzmzfiZ1NWY7YczAtKXHEAnR7sM9uvIXl3eO_UT2vLQGnqCrml0wzMGjaJu2H-ax40LTVbKBqlHe9ElGbmkk-Gxa-1PkmwT9Fmf3B3GI4o6Wsk-gqSsB5uMrsZa-sXhkXz58j5egSgNajPmBPgv0tasDjUaZ5tDoi_Ew6wCafLLURiwBuLFNEfb_877JnlKH0",
-        role: "member",
-        turnDate: "Jan 1, 2024",
-        paymentStatus: "pending",
-      },
-      {
-        id: 4,
-        name: "Lindsay Walton",
-        email: "lindsay@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuAK5lO6wcPdAIyCU22g_Fh88Y1wctZtZYFrH_-ycXeAQ0JAHmVNk1F4jTlS8KxC4ahBJzVznI2rRzJC8s-sna6jDGDplS4vnT__kTCGPcIFGaSg5o_NwgHgLSS5oyKCatxhinR7yPT-8yg9KGXrBw5y9-ctXM95v6Cm0NsfkvGTH-72sorrMqzpO-cXOs5fhYqZkFFccae3ibshhqr4nzpRJzvldVs4xzs0-qS70tq-Wdeu2MizopS_8VkPX9WOeMMSY_7lSUA85A0",
-        role: "member",
-        turnDate: "Feb 1, 2024",
-        paymentStatus: "future",
-      },
-      {
-        id: 5,
-        name: "Sarah Connor",
-        email: "sarah@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuBuVdVI9W4xZa3wFEpKvCeSRt4x54u_T7PV9TQi_enyBYh-wEK5tQGVJFTKHAtbadhsH-yk6CYCWAyXUAa2VZYGCpm1_jNVqLSarYBKHTmVDy9m0nwRCYC88Ck9iQBY2le0hsDmHtGldoA4IrCNsR6yRFwKacc-6lIWQSB6GQZ8npZG1ZiPMhTk7miDZi66relrHecNCSSiECSD1gSSThCHQVd17M_g1gRGhMenIfY4MUZQnlGmZ9WO5cyoIR-rPswo9XJYd5CpM_k",
-        role: "member",
-        turnDate: "Mar 1, 2024",
-        paymentStatus: "future",
-      },
-      {
-        id: 6,
-        name: "Tom Hardy",
-        email: "tom@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuCXFHgZ5GS2ufqUtsOkxSaXbP7nVlMYQ4qNRH_BIOwXDBfAglDPWd6X1JpTyPaVBMPw45GVGhRoPo4RrzV6L9xuSppSyULK4qU2uS82gjgCSXIgV6aPvx4AB1rThReMf_zKfDpMAwexRU6D_wFZnvRKGyFdvB2TcF9hrjioOVwFArzexfNL3yEPLBAuBPkjwhxZYNko4YvnPwRANNcGd2uIuxttmBAnVzJzWI01dDWHI-xHsm46BWjQiKqZsP3vuvFijR2xV6YLzaw",
-        role: "member",
-        turnDate: "Apr 1, 2024",
-        paymentStatus: "future",
-      },
-      {
-        id: 7,
-        name: "Emma Stone",
-        email: "emma@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuBbmW0NnKreIcj4qRJ7pm-qfDj5L_FUTEpW1HIrKgDTL9gNjrrhw8Ep0hHBlBw4mcLD9KfDmsoiudGzmzfiZ1NWY7YczAtKXHEAnR7sM9uvIXl3eO_UT2vLQGnqCrml0wzMGjaJu2H-ax40LTVbKBqlHe9ElGbmkk-Gxa-1PkmwT9Fmf3B3GI4o6Wsk-gqSsB5uMrsZa-sXhkXz58j5egSgNajPmBPgv0tasDjUaZ5tDoi_Ew6wCafLLURiwBuLFNEfb_877JnlKH0",
-        role: "member",
-        turnDate: "May 1, 2024",
-        paymentStatus: "future",
-      },
-      {
-        id: 8,
-        name: "Chris Evans",
-        email: "chris@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuAK5lO6wcPdAIyCU22g_Fh88Y1wctZtZYFrH_-ycXeAQ0JAHmVNk1F4jTlS8KxC4ahBJzVznI2rRzJC8s-sna6jDGDplS4vnT__kTCGPcIFGaSg5o_NwgHgLSS5oyKCatxhinR7yPT-8yg9KGXrBw5y9-ctXM95v6Cm0NsfkvGTH-72sorrMqzpO-cXOs5fhYqZkFFccae3ibshhqr4nzpRJzvldVs4xzs0-qS70tq-Wdeu2MizopS_8VkPX9WOeMMSY_7lSUA85A0",
-        role: "member",
-        turnDate: "Jun 1, 2024",
-        paymentStatus: "future",
-      },
-      {
-        id: 9,
-        name: "Natalie Portman",
-        email: "natalie@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuBuVdVI9W4xZa3wFEpKvCeSRt4x54u_T7PV9TQi_enyBYh-wEK5tQGVJFTKHAtbadhsH-yk6CYCWAyXUAa2VZYGCpm1_jNVqLSarYBKHTmVDy9m0nwRCYC88Ck9iQBY2le0hsDmHtGldoA4IrCNsR6yRFwKacc-6lIWQSB6GQZ8npZG1ZiPMhTk7miDZi66relrHecNCSSiECSD1gSSThCHQVd17M_g1gRGhMenIfY4MUZQnlGmZ9WO5cyoIR-rPswo9XJYd5CpM_k",
-        role: "member",
-        turnDate: "Jul 1, 2024",
-        paymentStatus: "future",
-      },
-      {
-        id: 10,
-        name: "Robert Downey",
-        email: "robert@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuCXFHgZ5GS2ufqUtsOkxSaXbP7nVlMYQ4qNRH_BIOwXDBfAglDPWd6X1JpTyPaVBMPw45GVGhRoPo4RrzV6L9xuSppSyULK4qU2uS82gjgCSXIgV6aPvx4AB1rThReMf_zKfDpMAwexRU6D_wFZnvRKGyFdvB2TcF9hrjioOVwFArzexfNL3yEPLBAuBPkjwhxZYNko4YvnPwRANNcGd2uIuxttmBAnVzJzWI01dDWHI-xHsm46BWjQiKqZsP3vuvFijR2xV6YLzaw",
-        role: "member",
-        turnDate: "Aug 1, 2024",
-        paymentStatus: "future",
-      },
-      {
-        id: 11,
-        name: "Scarlett Johansson",
-        email: "scarlett@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuBbmW0NnKreIcj4qRJ7pm-qfDj5L_FUTEpW1HIrKgDTL9gNjrrhw8Ep0hHBlBw4mcLD9KfDmsoiudGzmzfiZ1NWY7YczAtKXHEAnR7sM9uvIXl3eO_UT2vLQGnqCrml0wzMGjaJu2H-ax40LTVbKBqlHe9ElGbmkk-Gxa-1PkmwT9Fmf3B3GI4o6Wsk-gqSsB5uMrsZa-sXhkXz58j5egSgNajPmBPgv0tasDjUaZ5tDoi_Ew6wCafLLURiwBuLFNEfb_877JnlKH0",
-        role: "member",
-        turnDate: "Sep 1, 2024",
-        paymentStatus: "future",
-      },
-      {
-        id: 12,
-        name: "Mark Ruffalo",
-        email: "mark@example.com",
-        avatar:
-          "https://lh3.googleusercontent.com/aida-public/AB6AXuAK5lO6wcPdAIyCU22g_Fh88Y1wctZtZYFrH_-ycXeAQ0JAHmVNk1F4jTlS8KxC4ahBJzVznI2rRzJC8s-sna6jDGDplS4vnT__kTCGPcIFGaSg5o_NwgHgLSS5oyKCatxhinR7yPT-8yg9KGXrBw5y9-ctXM95v6Cm0NsfkvGTH-72sorrMqzpO-cXOs5fhYqZkFFccae3ibshhqr4nzpRJzvldVs4xzs0-qS70tq-Wdeu2MizopS_8VkPX9WOeMMSY_7lSUA85A0",
-        role: "member",
-        turnDate: "Oct 1, 2024",
-        paymentStatus: "future",
-      },
-    ],
-  };
+  // Mock data removed - we only use real API data now
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private darService: DarService,
   ) {}
 
   ngOnInit(): void {
-    this.darId = this.route.snapshot.paramMap.get("id");
-    this.loadDarDetails();
+    // Subscribe to route params changes to reload data when navigating between darts
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      this.darId = params.get("id");
+      console.log(
+        "╔═══════════════════════════════════════════════════════════╗",
+      );
+      console.log(
+        "║  DART DETAILS COMPONENT - ROUTE PARAMS CHANGED           ║",
+      );
+      console.log(
+        "╚═══════════════════════════════════════════════════════════╝",
+      );
+      console.log("🆔 New Dart ID from route:", this.darId);
+      console.log("📋 Full route params:", params);
+      console.log("🌐 Current URL:", window.location.href);
+      console.log("🔄 Component will reload data for this dart");
+
+      // Reset state
+      this.darDetails = null;
+      this.error = null;
+
+      // Load data for the new dart
+      this.loadDarDetails();
+    });
   }
 
   ngOnDestroy(): void {
@@ -261,29 +116,235 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
    * Currently uses mock data, but structured to easily replace with API call
    */
   loadDarDetails(): void {
-    // Simulate loading
+    if (!this.darId) {
+      this.error = "No Dâr ID provided";
+      console.error(
+        "╔═══════════════════════════════════════════════════════════╗",
+      );
+      console.error(
+        "║  ❌ ERROR: NO DART ID FOUND                             ║",
+      );
+      console.error(
+        "╚═══════════════════════════════════════════════════════════╝",
+      );
+      return;
+    }
+
+    console.log(
+      "╔═══════════════════════════════════════════════════════════╗",
+    );
+    console.log("║  📡 LOADING DART DETAILS FROM API                        ║");
+    console.log(
+      "╚═══════════════════════════════════════════════════════════╝",
+    );
+    console.log(`🆔 Dart ID to fetch: ${this.darId}`);
+    console.log(`🌐 API URL: ${this.darService["apiUrl"]}/${this.darId}`);
     this.isLoading = true;
     this.error = null;
 
-    // Simulate network delay
-    setTimeout(() => {
-      try {
-        // TODO: Replace with actual API call
-        // Example:
-        // this.darService.getDarDetails(+this.darId!)
-        //   .pipe(takeUntil(this.destroy$))
-        //   .subscribe({
-        //     next: (data) => { this.darDetails = this.mapApiData(data); },
-        //     error: (err) => { this.error = err.message; }
-        //   });
+    this.darService
+      .getDarDetails(this.darId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.isLoading = false)),
+      )
+      .subscribe({
+        next: (data) => {
+          console.log(
+            "╔═══════════════════════════════════════════════════════════╗",
+          );
+          console.log(
+            "║  ✅ DART DETAILS LOADED FROM API                         ║",
+          );
+          console.log(
+            "╚═══════════════════════════════════════════════════════════╝",
+          );
+          console.log("📦 RAW API RESPONSE:");
+          console.log("  🆔 ID:", data.id);
+          console.log("  📝 Name:", data.name);
+          console.log("  📊 Status:", data.status);
+          console.log("  👤 Organizer Name:", data.organizerName);
+          console.log("  👥 Member Count:", data.memberCount);
+          console.log("  💰 Monthly Contribution:", data.monthlyContribution);
+          console.log("  📅 Start Date:", data.startDate);
+          console.log("  🔄 Current Cycle:", data.currentCycle);
+          console.log("  🎯 Total Cycles:", data.totalCycles);
+          console.log("  🖼️  Image:", data.image);
+          console.log("  📋 Full Response Object:", data);
 
-        this.darDetails = this.mockData;
-        this.isLoading = false;
-      } catch (err) {
-        this.error = "Failed to load Dâr details";
-        this.isLoading = false;
-      }
-    }, 500);
+          console.log("\n🔄 MAPPING API DATA TO COMPONENT FORMAT...");
+          this.darDetails = this.mapApiDataToComponent(data);
+
+          console.log(
+            "╔═══════════════════════════════════════════════════════════╗",
+          );
+          console.log(
+            "║  📊 MAPPED DATA READY FOR DISPLAY                        ║",
+          );
+          console.log(
+            "╚═══════════════════════════════════════════════════════════╝",
+          );
+          console.log("  🆔 darDetails.id:", this.darDetails.id);
+          console.log("  📝 darDetails.name:", this.darDetails.name);
+          console.log("  👤 darDetails.organizer:", this.darDetails.organizer);
+          console.log(
+            "  👥 darDetails.totalMembers:",
+            this.darDetails.totalMembers,
+          );
+          console.log(
+            "  💰 darDetails.monthlyPot:",
+            this.darDetails.monthlyPot,
+          );
+          console.log("  📊 darDetails.status:", this.darDetails.status);
+          console.log("  📋 Full darDetails Object:", this.darDetails);
+
+          // Check if current user is organizer
+          this.isOrganizer = data.isOrganizer || false;
+          console.log("  👤 Is Organizer:", this.isOrganizer);
+
+          // Load members separately
+          this.loadMembers();
+        },
+        error: (err) => {
+          console.error(
+            "╔═══════════════════════════════════════════════════════════╗",
+          );
+          console.error(
+            "║  ❌ ERROR LOADING DART DETAILS                           ║",
+          );
+          console.error(
+            "╚═══════════════════════════════════════════════════════════╝",
+          );
+          console.error("🆔 Attempted Dart ID:", this.darId);
+          console.error(
+            "🌐 API URL:",
+            `${this.darService["apiUrl"]}/${this.darId}`,
+          );
+          console.error("📊 Status Code:", err.status);
+          console.error("📋 Error Message:", err.error?.message);
+          console.error("📦 Full Error Object:", err);
+          console.error("⚠️  THIS MEANS THE API CALL FAILED - NO DATA LOADED");
+
+          this.error =
+            err.error?.message ||
+            "Failed to load Dâr details. Please try again.";
+          // Don't fallback to mock data - show error instead
+        },
+      });
+  }
+
+  /**
+   * Load members for the dart
+   */
+  private loadMembers(): void {
+    if (!this.darId) return;
+
+    console.log(
+      "╔═══════════════════════════════════════════════════════════╗",
+    );
+    console.log("║  👥 LOADING MEMBERS FROM API                             ║");
+    console.log(
+      "╚═══════════════════════════════════════════════════════════╝",
+    );
+    console.log(`🆔 Dart ID: ${this.darId}`);
+
+    this.darService
+      .getMembers(this.darId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (members) => {
+          console.log(`✅ Loaded ${members.length} members:`, members);
+          if (this.darDetails) {
+            this.darDetails.members = members.map((m: any) => ({
+              id: m.id || "",
+              name: m.user?.userName || "Unknown",
+              email: m.user?.email || "",
+              avatar: this.getDefaultAvatar(),
+              role: m.permission === "ORGANIZER" ? "organizer" : "member",
+              status: m.status as MemberStatus, // PENDING, ACTIVE, or LEAVED
+              turnDate: m.joinedAt
+                ? new Date(m.joinedAt).toLocaleDateString()
+                : "TBD",
+            }));
+            console.log(
+              `📊 Mapped ${this.darDetails.members.length} members for display`,
+            );
+            console.log(
+              `📋 Member statuses:`,
+              this.darDetails.members.map((m) => ({
+                name: m.name,
+                status: m.status,
+              })),
+            );
+          }
+        },
+        error: (err) => {
+          console.error("❌ Error loading members:");
+          console.error("  - Dart ID:", this.darId);
+          console.error("  - Error:", err);
+          // Keep empty members list
+        },
+      });
+  }
+
+  /**
+   * Maps API response to component display format
+   */
+  private mapApiDataToComponent(apiData: any): DarDetails {
+    console.log(
+      "╔═══════════════════════════════════════════════════════════╗",
+    );
+    console.log("║  🔄 MAPPING API DATA TO COMPONENT                        ║");
+    console.log(
+      "╚═══════════════════════════════════════════════════════════╝",
+    );
+    console.log("📥 INPUT from API:");
+    console.log("  - apiData.id:", apiData.id);
+    console.log("  - apiData.name:", apiData.name);
+    console.log("  - apiData.organizerName:", apiData.organizerName);
+    console.log("  - apiData.status:", apiData.status);
+    console.log("  - apiData.memberCount:", apiData.memberCount);
+
+    const mapped = {
+      id: apiData.id,
+      name: apiData.name,
+      image: apiData.image || this.getDefaultDarImage(),
+      status: apiData.status?.toLowerCase() || "pending",
+      organizer: apiData.organizerName || "Unknown",
+      startDate: apiData.startDate
+        ? new Date(apiData.startDate).toLocaleDateString()
+        : "Not started",
+      currentCycle: apiData.currentCycle || 0,
+      totalCycles: apiData.totalCycles || apiData.memberCount || 0,
+      progress:
+        apiData.totalCycles > 0
+          ? Math.round((apiData.currentCycle / apiData.totalCycles) * 100)
+          : 0,
+      totalMembers: apiData.memberCount || 0,
+      monthlyPot: apiData.totalMonthlyPool || 0,
+      nextPayout: apiData.nextPayoutDate
+        ? new Date(apiData.nextPayoutDate).toLocaleDateString()
+        : "TBD",
+      members: [], // Will be loaded separately
+    };
+
+    console.log("📤 OUTPUT to component:");
+    console.log("  - mapped.id:", mapped.id);
+    console.log("  - mapped.name:", mapped.name);
+    console.log("  - mapped.organizer:", mapped.organizer);
+    console.log("  - mapped.totalMembers:", mapped.totalMembers);
+    console.log("  - mapped.status:", mapped.status);
+    console.log("  - mapped.monthlyPot:", mapped.monthlyPot);
+
+    return mapped;
+  }
+
+  private getDefaultDarImage(): string {
+    return "https://lh3.googleusercontent.com/aida-public/AB6AXuD-pwl5GpoIiCkLChiBfM8jBx93qoPfudmizHw4SYrGPAqpLh5iKHnmvode9ncSTcX8DL1gns4F-ae0xNAH2xQWvXgtnTjKu5cagVr0TiEYflQKOxiwOrFxGbm1qTtC_VlRRNYQHS6LHhbRVzoWAn5wWzTm5bGQOLBVHVB9JrBaeYViaKMu-hXjEk-0ZtPSBjmCGFmqrQc9uLkPJD9riQH3WUuNmAKZ5Q8LbrwZ3xayNu7hbn0QqNuKxXqKRl_8x53-0trppiHouNs";
+  }
+
+  private getDefaultAvatar(): string {
+    return "https://lh3.googleusercontent.com/aida-public/AB6AXuBslXgr8opXf_uENdwJxzyKr9GRCw4G8mfyE8iZQQOngvypPi6214ULvdRZBuUvsIy0WRk3RdepAhh9-RL3tcVRMVvxfL9JUcmM12GxvjNk0oLlZRbTs0oCabm2iHzsq1TLpJG9oDmzaXryRQMyAngNT1Tdf14qsZ59ySzC37XJ8X06OXxX09aAZwtdAq4eTBxG3InSq6T5Drk7Fqk3HIqapsMv96l1zWzUSkStz23i_xUVPiqeKp3MKwHTg3E3eEbdsnnglO56Axs";
   }
 
   /**
@@ -338,84 +399,135 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Search for users to invite
+   * Search for users to invite (real-time API call)
    */
   searchUsers(): void {
-    if (!this.inviteSearchQuery.trim()) {
+    const query = this.inviteSearchQuery.trim();
+
+    if (!query) {
       this.searchResults = [];
       return;
     }
 
+    if (query.length < 2) {
+      this.searchResults = [];
+      return;
+    }
+
+    console.log("🔍 Searching users with query:", query);
     this.isSearching = true;
 
-    // Simulate API call with delay
-    setTimeout(() => {
-      const query = this.inviteSearchQuery.toLowerCase().trim();
+    // Get current member IDs to exclude them from results
+    const memberIds = this.darDetails?.members.map((m) => m.id) || [];
 
-      // Filter mock users (exclude already members)
-      const memberIds = this.darDetails?.members.map((m) => m.id) || [];
-      this.searchResults = this.mockUsers.filter(
-        (user) =>
-          !memberIds.includes(user.id) &&
-          (user.name.toLowerCase().includes(query) ||
-            user.email.toLowerCase().includes(query)),
-      );
-
-      this.isSearching = false;
-
-      // TODO: Replace with actual API call
-      // this.darService.searchUsers(this.inviteSearchQuery)
-      //   .pipe(takeUntil(this.destroy$))
-      //   .subscribe({
-      //     next: (users) => {
-      //       this.searchResults = users.filter(u => !memberIds.includes(u.id));
-      //       this.isSearching = false;
-      //     },
-      //     error: (err) => {
-      //       console.error("Error searching users:", err);
-      //       this.isSearching = false;
-      //     }
-      //   });
-    }, 300);
+    this.darService
+      .searchUsers(query)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.isSearching = false)),
+      )
+      .subscribe({
+        next: (users) => {
+          console.log("✅ Found users:", users);
+          // Filter out users who are already members
+          this.searchResults = users
+            .filter((u) => !memberIds.includes(u.id))
+            .map((u) => ({
+              id: u.id,
+              name: u.userName,
+              email: u.email,
+              avatar: u.avatar || this.getDefaultAvatar(),
+            }));
+          console.log(
+            "📋 Filtered results (excluding members):",
+            this.searchResults,
+          );
+        },
+        error: (err) => {
+          console.error("❌ Error searching users:", err);
+          this.searchResults = [];
+        },
+      });
   }
 
   /**
-   * Invite a user to the Dâr
+   * Invite a user to the Dâr (real API call)
    */
-  inviteUser(userId: number): void {
+  inviteUser(userId: string): void {
     if (!this.darId) return;
 
+    const user = this.searchResults.find((u) => u.id === userId);
+    if (!user) return;
+
+    console.log("📧 Inviting user:", user.name, "to dart:", this.darId);
     this.invitingUserId = userId;
 
-    // Simulate API call
-    setTimeout(() => {
-      // TODO: Replace with actual API call
-      // this.darService.inviteMember({ darId: +this.darId!, userId })
-      //   .pipe(takeUntil(this.destroy$))
-      //   .subscribe({
-      //     next: () => {
-      //       // Remove from search results
-      //       this.searchResults = this.searchResults.filter(u => u.id !== userId);
-      //       this.invitingUserId = null;
-      //       // Show success message
-      //       // Optionally refresh the member list
-      //     },
-      //     error: (err) => {
-      //       console.error("Error inviting member:", err);
-      //       this.invitingUserId = null;
-      //     }
-      //   });
+    this.darService
+      .inviteMember(this.darId, userId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.invitingUserId = null)),
+      )
+      .subscribe({
+        next: () => {
+          console.log("✅ User invited successfully");
+          // Remove from search results
+          this.searchResults = this.searchResults.filter(
+            (u) => u.id !== userId,
+          );
+          // Show success message
+          alert(`${user.name} has been invited to this Dâr!`);
+          // Reload members list
+          this.loadMembers();
+        },
+        error: (err) => {
+          console.error("❌ Error inviting member:", err);
+          const errorMessage =
+            err.error?.message ||
+            "Failed to invite member. They may already be a member.";
+          alert(errorMessage);
+        },
+      });
+  }
 
-      // Mock: Remove from search results
-      this.searchResults = this.searchResults.filter((u) => u.id !== userId);
-      this.invitingUserId = null;
+  /**
+   * Start the Dâr (organizer only)
+   */
+  startDart(): void {
+    if (!this.darId) return;
 
-      // Show success feedback
-      const user = this.mockUsers.find((u) => u.id === userId);
-      if (user) {
-        alert(`Invitation sent to ${user.name}!`);
-      }
-    }, 500);
+    if (
+      !confirm(
+        "Are you sure you want to start this Dâr? This will activate the dart and begin the contribution cycles.",
+      )
+    ) {
+      return;
+    }
+
+    console.log("🚀 Starting Dart:", this.darId);
+    this.isLoading = true;
+
+    this.darService
+      .startDar(this.darId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.isLoading = false)),
+      )
+      .subscribe({
+        next: (response) => {
+          console.log("✅ Dart started successfully:", response);
+          // Reload the dart details to show updated status
+          this.loadDarDetails();
+          alert("Dâr started successfully!");
+        },
+        error: (err) => {
+          console.error("❌ Error starting dart:", err);
+          const errorMessage =
+            err.error?.message ||
+            "Failed to start Dâr. Please ensure you have the minimum number of members.";
+          alert(errorMessage);
+        },
+      });
   }
 
   /**
@@ -431,7 +543,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   /**
    * Send reminder to a member about pending payment
    */
-  remindMember(memberId: number): void {
+  remindMember(memberId: string): void {
     console.log("Remind member:", memberId);
     // TODO: Implement reminder functionality
     // Example API call:
@@ -442,45 +554,39 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   /**
    * Open member options menu
    */
-  openMemberOptions(memberId: number): void {
+  openMemberOptions(memberId: string): void {
     console.log("Open options for member:", memberId);
     // TODO: Implement options menu
     // Example: Show dropdown with actions like remove, make admin, etc.
   }
 
   /**
-   * Get CSS classes for payment status badge
+   * Get CSS classes for member status badges
    */
-  getStatusClass(status: string): string {
-    const statusLower = status.toLowerCase();
-    switch (statusLower) {
-      case "paid":
+  getStatusClass(status: MemberStatus): string {
+    switch (status) {
+      case MemberStatus.ACTIVE:
         return "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 ring-green-600/20";
-      case "pending":
-        return "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 ring-yellow-600/20";
-      case "overdue":
-        return "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-400 ring-red-600/20";
-      case "future":
-        return "bg-gray-50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 ring-gray-500/10";
+      case MemberStatus.PENDING:
+        return "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 ring-yellow-600/20";
+      case MemberStatus.LEAVED:
+        return "bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 ring-gray-600/20";
       default:
-        return "bg-gray-50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 ring-gray-500/10";
+        return "bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 ring-gray-600/20";
     }
   }
 
   /**
    * Get Material icon name for payment status
    */
-  getStatusIcon(status: string): string {
-    const statusLower = status.toLowerCase();
-    switch (statusLower) {
-      case "paid":
+  getStatusIcon(status: MemberStatus): string {
+    switch (status) {
+      case MemberStatus.ACTIVE:
         return "check_circle";
-      case "pending":
+      case MemberStatus.PENDING:
         return "schedule";
-      case "overdue":
-        return "error";
-      case "future":
-        return "remove";
+      case MemberStatus.LEAVED:
+        return "logout";
       default:
         return "help";
     }
@@ -489,17 +595,14 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   /**
    * Get display text for payment status
    */
-  getStatusText(status: string): string {
-    const statusLower = status.toLowerCase();
-    switch (statusLower) {
-      case "paid":
-        return "Paid";
-      case "pending":
-        return "Pending";
-      case "overdue":
-        return "Overdue";
-      case "future":
-        return "Future";
+  getStatusText(status: MemberStatus): string {
+    switch (status) {
+      case MemberStatus.ACTIVE:
+        return "Active";
+      case MemberStatus.PENDING:
+        return "Pending Invitation";
+      case MemberStatus.LEAVED:
+        return "Left";
       default:
         return "Unknown";
     }
