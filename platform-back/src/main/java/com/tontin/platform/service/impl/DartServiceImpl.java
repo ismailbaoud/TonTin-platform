@@ -8,6 +8,7 @@ import com.tontin.platform.domain.enums.dart.DartStatus;
 import com.tontin.platform.domain.enums.member.MemberStatus;
 import com.tontin.platform.dto.dart.request.DartRequest;
 import com.tontin.platform.dto.dart.response.DartResponse;
+import com.tontin.platform.dto.dart.response.PageResponse;
 import com.tontin.platform.mapper.DartMapper;
 import com.tontin.platform.repository.DartRepository;
 import com.tontin.platform.service.DartService;
@@ -16,6 +17,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,30 +39,28 @@ public class DartServiceImpl implements DartService {
     @Transactional
     public DartResponse createDart(DartRequest request) {
         log.info(
-            "Creating dart with name: {}",
-            request != null ? request.name() : null
-        );
+                "Creating dart with name: {}",
+                request != null ? request.name() : null);
         validateRequest(request);
         Dart dart = dartMapper.toEntity(request);
         dart.setStatus(DartStatus.PENDING);
-        dart.setStartDate(LocalDateTime.now());
+        dart.setStartDate(null); // Will be set when organizer starts the dart
         Dart savedDart = dartRepository.save(dart);
         log.debug("Dart persisted with id: {}", savedDart.getId());
 
         User organizer = securityUtils.requireCurrentUser();
 
         memberService.createMember(
-            DartPermission.ORGANIZER,
-            MemberStatus.ACTIVE,
-            savedDart,
-            organizer
-        );
-        log.debug(
-            "Organizer member created for dart id: {}",
-            savedDart.getId()
-        );
+                DartPermission.ORGANIZER,
+                MemberStatus.ACTIVE,
+                savedDart,
+                organizer);
 
-        return dartMapper.toDto(savedDart);
+        log.debug(
+                "Organizer member created for dart id: {}",
+                savedDart.getId());
+
+        return dartMapper.toDtoWithContext(savedDart, organizer.getId());
     }
 
     @Override
@@ -71,7 +73,8 @@ public class DartServiceImpl implements DartService {
         applyRequest(dart, request);
         Dart updatedDart = dartRepository.save(dart);
         log.debug("Dart updated with id: {}", updatedDart.getId());
-        return dartMapper.toDto(updatedDart);
+        User currentUser = securityUtils.requireCurrentUser();
+        return dartMapper.toDtoWithContext(updatedDart, currentUser.getId());
     }
 
     @Override
@@ -80,7 +83,8 @@ public class DartServiceImpl implements DartService {
         log.debug("Fetching dart details for id: {}", id);
         validateId(id);
         Dart dart = findDartById(id);
-        return dartMapper.toDto(dart);
+        User currentUser = securityUtils.requireCurrentUser();
+        return dartMapper.toDtoWithContext(dart, currentUser.getId());
     }
 
     @Override
@@ -91,15 +95,16 @@ public class DartServiceImpl implements DartService {
         Dart dart = findDartById(id);
         if (dart.isActive() && !dart.getActiveMembers().isEmpty()) {
             log.warn(
-                "Attempt to delete active dart {} with active members",
-                id
-            );
+                    "Attempt to delete active dart {} with active members",
+                    id);
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Cannot delete an active dart with active members"
-            );
+                    HttpStatus.CONFLICT,
+                    "Cannot delete an active dart with active members");
         }
-        DartResponse response = dartMapper.toDto(dart);
+        User currentUser = securityUtils.requireCurrentUser();
+        DartResponse response = dartMapper.toDtoWithContext(
+                dart,
+                currentUser.getId());
         dartRepository.delete(dart);
         log.debug("Dart deleted with id: {}", id);
         return response;
@@ -109,47 +114,139 @@ public class DartServiceImpl implements DartService {
         if (id == null) {
             log.error("Dart identifier is null");
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Dart identifier must not be null"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Dart identifier must not be null");
         }
     }
 
     private Dart findDartById(UUID id) {
         return dartRepository
-            .findById(id)
-            .orElseThrow(() -> {
-                log.warn("Dart not found with id: {}", id);
-                return new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Dart not found with id: " + id
-                );
-            });
+                .findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Dart not found with id: {}", id);
+                    return new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Dart not found with id: " + id);
+                });
     }
 
     private void applyRequest(Dart dart, DartRequest request) {
         dart.setName(request.name());
         dart.setMonthlyContribution(request.monthlyContribution());
-        dart.setAllocationMethod(request.allocationMethod());
+        dart.setOrderMethod(request.orderMethod());
+        dart.setDescription(request.description());
+        dart.setPaymentFrequency(request.paymentFrequency());
     }
 
     private void validateRequest(DartRequest request) {
         if (request == null) {
             log.error("Dart request payload is null");
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Dart request must not be null"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Dart request must not be null");
         }
         if (!request.isValidAllocationMethod()) {
             log.error(
-                "Unsupported allocation method received: {}",
-                request.allocationMethod()
-            );
+                    "Unsupported order method received: {}",
+                    request.orderMethod());
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Unsupported allocation method: " + request.allocationMethod()
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Unsupported order method: " + request.orderMethod());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<DartResponse> getMyDarts(
+            DartStatus status,
+            int page,
+            int pageSize) {
+        log.info(
+                "Fetching darts for current user with status: {}, page: {}, size: {}",
+                status,
+                page,
+                pageSize);
+
+        User currentUser = securityUtils.requireCurrentUser();
+        Pageable pageable = PageRequest.of(page, pageSize);
+
+        Page<Dart> dartPage;
+        if (status != null) {
+            dartPage = dartRepository.findAllByUserIdAndStatus(
+                    currentUser.getId(),
+                    status,
+                    pageable);
+        } else {
+            dartPage = dartRepository.findAllByUserId(
+                    currentUser.getId(),
+                    pageable);
+        }
+        log.info("Total elements from DB: {}", dartPage.getTotalElements());
+        log.info("Content size before mapping: {}", dartPage.getContent().size());
+        dartPage.getContent().forEach(d -> log.info("Dart ID from DB: {}", d.getId()));
+        log.info("Current user ID: {}", currentUser.getId());
+
+        Page<DartResponse> responsePage = dartPage.map(dart -> dartMapper.toDtoWithContext(dart, currentUser.getId()));
+
+        log.debug(
+                "Retrieved {} darts for user {}",
+                responsePage.getNumberOfElements(),
+                currentUser.getId());
+        System.out.println(responsePage);
+
+        return PageResponse.of(responsePage);
+    }
+
+    @Override
+    @Transactional
+    public DartResponse startDart(UUID id) {
+        log.info("Starting dart with id: {}", id);
+        validateId(id);
+
+        Dart dart = findDartById(id);
+        User currentUser = securityUtils.requireCurrentUser();
+
+        // Verify user is organizer
+        boolean isOrganizer = dart
+                .getMembers()
+                .stream()
+                .anyMatch(
+                        m -> m.getUser().getId().equals(currentUser.getId()) &&
+                                m.getPermission() == DartPermission.ORGANIZER);
+
+        if (!isOrganizer) {
+            log.warn(
+                    "User {} is not organizer of dart {}",
+                    currentUser.getId(),
+                    id);
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only organizers can start a dart");
+        }
+
+        // Check if dart is already started
+        if (dart.getStartDate() != null) {
+            log.warn("Dart {} is already started", id);
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Dart has already been started");
+        }
+
+        // Check minimum members (e.g., at least 2 members including organizer)
+        if (dart.getActiveMembers().size() < 2) {
+            log.warn("Dart {} does not have minimum members", id);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot start dart: minimum 2 members required");
+        }
+
+        // Set start date and change status to ACTIVE
+        dart.setStartDate(LocalDateTime.now());
+        dart.setStatus(DartStatus.ACTIVE);
+
+        Dart updatedDart = dartRepository.save(dart);
+        log.info("Dart {} started successfully", id);
+
+        return dartMapper.toDtoWithContext(updatedDart, currentUser.getId());
     }
 }

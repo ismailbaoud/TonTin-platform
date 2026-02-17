@@ -217,7 +217,7 @@ public class MemberServiceImpl implements MemberService {
         log.debug("Fetching all members for dart {}", dartId);
         validateUuid(dartId, "dartId");
         ensureDartExists(dartId);
-        requireOrganizer(dartId);
+        // requireOrganizer(dartId);
 
         return memberRepository
             .findAllByDartId(dartId)
@@ -250,11 +250,9 @@ public class MemberServiceImpl implements MemberService {
         if (member.getDart() != null) {
             member.getDart().removeMember(member);
         }
-        User user = member.getUser();
-        if (user != null) {
-            user.setMember(null);
-            member.setUser(null);
-        }
+    member.setUser(null);
+    member.setDart(null);
+
 
         memberRepository.delete(member);
         log.debug("Member {} removed from dart {}", id, dartId);
@@ -369,6 +367,47 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
+    @Override
+    @Transactional
+    public MemberResponse acceptInvitation(UUID dartId) {
+        log.info("Accepting invitation for dart {}", dartId);
+        validateUuid(dartId, "dartId");
+
+        User currentUser = securityUtils.requireCurrentUser();
+
+        // Find the member record for current user in this dart
+        Member member = memberRepository
+            .findByDartIdAndUserId(dartId, currentUser.getId())
+            .orElseThrow(() ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "You are not a member of this dart"
+                )
+            );
+
+        // Check if member is in PENDING status
+        if (member.getStatus() != MemberStatus.PENDING) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Invitation has already been " +
+                    (member.getStatus() == MemberStatus.ACTIVE
+                        ? "accepted"
+                        : "processed")
+            );
+        }
+
+        // Update status to ACTIVE
+        member.activate();
+        Member savedMember = memberRepository.save(member);
+
+        log.info(
+            "User {} accepted invitation to dart {}",
+            currentUser.getId(),
+            dartId
+        );
+        return memberMapper.toDto(savedMember);
+    }
+
     private ResponseStatusException notFound(
         HttpStatus status,
         String template,
@@ -376,5 +415,45 @@ public class MemberServiceImpl implements MemberService {
     ) {
         String message = String.format(template, args);
         return new ResponseStatusException(status, message);
+    }
+
+    @Override
+    public MemberResponse rejectInvitation(UUID dartId) {
+        log.info("Rejecting invitation for dart {}", dartId);
+        validateUuid(dartId, "dartId");
+
+        User currentUser = securityUtils.requireCurrentUser();
+
+        // Find the member record for current user in this dart
+        Member member = memberRepository
+            .findByDartIdAndUserId(dartId, currentUser.getId())
+            .orElseThrow(() -> 
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "You are not a member of this dart"
+                )
+            );
+
+        // Check if member is in PENDING status
+        if(member.getStatus() != MemberStatus.PENDING) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Invitation has already been "+
+                (member.getStatus() == MemberStatus.ACTIVE
+                    ? "accepted"
+                    : "processed") 
+            );
+        }
+
+        // update status to LEAVED
+        member.reject();
+        Member savedMember = memberRepository.save(member);
+
+        log.info(
+            "User {} rejected invitation to dart {}",
+            currentUser.getId(),
+            dartId
+        );
+        return memberMapper.toDto(savedMember);
     }
 }
