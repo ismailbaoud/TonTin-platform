@@ -20,7 +20,7 @@ public class AuthloggingAspect {
 
     private final LogRepository logRepository;
 
-    @Value("${env}")
+    @Value("${env:development}")
     private String env;
 
     @Around("execution(* com.tontin.platform.service.AuthService.*(..))")
