@@ -1,9 +1,13 @@
 <div class="bg-gray-50 dark:bg-gray-950 p-6 lg:p-10">
   <div class="w-full max-w-6xl mx-auto flex flex-col gap-8">
     <!-- Page Heading & Actions -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+    >
       <div class="flex flex-col gap-1">
-        <h1 class="text-gray-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
+        <h1
+          class="text-gray-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]"
+        >
           My Dârs
         </h1>
         <p class="text-gray-500 dark:text-gray-400 text-base font-normal">
@@ -14,18 +18,30 @@
         routerLink="/dashboard/client/create-dar"
         class="flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-green-500 text-gray-900 px-6 py-3 font-bold transition-all shadow-lg shadow-primary/20 group"
       >
-        <span class="material-symbols-outlined group-hover:scale-110 transition-transform" style="font-size: 20px">add_circle</span>
+        <span
+          class="material-symbols-outlined group-hover:scale-110 transition-transform"
+          style="font-size: 20px"
+          >add_circle</span
+        >
         <span>Create New Dâr</span>
       </button>
     </div>
 
     <!-- Controls: Search, Filter, Layout Toggle -->
-    <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
+    <div
+      class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800"
+    >
       <!-- Search -->
       <div class="flex-1 max-w-lg">
-        <div class="relative flex items-center w-full h-11 rounded-lg focus-within:ring-2 ring-primary/50 transition-shadow">
-          <div class="absolute left-3 flex items-center justify-center text-gray-500 pointer-events-none">
-            <span class="material-symbols-outlined" style="font-size: 24px">search</span>
+        <div
+          class="relative flex items-center w-full h-11 rounded-lg focus-within:ring-2 ring-primary/50 transition-shadow"
+        >
+          <div
+            class="absolute left-3 flex items-center justify-center text-gray-500 pointer-events-none"
+          >
+            <span class="material-symbols-outlined" style="font-size: 24px"
+              >search</span
+            >
           </div>
           <input
             [(ngModel)]="searchQuery"
@@ -38,9 +54,27 @@
       </div>
 
       <!-- Filters & View Toggle -->
-      <div class="flex flex-col sm:flex-row gap-4 items-center justify-between lg:justify-end flex-1">
+      <div
+        class="flex flex-col sm:flex-row gap-4 items-center justify-between lg:justify-end flex-1"
+      >
         <!-- Tabs -->
-        <div class="flex bg-gray-50 dark:bg-gray-800 p-1 rounded-lg w-full sm:w-auto">
+        <div
+          class="flex bg-gray-50 dark:bg-gray-800 p-1 rounded-lg w-full sm:w-auto"
+        >
+          <button
+            (click)="setTab('pending')"
+            [class.bg-white]="activeTab === 'pending'"
+            [class.dark:bg-gray-900]="activeTab === 'pending'"
+            [class.shadow-sm]="activeTab === 'pending'"
+            [class.text-gray-900]="activeTab === 'pending'"
+            [class.dark:text-white]="activeTab === 'pending'"
+            [class.font-bold]="activeTab === 'pending'"
+            [class.text-gray-500]="activeTab !== 'pending'"
+            [class.font-medium]="activeTab !== 'pending'"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-md text-sm transition-all"
+          >
+            Pending
+          </button>
           <button
             (click)="setTab('active')"
             [class.bg-white]="activeTab === 'active'"
@@ -56,18 +90,18 @@
             Active
           </button>
           <button
-            (click)="setTab('completed')"
-            [class.bg-white]="activeTab === 'completed'"
-            [class.dark:bg-gray-900]="activeTab === 'completed'"
-            [class.shadow-sm]="activeTab === 'completed'"
-            [class.text-gray-900]="activeTab === 'completed'"
-            [class.dark:text-white]="activeTab === 'completed'"
-            [class.font-bold]="activeTab === 'completed'"
-            [class.text-gray-500]="activeTab !== 'completed'"
-            [class.font-medium]="activeTab !== 'completed'"
+            (click)="setTab('finished')"
+            [class.bg-white]="activeTab === 'finished'"
+            [class.dark:bg-gray-900]="activeTab === 'finished'"
+            [class.shadow-sm]="activeTab === 'finished'"
+            [class.text-gray-900]="activeTab === 'finished'"
+            [class.dark:text-white]="activeTab === 'finished'"
+            [class.font-bold]="activeTab === 'finished'"
+            [class.text-gray-500]="activeTab !== 'finished'"
+            [class.font-medium]="activeTab !== 'finished'"
             class="flex-1 sm:flex-none px-4 py-2 rounded-md text-sm transition-all"
           >
-            Completed
+            Finished
           </button>
           <button
             (click)="setTab('all')"
@@ -86,7 +120,9 @@
         </div>
 
         <!-- View Toggle -->
-        <div class="hidden sm:flex items-center border-l border-gray-200 dark:border-gray-800 pl-4 gap-2">
+        <div
+          class="hidden sm:flex items-center border-l border-gray-200 dark:border-gray-800 pl-4 gap-2"
+        >
           <button
             (click)="setViewMode('grid')"
             [class.bg-gray-100]="viewMode === 'grid'"
@@ -96,7 +132,11 @@
             [class.text-gray-500]="viewMode !== 'grid'"
             class="p-2 rounded-lg transition-colors"
           >
-            <span class="material-symbols-outlined block" style="font-size: 24px">grid_view</span>
+            <span
+              class="material-symbols-outlined block"
+              style="font-size: 24px"
+              >grid_view</span
+            >
           </button>
           <button
             (click)="setViewMode('list')"
@@ -107,7 +147,11 @@
             [class.text-gray-500]="viewMode !== 'list'"
             class="p-2 rounded-lg transition-colors"
           >
-            <span class="material-symbols-outlined block" style="font-size: 24px">view_list</span>
+            <span
+              class="material-symbols-outlined block"
+              style="font-size: 24px"
+              >view_list</span
+            >
           </button>
         </div>
       </div>
@@ -117,64 +161,147 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <!-- Dâr Cards -->
       <ng-container *ngFor="let dar of filteredDars">
-        <div class="group relative flex flex-col bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+        <div
+          class="group relative flex flex-col bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
           [ngClass]="{
             'border-2 border-primary': dar.isOrganizer,
-            'border border-gray-200 dark:border-gray-800': !dar.isOrganizer && dar.status !== 'late',
-            'border border-red-200 dark:border-red-900/30': dar.status === 'late'
-          }">
-
+            'border border-gray-200 dark:border-gray-800':
+              !dar.isOrganizer && dar.status !== 'late',
+            'border border-red-200 dark:border-red-900/30':
+              dar.status === 'late',
+          }"
+        >
           <!-- Organizer Badge -->
-          <div *ngIf="dar.isOrganizer" class="absolute top-0 right-0 bg-primary text-gray-900 text-xs font-bold px-3 py-1 rounded-bl-xl z-10">
+          <div
+            *ngIf="dar.isOrganizer"
+            class="absolute top-0 right-0 bg-primary text-gray-900 text-xs font-bold px-3 py-1 rounded-bl-xl z-10"
+          >
             Organizer
           </div>
 
           <!-- Payment Due Badge -->
-          <div *ngIf="dar.paymentDue" class="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1 z-10">
-            <span class="material-symbols-outlined" style="font-size: 14px">warning</span>
+          <div
+            *ngIf="dar.paymentDue"
+            class="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1 z-10"
+          >
+            <span class="material-symbols-outlined" style="font-size: 14px"
+              >warning</span
+            >
             Payment Due
           </div>
 
           <!-- Card Image -->
-          <div class="h-40 w-full bg-cover bg-center relative" [style.background-image]="'url(' + dar.imageUrl + ')'">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+          <div
+            class="h-40 w-full bg-cover bg-center relative"
+            [style.background-image]="'url(' + dar.imageUrl + ')'"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+            ></div>
             <div class="absolute bottom-3 left-4 text-white">
               <h3 class="text-xl font-bold tracking-tight">{{ dar.name }}</h3>
             </div>
           </div>
 
           <div class="p-5 flex flex-col gap-4 flex-1">
+            <!-- User Role & Status Badges -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Role Badge -->
+              <span
+                *ngIf="dar.isOrganizer"
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-600/20"
+              >
+                <span class="material-symbols-outlined text-[14px] mr-1"
+                  >admin_panel_settings</span
+                >
+                Organizer
+              </span>
+              <span
+                *ngIf="!dar.isOrganizer"
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-300 border border-gray-500/20"
+              >
+                <span class="material-symbols-outlined text-[14px] mr-1"
+                  >person</span
+                >
+                Member
+              </span>
+
+              <!-- Member Status Badge -->
+              <span
+                *ngIf="dar.userMemberStatus === 'PENDING'"
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-600/20"
+              >
+                <span class="material-symbols-outlined text-[14px] mr-1"
+                  >schedule</span
+                >
+                Pending Invitation
+              </span>
+              <span
+                *ngIf="dar.userMemberStatus === 'ACTIVE'"
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-600/20"
+              >
+                <span class="material-symbols-outlined text-[14px] mr-1"
+                  >check_circle</span
+                >
+                Active
+              </span>
+            </div>
+
             <!-- Stats Row -->
             <div class="flex items-center justify-between text-sm">
               <div class="flex items-center gap-2">
-                <div class="size-6 rounded-full bg-cover bg-center border border-white" [style.background-image]="'url(' + dar.organizerAvatar + ')'"></div>
-                <span class="text-gray-500 dark:text-gray-400">{{ dar.organizer }}</span>
+                <div
+                  class="size-6 rounded-full bg-cover bg-center border border-white"
+                  [style.background-image]="'url(' + dar.organizerAvatar + ')'"
+                ></div>
+                <span class="text-gray-500 dark:text-gray-400">{{
+                  dar.organizer
+                }}</span>
               </div>
-              <div class="flex items-center gap-1 text-gray-900 dark:text-white font-medium">
-                <span class="material-symbols-outlined text-primary" style="font-size: 18px">group</span>
+              @if (dar.userMemberStatus != 'LEAVED') {
+
+              <div
+                class="flex items-center gap-1 text-gray-900 dark:text-white font-medium"
+              >
+                <span
+                  class="material-symbols-outlined text-primary"
+                  style="font-size: 18px"
+                  >group</span
+                >
                 {{ dar.members }} Members
               </div>
+            }
             </div>
 
             <!-- Amount Info -->
-            <div class="flex items-end justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
+            @if (dar.userMemberStatus != 'LEAVED') {
+
+            <div class="border-b border-gray-200 dark:border-gray-800 pb-3">
               <div>
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contribution</p>
+                <p
+                  class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Monthly Contribution
+                </p>
                 <p class="text-lg font-bold text-gray-900 dark:text-white">
                   ${{ dar.contribution }}
-                  <span class="text-sm font-normal text-gray-500 dark:text-gray-400">/ Month</span>
+                  <span
+                    class="text-sm font-normal text-gray-500 dark:text-gray-400"
+                    >/ Month</span
+                  >
                 </p>
               </div>
-              <div class="text-right">
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pot Size</p>
-                <p class="text-lg font-bold text-gray-900 dark:text-white">${{ dar.potSize }}</p>
-              </div>
             </div>
+          }
 
             <!-- Progress Bar -->
+            @if (dar.userMemberStatus != 'LEAVED') {
             <div class="flex flex-col gap-1.5">
               <div class="flex justify-between text-xs font-semibold">
-                <span [class.text-primary]="dar.status !== 'late'" [class.text-red-500]="dar.status === 'late'">
+                <span
+                  [class.text-primary]="dar.status !== 'late'"
+                  [class.text-red-500]="dar.status === 'late'"
+                >
                   <ng-container *ngIf="dar.status !== 'late'">
                     Cycle {{ dar.currentCycle }} of {{ dar.totalCycles }}
                   </ng-container>
@@ -182,83 +309,214 @@
                     Action Required
                   </ng-container>
                 </span>
-                <span class="text-gray-900 dark:text-white">{{ dar.progress }}%</span>
+                <span class="text-gray-900 dark:text-white"
+                  >{{ dar.progress }}%</span
+                >
               </div>
-              <div class="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-primary rounded-full" [style.width.%]="dar.progress"></div>
+              <div
+                class="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+              >
+                <div
+                  class="h-full bg-primary rounded-full"
+                  [style.width.%]="dar.progress"
+                ></div>
               </div>
-              <p class="text-xs mt-1" [ngClass]="{'text-gray-500 dark:text-gray-400': dar.status !== 'late', 'text-red-500 font-medium': dar.status === 'late'}">
+              <p
+                class="text-xs mt-1"
+                [ngClass]="{
+                  'text-gray-500 dark:text-gray-400': dar.status !== 'late',
+                  'text-red-500 font-medium': dar.status === 'late',
+                }"
+              >
                 <ng-container *ngIf="dar.status !== 'late'">
-                  Next payout: <span class="text-gray-900 dark:text-white font-medium">{{ dar.nextPayout }}</span>
+                  Next payout:
+                  <span class="text-gray-900 dark:text-white font-medium">{{
+                    dar.nextPayout
+                  }}</span>
                 </ng-container>
                 <ng-container *ngIf="dar.status === 'late'">
                   Payment was due yesterday
                 </ng-container>
               </p>
             </div>
+            }
 
             <!-- Action Buttons -->
             <div class="mt-auto pt-2 flex gap-2">
-              <button *ngIf="!dar.paymentDue" (click)="openDetails(dar.id)" class="flex-1 h-9 px-4 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-primary/20 text-gray-900 dark:text-white text-sm font-semibold transition-colors">
+              <!-- Accept Invitation Button (for pending members) -->
+              <button
+                *ngIf="dar.userMemberStatus === 'PENDING' && !dar.isOrganizer"
+                (click)="acceptInvitation(dar.id)"
+                class="flex-1 h-9 px-4 rounded-lg bg-primary text-gray-900 hover:brightness-105 text-sm font-bold transition-all shadow-md shadow-primary/20"
+              >
+                Accept Invitation
+              </button>
+
+              <button
+                *ngIf="dar.userMemberStatus === 'ACTIVE' && !dar.paymentDue"
+                (click)="openDetails(dar.id)"
+                class="flex-1 h-9 px-4 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-primary/20 text-gray-900 dark:text-white text-sm font-semibold transition-colors"
+              >
                 Open Details
               </button>
-              <button *ngIf="dar.paymentDue" (click)="payNow(dar.id)" class="flex-1 h-9 px-4 rounded-lg bg-primary text-gray-900 hover:brightness-105 text-sm font-bold transition-all shadow-md shadow-primary/20">
+              <button
+                *ngIf="dar.paymentDue"
+                (click)="payNow(dar.id)"
+                class="flex-1 h-9 px-4 rounded-lg bg-primary text-gray-900 hover:brightness-105 text-sm font-bold transition-all shadow-md shadow-primary/20"
+              >
                 Pay Now
               </button>
 
-              <button *ngIf="dar.isOrganizer" (click)="inviteMembers(dar.id)" class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 hover:border-primary hover:text-primary text-gray-500 dark:text-gray-400 transition-colors" title="Invite Members">
-                <span class="material-symbols-outlined" style="font-size: 20px">person_add</span>
+              <button
+                *ngIf="dar.isOrganizer"
+                (click)="inviteMembers(dar.id)"
+                class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 hover:border-primary hover:text-primary text-gray-500 dark:text-gray-400 transition-colors"
+                title="Invite Members"
+              >
+                <span class="material-symbols-outlined" style="font-size: 20px"
+                  >person_add</span
+                >
               </button>
 
-              <button *ngIf="dar.isOrganizer" (click)="editDar(dar.id)" class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 hover:border-primary hover:text-primary text-gray-500 dark:text-gray-400 transition-colors" title="Edit Dâr">
-                <span class="material-symbols-outlined" style="font-size: 20px">edit</span>
+              <button
+                *ngIf="dar.isOrganizer"
+                (click)="editDar(dar.id)"
+                class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 hover:border-primary hover:text-primary text-gray-500 dark:text-gray-400 transition-colors"
+                title="Edit Dâr"
+              >
+                <span class="material-symbols-outlined" style="font-size: 20px"
+                  >edit</span
+                >
               </button>
+              @if (dar.userMemberStatus != 'LEAVED') {
 
-              <button *ngIf="!dar.isOrganizer" (click)="leaveDar(dar.id)" class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 hover:border-red-500 hover:text-red-500 text-gray-500 dark:text-gray-400 transition-colors" title="Leave Dâr">
-                <span class="material-symbols-outlined" style="font-size: 20px">logout</span>
+                <button
+                *ngIf="!dar.isOrganizer"
+                (click)="leaveDar(dar.id)"
+                class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 hover:border-red-500 hover:text-red-500 text-gray-500 dark:text-gray-400 transition-colors"
+                title="Leave Dâr"
+                >
+                <span class="material-symbols-outlined" style="font-size: 20px"
+                >logout</span
+                >
+                </button>
+              }
+              @else {
+                <button
+                disabled
+                class="flex-1 h-9 px-4 rounded-lg bg-red-100 dark:bg-red-800 text-red-900 dark:text-white text-sm font-semibold transition-colors"
+              >
+                You Leaved this Dart
               </button>
+              }
             </div>
           </div>
         </div>
       </ng-container>
 
       <!-- Add New Placeholder Card -->
-      <button routerLink="/dashboard/client/create-dar" class="group flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 min-h-[360px] cursor-pointer">
-        <div class="size-16 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/20 flex items-center justify-center transition-colors mb-4">
-          <span class="material-symbols-outlined text-gray-500 dark:text-gray-400 group-hover:text-primary transition-colors" style="font-size: 32px">add</span>
+      <button
+        routerLink="/dashboard/client/create-dar"
+        class="group flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 min-h-[360px] cursor-pointer"
+      >
+        <div
+          class="size-16 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/20 flex items-center justify-center transition-colors mb-4"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 dark:text-gray-400 group-hover:text-primary transition-colors"
+            style="font-size: 32px"
+            >add</span
+          >
         </div>
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Join or Create New Dâr</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 text-center max-w-[200px]">Start a new savings circle or find one to join.</p>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+          Join or Create New Dâr
+        </h3>
+        <p
+          class="text-sm text-gray-500 dark:text-gray-400 text-center max-w-[200px]"
+        >
+          Start a new savings circle or find one to join.
+        </p>
       </button>
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="filteredDars.length === 0" class="flex flex-col items-center justify-center py-16 gap-4">
-      <div class="size-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-        <span class="material-symbols-outlined text-gray-400 dark:text-gray-600" style="font-size: 48px">search_off</span>
+    <div
+      *ngIf="filteredDars.length === 0"
+      class="flex flex-col items-center justify-center py-16 gap-4"
+    >
+      <div
+        class="size-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
+      >
+        <span
+          class="material-symbols-outlined text-gray-400 dark:text-gray-600"
+          style="font-size: 48px"
+          >search_off</span
+        >
       </div>
       <div class="text-center">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No Dârs Found</h3>
-        <p class="text-gray-500 dark:text-gray-400">Try adjusting your search or filters.</p>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          No Dârs Found
+        </h3>
+        <p class="text-gray-500 dark:text-gray-400">
+          Try adjusting your search or filters.
+        </p>
       </div>
     </div>
 
     <!-- Pagination -->
-    <div *ngIf="filteredDars.length > 0" class="flex items-center justify-center gap-2 mt-8">
-      <button (click)="previousPage()" [disabled]="currentPage === 1" class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-        <span class="material-symbols-outlined" style="font-size: 20px">chevron_left</span>
+    <div
+      *ngIf="filteredDars.length > 0"
+      class="flex items-center justify-center gap-2 mt-8"
+    >
+      <button
+        (click)="previousPage()"
+        [disabled]="currentPage === 1"
+        class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span class="material-symbols-outlined" style="font-size: 20px"
+          >chevron_left</span
+        >
       </button>
-      <button (click)="goToPage(1)" [ngClass]="{'bg-primary text-gray-900 font-bold': currentPage === 1, 'border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400': currentPage !== 1}" class="size-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm">
+      <button
+        (click)="goToPage(1)"
+        [ngClass]="{
+          'bg-primary text-gray-900 font-bold': currentPage === 1,
+          'border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400':
+            currentPage !== 1,
+        }"
+        class="size-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+      >
         1
       </button>
-      <button (click)="goToPage(2)" [ngClass]="{'bg-primary text-gray-900 font-bold': currentPage === 2, 'border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400': currentPage !== 2}" class="size-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm">
+      <button
+        (click)="goToPage(2)"
+        [ngClass]="{
+          'bg-primary text-gray-900 font-bold': currentPage === 2,
+          'border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400':
+            currentPage !== 2,
+        }"
+        class="size-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+      >
         2
       </button>
-      <button (click)="goToPage(3)" [ngClass]="{'bg-primary text-gray-900 font-bold': currentPage === 3, 'border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400': currentPage !== 3}" class="size-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm">
+      <button
+        (click)="goToPage(3)"
+        [ngClass]="{
+          'bg-primary text-gray-900 font-bold': currentPage === 3,
+          'border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400':
+            currentPage !== 3,
+        }"
+        class="size-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm"
+      >
         3
       </button>
-      <button (click)="nextPage()" class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-        <span class="material-symbols-outlined" style="font-size: 20px">chevron_right</span>
+      <button
+        (click)="nextPage()"
+        class="size-9 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      >
+        <span class="material-symbols-outlined" style="font-size: 20px"
+          >chevron_right</span
+        >
       </button>
     </div>
   </div>

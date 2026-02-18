@@ -7,7 +7,7 @@ import { DarService, Dar } from "../services/dar.service";
 
 // Local interface for display purposes (extends API Dar type)
 interface DarDisplay {
-  id: number;
+  id: string;
   name: string;
   organizer: string;
   organizerAvatar: string;
@@ -22,6 +22,8 @@ interface DarDisplay {
   isOrganizer: boolean;
   status: string;
   paymentDue: boolean;
+  userMemberStatus?: string; // PENDING, ACTIVE, LEAVED
+  userPermission?: string; // ORGANIZER, MEMBER
 }
 
 @Component({
@@ -35,7 +37,7 @@ export class MyDarsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   searchQuery = "";
-  activeTab: "active" | "completed" | "all" = "active";
+  activeTab: "pending" | "active" | "finished" | "all" = "active";
   viewMode: "grid" | "list" = "grid";
   currentPage = 0;
   pageSize = 12;
@@ -50,7 +52,7 @@ export class MyDarsComponent implements OnInit, OnDestroy {
   // Keep mock data as fallback for now
   mockDars: DarDisplay[] = [
     {
-      id: 1,
+      id: "1",
       name: "Family Vacation Fund",
       organizer: "You",
       organizerAvatar:
@@ -69,7 +71,7 @@ export class MyDarsComponent implements OnInit, OnDestroy {
       paymentDue: false,
     },
     {
-      id: 2,
+      id: "2",
       name: "Office Savings",
       organizer: "Sarah M.",
       organizerAvatar:
@@ -88,7 +90,7 @@ export class MyDarsComponent implements OnInit, OnDestroy {
       paymentDue: false,
     },
     {
-      id: 3,
+      id: "3",
       name: "New Car Fund",
       organizer: "John D.",
       organizerAvatar:
@@ -107,7 +109,7 @@ export class MyDarsComponent implements OnInit, OnDestroy {
       paymentDue: true,
     },
     {
-      id: 4,
+      id: "4",
       name: "Community Trust",
       organizer: "You",
       organizerAvatar:
@@ -145,7 +147,8 @@ export class MyDarsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
 
-    const status = this.activeTab === "all" ? undefined : this.activeTab;
+    const status =
+      this.activeTab === "all" ? undefined : this.activeTab.toUpperCase();
 
     this.darService
       .getMyDars(status, this.currentPage, this.pageSize)
@@ -155,9 +158,29 @@ export class MyDarsComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
+          console.log("📊 API Response:", response);
+          console.log("📋 Darts received:", response.content.length);
+
+          // Log each dart's user context
+          response.content.forEach((dar, index) => {
+            console.log(`Dart ${index + 1}: ${dar.name}`);
+            console.log(`  - isOrganizer: ${dar.isOrganizer}`);
+            console.log(`  - userPermission: ${dar.userPermission}`);
+            console.log(`  - userMemberStatus: ${dar.userMemberStatus}`);
+          });
+
           this.dars = this.mapApiDarsToComponent(response.content);
           this.totalPages = response.totalPages;
           this.totalElements = response.totalElements;
+
+          console.log(
+            "✅ Mapped dars:",
+            this.dars.map((d) => ({
+              name: d.name,
+              userMemberStatus: d.userMemberStatus,
+              isOrganizer: d.isOrganizer,
+            })),
+          );
         },
         error: (err) => {
           console.error("Error loading Dârs:", err);
@@ -175,9 +198,9 @@ export class MyDarsComponent implements OnInit, OnDestroy {
       organizer: dar.isOrganizer ? "You" : dar.organizerName,
       organizerAvatar: dar.organizerAvatar || this.getDefaultAvatar(),
       imageUrl: dar.image || this.getDefaultDarImage(),
-      members: dar.totalMembers,
-      contribution: dar.contributionAmount,
-      potSize: dar.potSize,
+      members: dar.totalMembers || dar.memberCount,
+      contribution: dar.contributionAmount || dar.monthlyContribution,
+      potSize: dar.potSize || dar.totalMonthlyPool,
       currentCycle: dar.currentCycle,
       totalCycles: dar.totalCycles,
       progress:
@@ -186,6 +209,8 @@ export class MyDarsComponent implements OnInit, OnDestroy {
       isOrganizer: dar.isOrganizer,
       status: dar.status,
       paymentDue: false, // TODO: Calculate from payment status
+      userMemberStatus: dar.userMemberStatus, // PENDING, ACTIVE, LEAVED
+      userPermission: dar.userPermission, // ORGANIZER, MEMBER
     }));
   }
 
@@ -213,7 +238,7 @@ export class MyDarsComponent implements OnInit, OnDestroy {
     return filtered;
   }
 
-  setTab(tab: "active" | "completed" | "all"): void {
+  setTab(tab: "pending" | "active" | "finished" | "all"): void {
     this.activeTab = tab;
     this.currentPage = 0;
     this.loadDars();
@@ -228,21 +253,24 @@ export class MyDarsComponent implements OnInit, OnDestroy {
     this.searchQuery = input.value;
   }
 
-  openDetails(darId: number): void {
+  openDetails(darId: string): void {
+    console.log("=== Opening Dart Details ===");
+    console.log("Dart ID:", darId);
+    console.log("Navigation path:", ["/dashboard/client/dar", darId]);
     this.router.navigate(["/dashboard/client/dar", darId]);
   }
 
-  inviteMembers(darId: number): void {
+  inviteMembers(darId: string): void {
     // Navigate to dar details page where invite functionality exists
     this.router.navigate(["/dashboard/client/dar", darId]);
   }
 
-  editDar(darId: number): void {
+  editDar(darId: string): void {
     // Navigate to dar details page for editing
     this.router.navigate(["/dashboard/client/dar", darId]);
   }
 
-  leaveDar(darId: number): void {
+  leaveDar(darId: string): void {
     if (confirm("Are you sure you want to leave this Dâr?")) {
       this.darService
         .leaveDar(darId)
@@ -259,7 +287,30 @@ export class MyDarsComponent implements OnInit, OnDestroy {
     }
   }
 
-  payNow(darId: number): void {
+  acceptInvitation(darId: string): void {
+    console.log("=== Accepting Invitation ===");
+    console.log("Dart ID:", darId);
+
+    this.darService
+      .acceptInvitation(darId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log("✅ Invitation accepted successfully");
+          // Reload dars to update the status
+          this.loadDars();
+        },
+        error: (err) => {
+          console.error("❌ Error accepting invitation:", err);
+          alert(
+            err.error?.message ||
+              "Failed to accept invitation. Please try again.",
+          );
+        },
+      });
+  }
+
+  payNow(darId: string): void {
     console.log("Pay now for Dâr:", darId);
     // Navigate to payment page with darId
     this.router.navigate(["/dashboard/client/pay-contribution", darId]);

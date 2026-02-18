@@ -19,7 +19,7 @@ import {
 import { DarService, Dar as ApiDar } from "../../dars/services/dar.service";
 
 interface Dar {
-  id: number;
+  id: string;
   name: string;
   currentCycle: number;
   totalCycles: number;
@@ -69,7 +69,7 @@ export class PayContributionComponent implements OnInit, OnDestroy {
   private feeCalculationSubject$ = new Subject<void>();
 
   darId: string | null = null;
-  selectedDarId: number | null = null;
+  selectedDarId: string | null = null;
   selectedPaymentMethodId: number | null = null;
   contributionAmount = 0;
 
@@ -108,7 +108,7 @@ export class PayContributionComponent implements OnInit, OnDestroy {
 
     // If darId is provided, select it and load its contribution amount
     if (this.darId) {
-      this.selectedDarId = parseInt(this.darId, 10);
+      this.selectedDarId = this.darId;
     }
   }
 
@@ -195,14 +195,14 @@ export class PayContributionComponent implements OnInit, OnDestroy {
         name: dar.nextPayoutRecipient || "TBD",
         avatar: dar.image || this.getDefaultAvatar(),
       },
-      potSize: dar.potSize,
+      potSize: dar.potSize || dar.totalMonthlyPool,
       dueDate: this.formatDate(dar.nextPayoutDate),
       status: dar.status === "active" ? "pending" : (dar.status as any),
       contributionProgress:
         dar.totalCycles > 0 ? (dar.currentCycle / dar.totalCycles) * 100 : 0,
       membersContributed: 0, // TODO: Get from API
-      totalMembers: dar.totalMembers,
-      contributionAmount: dar.contributionAmount,
+      totalMembers: dar.totalMembers || dar.memberCount,
+      contributionAmount: dar.contributionAmount || dar.monthlyContribution,
     }));
   }
 
@@ -369,7 +369,7 @@ export class PayContributionComponent implements OnInit, OnDestroy {
 
   onDarChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    this.selectedDarId = parseInt(select.value, 10);
+    this.selectedDarId = select.value;
 
     const dar = this.selectedDar;
     if (dar) {
