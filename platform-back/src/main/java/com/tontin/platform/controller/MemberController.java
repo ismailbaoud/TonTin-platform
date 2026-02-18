@@ -35,9 +35,11 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST Controller for Member management operations.
  *
- * <p>This controller handles operations related to dart membership, including
+ * <p>
+ * This controller handles operations related to dart membership, including
  * adding members, updating permissions, and managing member status. Requires
- * authentication with CLIENT or ADMIN role.</p>
+ * authentication with CLIENT or ADMIN role.
+ * </p>
  */
 @RestController
 @RequestMapping("/api/v1/member")
@@ -56,8 +58,8 @@ public class MemberController {
     /**
      * Adds a new member to a dart.
      *
-     * @param userId the unique identifier of the user to add as member
-     * @param dartId the unique identifier of the dart
+     * @param userId  the unique identifier of the user to add as member
+     * @param dartId  the unique identifier of the dart
      * @param request the member permission request
      * @return the created member details
      */
@@ -130,8 +132,8 @@ public class MemberController {
      * Updates a member's permission level.
      *
      * @param memberId the unique identifier of the member
-     * @param dartId the unique identifier of the dart
-     * @param request the member permission update request
+     * @param dartId   the unique identifier of the dart
+     * @param request  the member permission update request
      * @return the updated member details
      */
     @PutMapping(
@@ -203,7 +205,7 @@ public class MemberController {
      * Retrieves a member by ID within a specific dart.
      *
      * @param memberId the unique identifier of the member
-     * @param dartId the unique identifier of the dart
+     * @param dartId   the unique identifier of the dart
      * @return the member details
      */
     @GetMapping(
@@ -314,7 +316,7 @@ public class MemberController {
      * Removes a member from a dart.
      *
      * @param memberId the unique identifier of the member to remove
-     * @param dartId the unique identifier of the dart
+     * @param dartId   the unique identifier of the dart
      * @return success message
      */
     @DeleteMapping(
@@ -369,6 +371,58 @@ public class MemberController {
     }
 
     /**
+     * Accept invitation to join a dart (change member status from PENDING to ACTIVE)
+     *
+     * @param dartId the unique identifier of the dart
+     * @return the updated member details
+     */
+    @PostMapping(
+        value = "/dart/{dartId}/accept",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @Operation(
+        summary = "Accept invitation to dart",
+        description = "Accepts an invitation to join a dart by changing member status from PENDING to ACTIVE"
+    )
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Invitation accepted successfully",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = MemberResponse.class)
+                )
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "Invitation has already been processed or invalid status"
+            ),
+            @ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - authentication required"
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Member not found in this dart"
+            ),
+        }
+    )
+    public ResponseEntity<MemberResponse> acceptInvitation(
+        @Parameter(
+            description = "Unique identifier of the dart",
+            required = true,
+            example = "123e4567-e89b-12d3-a456-426614174000"
+        ) @PathVariable("dartId") UUID dartId
+    ) {
+        log.info("Accepting invitation for dart {}", dartId);
+        MemberResponse response = memberService.acceptInvitation(dartId);
+        log.info("Invitation accepted successfully for dart {}", dartId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Simple record for message responses.
      *
      * @param message the message to return to the client
@@ -380,4 +434,56 @@ public class MemberController {
             example = "Member removed successfully"
         ) String message
     ) {}
+
+    /**
+     * rejecte invitation to join a dart (change member status from PENDING to LEAVED)
+     * 
+     * @param dartId the unique identifier of the dart
+     * @return the updated member details
+     */
+    @PostMapping(
+        value = "/dart/{dartId}/leave",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @Operation(
+        summary = "Reject invetation to dart",
+        description = "Reject an invitation to join a dart by changing member status from PENDING to LEAVED"
+    )
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Invitation rejected successfully",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = MemberResponse.class)
+                )
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "Invitation has already been processed or invalid status"
+            ),
+            @ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - authentication required"
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Member not found in this dart"
+            ),
+        }
+    )
+    public ResponseEntity<MemberResponse> rejectInvitation(
+        @Parameter(
+            description = "Unique identifier of the dart",
+            required = true,
+            example = "123e4567-e89b-12d3-a456-426614174000"
+        ) @PathVariable("dartId") UUID dartId
+    ) {
+        log.info("Rejecting invitation for dart {}", dartId);
+        MemberResponse response = memberService.rejectInvitation(dartId);
+        log.info("Invitation accepted successfully for dart {}", dartId);
+        return ResponseEntity.ok(response);
+    }
 }
