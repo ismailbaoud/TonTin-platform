@@ -15,6 +15,7 @@ export * from './member.model';
 export * from './tour.model';
 export * from './transaction.model';
 export * from './message.model';
+export * from './round.model';
 
 // Request/Response DTOs
 export * from './dar-requests.model';

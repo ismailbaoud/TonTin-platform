@@ -34,6 +34,7 @@ public class DartServiceImpl implements DartService {
     private final MemberService memberService;
     private final DartMapper dartMapper;
     private final SecurityUtils securityUtils;
+    private final com.tontin.platform.service.RoundService roundService;
 
     @Override
     @Transactional
@@ -246,6 +247,18 @@ public class DartServiceImpl implements DartService {
 
         Dart updatedDart = dartRepository.save(dart);
         log.info("Dart {} started successfully", id);
+
+        // Automatically create rounds for the dart based on order method and payment frequency
+        try {
+            com.tontin.platform.dto.round.request.CreateRoundsRequest createRoundsRequest =
+                new com.tontin.platform.dto.round.request.CreateRoundsRequest(id);
+            roundService.createRoundsForDart(createRoundsRequest);
+            log.info("Rounds created successfully for dart {}", id);
+        } catch (Exception e) {
+            log.error("Failed to create rounds for dart {}: {}", id, e.getMessage(), e);
+            // Don't fail the dart start if round creation fails - rounds can be created manually later
+            // But log the error for investigation
+        }
 
         return dartMapper.toDtoWithContext(updatedDart, currentUser.getId());
     }

@@ -53,6 +53,14 @@ public class Round extends BaseEntity {
     @JoinColumn(name = "dart_id", nullable = false)
     private Dart dart;
 
+    /**
+     * The member who receives the money in this round.
+     * This is set when the round is created based on the order method.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "recipient_member_id", nullable = true)
+    private Member recipient;
+
     public boolean isPayed() {
         return RoundStatus.PAYED.equals(status);
     }
@@ -88,6 +96,7 @@ public class Round extends BaseEntity {
             ", date=" + date +
             ", amount=" + amount +
             ", dartId=" + (dart != null ? dart.getId() : null) +
+            ", recipientMemberId=" + (recipient != null ? recipient.getId() : null) +
             '}';
     }
 }
