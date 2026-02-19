@@ -4,8 +4,10 @@ import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { Subject, takeUntil, finalize } from "rxjs";
 import { DarService } from "../services/dar.service";
+import { RoundService } from "../services/round.service";
 import { AuthService } from "../../../../auth/services/auth.service";
 import { MemberStatus } from "../enums/member-status.enum";
+import { Round, RoundStatus, formatRoundDate, getRelativeTime, getRoundStatusLabel, getRoundStatusColor } from "../models/round.model";
 
 interface Member {
   id: string;
@@ -67,6 +69,9 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   // Data
   darDetails: DarDetails | null = null;
   isOrganizer = false;
+  rounds: Round[] = [];
+  currentRound: Round | null = null;
+  isLoadingRounds = false;
 
   // No more mock data - using real API
 
@@ -77,6 +82,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private darService: DarService,
+    private roundService: RoundService,
   ) {}
 
   ngOnInit(): void {
@@ -204,6 +210,19 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
 
           // Load members separately
           this.loadMembers();
+
+          // Load rounds if dart is active (check both uppercase and lowercase)
+          const status = data.status?.toUpperCase() || '';
+          console.log("🔍 Dart status check for rounds loading:", {
+            rawStatus: data.status,
+            upperCaseStatus: status,
+            willLoadRounds: status === 'ACTIVE'
+          });
+          if (status === 'ACTIVE') {
+            this.loadRounds();
+          } else {
+            console.log("⏸️ Dart is not active, skipping rounds load. Status:", status);
+          }
         },
         error: (err) => {
           console.error(
@@ -262,20 +281,23 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
               avatar: this.getDefaultAvatar(),
               role: m.permission === "ORGANIZER" ? "organizer" : "member",
               status: m.status as MemberStatus, // PENDING, ACTIVE, or LEAVED
-              turnDate: m.joinedAt
-                ? new Date(m.joinedAt).toLocaleDateString()
-                : "TBD",
+              turnDate: "TBD", // Will be updated from rounds
             }));
             console.log(
               `📊 Mapped ${this.darDetails.members.length} members for display`,
             );
             console.log(
-              `📋 Member statuses:`,
+              `📋 Member IDs:`,
               this.darDetails.members.map((m) => ({
                 name: m.name,
-                status: m.status,
+                id: m.id,
               })),
             );
+            
+            // Update turn dates from rounds if rounds are already loaded
+            if (this.rounds.length > 0) {
+              this.updateMemberTurnDates();
+            }
           }
         },
         error: (err) => {
@@ -285,6 +307,128 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
           // Keep empty members list
         },
       });
+  }
+
+  /**
+   * Load rounds for the dart
+   */
+  private loadRounds(): void {
+    if (!this.darId) return;
+
+    this.isLoadingRounds = true;
+    console.log("🔄 Loading rounds for dart:", this.darId);
+
+    // Load all rounds
+    this.roundService
+      .getRoundsByDartId(this.darId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (rounds) => {
+          console.log(`✅ Loaded ${rounds.length} rounds:`, rounds);
+          console.log("📋 Round details:", rounds.map(r => ({
+            id: r.id,
+            number: r.number,
+            recipientMemberId: r.recipientMemberId,
+            recipientMemberName: r.recipientMemberName,
+            date: r.date,
+            status: r.status
+          })));
+          
+          this.rounds = rounds.sort((a, b) => a.number - b.number);
+          this.isLoadingRounds = false;
+
+          // Set current round = first INPAYED round (next to receive money)
+          this.currentRound = this.rounds.find((r) => r.status === 'INPAYED') ?? null;
+
+          // Update member turn dates based on rounds (if members are already loaded)
+          if (this.darDetails && this.darDetails.members.length > 0) {
+            this.updateMemberTurnDates();
+          }
+
+          // Optionally sync from backend (don't replace if we already have one)
+          if (!this.currentRound && this.rounds.length > 0) {
+            this.loadCurrentRound();
+          }
+        },
+        error: (err) => {
+          console.error("❌ Error loading rounds:", err);
+          console.error("  - Dart ID:", this.darId);
+          console.error("  - Status Code:", err.status);
+          console.error("  - Error Message:", err.error?.message || err.message);
+          console.error("  - Full Error:", err);
+          this.isLoadingRounds = false;
+          // Show error in console but don't break the UI
+          // Rounds might not exist yet if dart just started
+        },
+      });
+  }
+
+  /**
+   * Load current round from backend (optional fallback when no INPAYED in list)
+   */
+  private loadCurrentRound(): void {
+    if (!this.darId) return;
+
+    this.roundService
+      .getCurrentRound(this.darId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (round) => {
+          console.log("✅ Current round from API:", round);
+          this.currentRound = round;
+        },
+        error: () => {
+          // Keep currentRound from rounds list; only clear if we never had one
+          if (!this.currentRound) {
+            console.log("ℹ️ No current round from API (all rounds may be paid)");
+          }
+        },
+      });
+  }
+
+  /**
+   * Update member turn dates based on rounds
+   */
+  private updateMemberTurnDates(): void {
+    if (!this.darDetails || !this.rounds.length) {
+      console.log("⚠️ Cannot update turn dates - missing data:", {
+        hasDarDetails: !!this.darDetails,
+        roundsCount: this.rounds.length
+      });
+      return;
+    }
+
+    console.log("🔄 Updating member turn dates from rounds...");
+    console.log("📋 Rounds:", this.rounds.map(r => ({
+      number: r.number,
+      recipientMemberId: r.recipientMemberId,
+      date: r.date
+    })));
+    console.log("👥 Members:", this.darDetails.members.map(m => ({
+      name: m.name,
+      id: m.id
+    })));
+
+    // Map rounds to members by recipient
+    let updatedCount = 0;
+    this.darDetails.members.forEach((member) => {
+      const round = this.rounds.find(
+        (r) => r.recipientMemberId === member.id
+      );
+      if (round) {
+        member.turnDate = formatRoundDate(round.date);
+        updatedCount++;
+        console.log(`✅ Updated ${member.name}: ${member.turnDate} (Round ${round.number})`);
+      } else {
+        console.log(`⚠️ No round found for member ${member.name} (ID: ${member.id})`);
+        // Keep TBD if no round found
+        if (!member.turnDate || member.turnDate === "TBD") {
+          member.turnDate = "TBD";
+        }
+      }
+    });
+    
+    console.log(`✅ Updated ${updatedCount} out of ${this.darDetails.members.length} member turn dates`);
   }
 
   /**
@@ -518,7 +662,8 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
           console.log("✅ Dart started successfully:", response);
           // Reload the dart details to show updated status
           this.loadDarDetails();
-          alert("Dâr started successfully!");
+          // Rounds will be loaded automatically when dart status is ACTIVE
+          alert("Dâr started successfully! Rounds have been created.");
         },
         error: (err) => {
           console.error("❌ Error starting dart:", err);
@@ -558,6 +703,57 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
     console.log("Open options for member:", memberId);
     // TODO: Implement options menu
     // Example: Show dropdown with actions like remove, make admin, etc.
+  }
+
+  /**
+   * Format round date for display
+   */
+  formatRoundDate(dateString: string): string {
+    return formatRoundDate(dateString);
+  }
+
+  /**
+   * Get relative time for round date
+   */
+  getRelativeTime(dateString: string): string {
+    return getRelativeTime(dateString);
+  }
+
+  /**
+   * Get round status label
+   */
+  getRoundStatusLabel(status: RoundStatus | string): string {
+    return getRoundStatusLabel(status as RoundStatus);
+  }
+
+  /**
+   * Get round status color classes
+   */
+  getRoundStatusColor(status: RoundStatus | string): string {
+    return getRoundStatusColor(status as RoundStatus);
+  }
+
+  /**
+   * Rounds for display: current (next) round first, then the rest by number
+   */
+  get roundsForDisplay(): Round[] {
+    if (!this.rounds.length) return [];
+    if (!this.currentRound) return [...this.rounds];
+    const current = this.rounds.find((r) => r.id === this.currentRound?.id);
+    if (!current) return [...this.rounds];
+    const rest = this.rounds.filter((r) => r.id !== current.id);
+    return [current, ...rest];
+  }
+
+  /**
+   * Contribution per person for a round (each member pays this amount)
+   * Total pot = amount; each pays amount / totalMembers
+   */
+  getContributionPerPerson(round: Round): number {
+    if (!this.darDetails?.totalMembers || this.darDetails.totalMembers <= 0) {
+      return round.amount ?? 0;
+    }
+    return (round.amount ?? 0) / this.darDetails.totalMembers;
   }
 
   /**
