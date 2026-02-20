@@ -123,7 +123,7 @@ export const environment = {
   // External Services
   external: {
     googleMapsApiKey: "",
-    stripePublicKey: "",
+    stripePublishableKey: "",
   },
 };
 

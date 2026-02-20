@@ -5,6 +5,13 @@ import {
   AuthService,
   UserResponse,
 } from "../../../../auth/services/auth.service";
+import { DarService } from "../../dars/services/dar.service";
+import { Dar } from "../../dars/models";
+import {
+  DarStatus,
+  getDarStatusLabel,
+  getDarStatusColor,
+} from "../../dars/enums/dar-status.enum";
 
 @Component({
   selector: "app-client",
@@ -16,14 +23,32 @@ import {
 export class ClientComponent implements OnInit {
   currentUser: UserResponse | null = null;
   isLoading = false;
+  dars: Dar[] = [];
+  isLoadingDars = false;
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private darService: DarService,
   ) {}
 
   ngOnInit(): void {
     this.loadUserData();
+    this.loadDars();
+  }
+
+  private loadDars(): void {
+    this.isLoadingDars = true;
+    this.darService.getMyDars(undefined, 0, 10).subscribe({
+      next: (res) => {
+        this.dars = res.content ?? [];
+        this.isLoadingDars = false;
+      },
+      error: () => {
+        this.dars = [];
+        this.isLoadingDars = false;
+      },
+    });
   }
 
   private loadUserData(): void {
@@ -60,11 +85,21 @@ export class ClientComponent implements OnInit {
     this.router.navigate(["/dashboard/client/reports"]);
   }
 
-  navigateToDarDetails(darId: number): void {
+  navigateToDarDetails(darId: string): void {
     this.router.navigate(["/dashboard/client/dar", darId]);
   }
 
-  navigateToPayment(darId: number): void {
+  navigateToPayment(darId: string): void {
     this.router.navigate(["/dashboard/client/pay-contribution", darId]);
+  }
+
+  getStatusLabel(status: string): string {
+    const normalized = (status || "").toLowerCase() as DarStatus;
+    return getDarStatusLabel(normalized) || status || "—";
+  }
+
+  getStatusColor(status: string): string {
+    const normalized = (status || "").toLowerCase() as DarStatus;
+    return getDarStatusColor(normalized) || "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
   }
 }

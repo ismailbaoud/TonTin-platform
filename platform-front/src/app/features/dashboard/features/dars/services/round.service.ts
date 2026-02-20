@@ -4,6 +4,11 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { Round, RoundStatistics, PaginatedResponse } from '../models';
 
+export interface RoundContributionsResponse {
+  roundId: string | null;
+  paidMemberIds: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -49,6 +54,15 @@ export class RoundService {
    */
   getCurrentRound(dartId: string): Observable<Round> {
     return this.http.get<Round>(`${this.apiUrl}/dart/${dartId}/current`);
+  }
+
+  /**
+   * Get which members have paid for the current round (for showing Paid/Pending in UI)
+   */
+  getCurrentRoundContributions(dartId: string): Observable<RoundContributionsResponse> {
+    return this.http.get<RoundContributionsResponse>(
+      `${this.apiUrl}/dart/${dartId}/current/contributions`
+    );
   }
 
   /**

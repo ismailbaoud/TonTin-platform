@@ -143,11 +143,17 @@ export interface PaginatedResponse<T> {
   first: boolean;
 }
 
+export interface CreatePaymentIntentResponse {
+  clientSecret: string;
+  paymentId: string;
+}
+
 @Injectable({
   providedIn: "root",
 })
 export class PaymentService {
   private apiUrl = `${environment.apiUrl}/payments`;
+  private apiV1Url = `${environment.apiUrl}/v1/payments`;
   private walletApiUrl = `${environment.apiUrl}/wallet`;
   private paymentMethodsApiUrl = `${environment.apiUrl}/payment-methods`;
 
@@ -242,7 +248,29 @@ export class PaymentService {
   }
 
   /**
-   * Make a contribution payment
+   * Create a Stripe PaymentIntent for contribution (current round of the dart).
+   * Use the returned clientSecret with Stripe.js to confirm payment.
+   */
+  createPaymentIntent(dartId: string): Observable<CreatePaymentIntentResponse> {
+    return this.http.post<CreatePaymentIntentResponse>(
+      `${this.apiV1Url}/create-intent`,
+      { dartId },
+    );
+  }
+
+  /**
+   * Mark payment as succeeded after Stripe confirmCardPayment succeeds.
+   * Call this so the member shows as paid without waiting for the webhook.
+   */
+  confirmPaymentSuccess(paymentIntentId: string): Observable<{ status: string }> {
+    return this.http.post<{ status: string }>(
+      `${this.apiV1Url}/confirm-success`,
+      { paymentIntentId },
+    );
+  }
+
+  /**
+   * Make a contribution payment (legacy / non-Stripe flow)
    */
   makePayment(request: MakePaymentRequest): Observable<Payment> {
     return this.http.post<Payment>(`${this.apiUrl}/contribute`, request);

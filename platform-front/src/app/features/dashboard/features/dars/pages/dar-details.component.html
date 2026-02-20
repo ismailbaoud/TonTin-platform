@@ -26,10 +26,19 @@
           Error
         </h4>
         <p class="text-sm text-red-800 dark:text-red-200">{{ error }}</p>
+        <a
+          [routerLink]="['/dashboard/client/my-dars']"
+          class="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
+        >
+          Go to My Dârs
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </a>
       </div>
       <button
+        *ngIf="!error?.includes('Invalid Dâr link')"
         (click)="error = null; loadDarDetails()"
         class="text-red-400 hover:text-red-600"
+        title="Dismiss and retry"
       >
         <span class="material-symbols-outlined">close</span>
       </button>
@@ -172,6 +181,14 @@
             >
               <span class="material-symbols-outlined text-[20px]">share</span>
               Share Link
+            </button>
+            <button
+              *ngIf="showPayContributionButton"
+              (click)="goToPayContribution()"
+              class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-bold text-black shadow-sm hover:bg-amber-600 transition-colors"
+            >
+              <span class="material-symbols-outlined text-[20px]">payments</span>
+              Pay contribution
             </button>
           </div>
         </div>
@@ -378,6 +395,7 @@
                   <th class="px-6 py-4" scope="col">Role</th>
                   <th class="px-6 py-4" scope="col">Turn Date</th>
                   <th class="px-6 py-4 text-center" scope="col">Status</th>
+                  <th class="px-6 py-4 text-center" scope="col">Contribution</th>
                   <th class="px-6 py-4 text-right" scope="col">Actions</th>
                 </tr>
               </thead>
@@ -437,6 +455,19 @@
                       }}</span>
                       {{ getStatusText(member.status) }}
                     </span>
+                  </td>
+                  <td class="px-6 py-4 text-center">
+                    <span
+                      *ngIf="currentRound && member.contributionStatus"
+                      class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
+                      [ngClass]="getContributionStatusClass(member.contributionStatus)"
+                    >
+                      <span class="material-symbols-outlined text-[14px]">{{
+                        member.contributionStatus === 'paid' ? 'check_circle' : member.contributionStatus === 'pending' ? 'schedule' : 'account_balance_wallet'
+                      }}</span>
+                      {{ getContributionStatusText(member.contributionStatus) }}
+                    </span>
+                    <span *ngIf="!currentRound" class="text-gray-400">—</span>
                   </td>
                   <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">

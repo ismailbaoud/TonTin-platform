@@ -17,8 +17,8 @@ interface Member {
   role: string;
   status: MemberStatus; // Member participation status (PENDING/ACTIVE/LEAVED)
   turnDate: string;
-  // NOTE: paymentStatus removed - should be tracked separately in a Payment entity
-  // For now, we'll use a placeholder based on member status for display purposes only
+  /** For current round: paid, pending, or recipient (no payment required) */
+  contributionStatus?: "paid" | "pending" | "recipient";
 }
 
 interface DarDetails {
@@ -72,6 +72,10 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   rounds: Round[] = [];
   currentRound: Round | null = null;
   isLoadingRounds = false;
+  /** Current user's member id in this dart (set when members load). Used to show/hide Pay contribution. */
+  currentUserMemberId: string | null = null;
+  /** Member IDs who have paid for the current round (for showing Paid/Pending). */
+  paidMemberIdsForCurrentRound: string[] = [];
 
   // No more mock data - using real API
 
@@ -83,9 +87,17 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
     private router: Router,
     private darService: DarService,
     private roundService: RoundService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    // When returning from successful payment, refresh contributions so "Paid" shows
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((q) => {
+      if (q.get("payment") === "success" && this.darId) {
+        this.loadCurrentRoundContributions();
+      }
+    });
+
     // Subscribe to route params changes to reload data when navigating between darts
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.darId = params.get("id");
@@ -105,6 +117,8 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
 
       // Reset state
       this.darDetails = null;
+      this.currentRound = null;
+      this.currentUserMemberId = null;
       this.error = null;
 
       // Load data for the new dart
@@ -117,6 +131,14 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  /** UUID v4 pattern – backend expects a valid UUID, not a number or slug */
+  private static readonly UUID_REGEX =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  private isValidUuid(value: string | null): boolean {
+    return !!value && DarDetailsComponent.UUID_REGEX.test(value);
+  }
+
   /**
    * Load Dâr details
    * Currently uses mock data, but structured to easily replace with API call
@@ -124,15 +146,13 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   loadDarDetails(): void {
     if (!this.darId) {
       this.error = "No Dâr ID provided";
-      console.error(
-        "╔═══════════════════════════════════════════════════════════╗",
-      );
-      console.error(
-        "║  ❌ ERROR: NO DART ID FOUND                             ║",
-      );
-      console.error(
-        "╚═══════════════════════════════════════════════════════════╝",
-      );
+      return;
+    }
+
+    if (!this.isValidUuid(this.darId)) {
+      this.error =
+        "Invalid Dâr link. This page expects a valid Dâr ID. Use \"My Dârs\" to open a Dâr.";
+      this.isLoading = false;
       return;
     }
 
@@ -273,6 +293,12 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (members) => {
           console.log(`✅ Loaded ${members.length} members:`, members);
+          const currentUser = this.authService.getStoredUser();
+          const myMember = members.find(
+            (m: any) => m.user?.id === currentUser?.id
+          );
+          this.currentUserMemberId = myMember?.id ?? null;
+
           if (this.darDetails) {
             this.darDetails.members = members.map((m: any) => ({
               id: m.id || "",
@@ -282,22 +308,17 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
               role: m.permission === "ORGANIZER" ? "organizer" : "member",
               status: m.status as MemberStatus, // PENDING, ACTIVE, or LEAVED
               turnDate: "TBD", // Will be updated from rounds
+              contributionStatus: undefined as "paid" | "pending" | "recipient" | undefined,
             }));
             console.log(
               `📊 Mapped ${this.darDetails.members.length} members for display`,
             );
-            console.log(
-              `📋 Member IDs:`,
-              this.darDetails.members.map((m) => ({
-                name: m.name,
-                id: m.id,
-              })),
-            );
-            
-            // Update turn dates from rounds if rounds are already loaded
+
+            // Update turn dates and contribution status if rounds/contributions already loaded
             if (this.rounds.length > 0) {
               this.updateMemberTurnDates();
             }
+            this.updateMemberContributionStatus();
           }
         },
         error: (err) => {
@@ -340,9 +361,13 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
           // Set current round = first INPAYED round (next to receive money)
           this.currentRound = this.rounds.find((r) => r.status === 'INPAYED') ?? null;
 
+          // Load who has paid for the current round (for Paid/Pending badges)
+          this.loadCurrentRoundContributions();
+
           // Update member turn dates based on rounds (if members are already loaded)
           if (this.darDetails && this.darDetails.members.length > 0) {
             this.updateMemberTurnDates();
+            this.updateMemberContributionStatus();
           }
 
           // Optionally sync from backend (don't replace if we already have one)
@@ -361,6 +386,46 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
           // Rounds might not exist yet if dart just started
         },
       });
+  }
+
+  /**
+   * Load which members have paid for the current round
+   */
+  private loadCurrentRoundContributions(): void {
+    if (!this.darId) return;
+
+    this.roundService
+      .getCurrentRoundContributions(this.darId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.paidMemberIdsForCurrentRound = res.paidMemberIds ?? [];
+          this.updateMemberContributionStatus();
+        },
+        error: () => {
+          this.paidMemberIdsForCurrentRound = [];
+        },
+      });
+  }
+
+  /**
+   * Set contributionStatus on each member (paid / pending / recipient) for current round
+   */
+  private updateMemberContributionStatus(): void {
+    if (!this.darDetails?.members.length) return;
+
+    const paidSet = new Set(this.paidMemberIdsForCurrentRound);
+    const recipientId = this.currentRound?.recipientMemberId ?? null;
+
+    this.darDetails.members.forEach((member) => {
+      if (recipientId && member.id === recipientId) {
+        member.contributionStatus = "recipient";
+      } else if (paidSet.has(member.id)) {
+        member.contributionStatus = "paid";
+      } else {
+        member.contributionStatus = "pending";
+      }
+    });
   }
 
   /**
@@ -685,6 +750,24 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
     alert("Share link functionality coming soon!");
   }
 
+  /** True when current user is a member, there is a current (INPAYED) round, and they are not the recipient. */
+  get showPayContributionButton(): boolean {
+    if (!this.darId || !this.currentRound || this.currentUserMemberId == null) {
+      return false;
+    }
+    return this.currentUserMemberId !== this.currentRound.recipientMemberId;
+  }
+
+  /** Navigate to the pay-contribution page for this dart. */
+  goToPayContribution(): void {
+    if (this.darId) {
+      this.router.navigate([
+        "/dashboard/client/pay-contribution",
+        this.darId,
+      ]);
+    }
+  }
+
   /**
    * Send reminder to a member about pending payment
    */
@@ -801,6 +884,38 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
         return "Left";
       default:
         return "Unknown";
+    }
+  }
+
+  /**
+   * Get badge text for contribution status (current round)
+   */
+  getContributionStatusText(contributionStatus?: "paid" | "pending" | "recipient"): string {
+    switch (contributionStatus) {
+      case "paid":
+        return "Paid";
+      case "pending":
+        return "Pending";
+      case "recipient":
+        return "Recipient";
+      default:
+        return "—";
+    }
+  }
+
+  /**
+   * Get CSS classes for contribution status badge
+   */
+  getContributionStatusClass(contributionStatus?: "paid" | "pending" | "recipient"): string {
+    switch (contributionStatus) {
+      case "paid":
+        return "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 ring-green-600/20";
+      case "pending":
+        return "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 ring-amber-600/20";
+      case "recipient":
+        return "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-blue-600/20";
+      default:
+        return "bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 ring-gray-600/20";
     }
   }
 }

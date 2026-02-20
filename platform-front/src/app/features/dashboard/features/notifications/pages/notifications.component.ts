@@ -116,7 +116,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       isRead: true,
       actionButton: {
         label: "View Details",
-        route: "/dashboard/client/dar/2",
+        route: "/dashboard/client/my-dars",
       },
       secondaryButton: {
         label: "Decline",
@@ -147,7 +147,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       isRead: true,
       actionButton: {
         label: "View Transaction",
-        route: "/dashboard/client/dar/3",
+        route: "/dashboard/client/my-dars",
       },
       category: "yesterday",
     },
