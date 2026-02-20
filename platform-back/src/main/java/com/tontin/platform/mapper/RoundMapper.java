@@ -20,6 +20,7 @@ public interface RoundMapper {
      *
      * @param request the round request DTO
      * @return the round entity
+     *
      */
     @Mapping(target = "dart", ignore = true)
     @Mapping(
@@ -60,6 +61,7 @@ public interface RoundMapper {
         expression = "java(round.getRecipient() != null && round.getRecipient().getUser() != null ? round.getRecipient().getUser().getEmail() : null)"
     )
     @Mapping(target = "paidMemberIds", ignore = true)
+    @Mapping(target = "paymentOpenDate", ignore = true)
     RoundResponse toDto(Round round);
 
     /**
@@ -127,6 +129,13 @@ public interface RoundMapper {
             .recipientMemberName(recipientMemberName)
             .recipientMemberEmail(recipientMemberEmail)
             .paidMemberIds(paidMemberIds != null ? paidMemberIds : List.of())
+            .paymentOpenDate(
+                round.getDate() != null
+                    ? round
+                          .getDate()
+                          .minusDays(RoundResponse.PAYMENT_WINDOW_DAYS)
+                    : null
+            )
             .createdAt(round.getCreatedAt())
             .updatedAt(round.getUpdatedAt())
             .build();

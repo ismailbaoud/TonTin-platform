@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+/** Number of days before the round date that payments are allowed to open. */
 import lombok.Builder;
 
 /**
@@ -27,9 +28,11 @@ import lombok.Builder;
  * @param recipientMemberName   Name of the recipient member
  * @param recipientMemberEmail  Email of the recipient member
  * @param paidMemberIds         List of member IDs (payers) who have already paid for this round
+ * @param paymentOpenDate       Date from which payments are accepted (round date minus PAYMENT_WINDOW_DAYS)
  * @param createdAt             Timestamp when the round was created
  * @param updatedAt             Timestamp when the round was last updated
  */
+/** Number of days before the round date that payments are allowed to open. */
 @Builder
 @Schema(description = "Response object containing round information")
 public record RoundResponse(
@@ -98,6 +101,12 @@ public record RoundResponse(
     List<UUID> paidMemberIds,
 
     @Schema(
+        description = "Earliest date from which members are allowed to submit their payment for this round (round date minus 5 days). Null if round date is not set.",
+        example = "2026-01-27T00:00:00"
+    )
+    LocalDateTime paymentOpenDate,
+
+    @Schema(
         description = "Timestamp when the round was created",
         example = "2024-01-15T10:00:00"
     )
@@ -127,6 +136,9 @@ public record RoundResponse(
         return status == RoundStatus.INPAYED;
     }
 
+    /** Number of days before the round date that payments open. */
+    public static final int PAYMENT_WINDOW_DAYS = 5;
+
     /**
      * Checks if a specific member has already paid for this round.
      *
@@ -136,5 +148,14 @@ public record RoundResponse(
     public boolean hasMemberPaid(UUID memberId) {
         if (paidMemberIds == null || memberId == null) return false;
         return paidMemberIds.contains(memberId);
+    }
+
+    /**
+     * Returns true when the payment window is currently open,
+     * i.e. now is on or after {@code paymentOpenDate}.
+     */
+    public boolean isPaymentWindowOpen() {
+        if (paymentOpenDate == null) return false;
+        return !LocalDateTime.now().isBefore(paymentOpenDate);
     }
 }

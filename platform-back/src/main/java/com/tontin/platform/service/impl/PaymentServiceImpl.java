@@ -148,6 +148,24 @@ public class PaymentServiceImpl implements PaymentService {
 
         Round round = current.get(0);
 
+        // Enforce payment window: members can only pay starting 5 days before the round date
+        if (round.getDate() != null) {
+            java.time.LocalDateTime paymentOpenDate = round
+                .getDate()
+                .minusDays(5);
+            if (java.time.LocalDateTime.now().isBefore(paymentOpenDate)) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Payment for this round is not open yet. " +
+                        "You can pay starting " +
+                        paymentOpenDate.toLocalDate() +
+                        " (5 days before the round date of " +
+                        round.getDate().toLocalDate() +
+                        ")."
+                );
+            }
+        }
+
         if (
             round.getRecipient() != null &&
             round.getRecipient().getId().equals(payer.getId())
