@@ -741,6 +741,29 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   // -------------------------------------------------------------------------
 
   /**
+   * True when the payment window is open for the current round.
+   * The window opens 5 days before the round date (paymentOpenDate from backend).
+   * Returns true when there is no paymentOpenDate set (permissive fallback).
+   */
+  get isPaymentWindowOpen(): boolean {
+    if (!this.currentRound) return false;
+    if (!this.currentRound.paymentOpenDate) return true; // no restriction → allow
+    return new Date() >= new Date(this.currentRound.paymentOpenDate);
+  }
+
+  /**
+   * ISO date string of when the payment window opens for the current round.
+   * Used to display a countdown / "opens on" message to the user.
+   */
+  get paymentWindowOpensOn(): string | null {
+    if (!this.currentRound?.paymentOpenDate) return null;
+    return new Date(this.currentRound.paymentOpenDate).toLocaleDateString(
+      "en-US",
+      { year: "numeric", month: "long", day: "numeric" },
+    );
+  }
+
+  /**
    * True when the current user has already confirmed a PAYED payment for the
    * current round but the round is still INPAYED (others haven't paid yet).
    * In this state the "Pay again" button is shown instead of "Pay contribution".
@@ -829,12 +852,27 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
 
   // -------------------------------------------------------------------------
 
-  /** True when current user is a member, there is a current (INPAYED) round, and they are not the recipient. */
+  /**
+   * True when the current user is a member, there is a current (INPAYED) round,
+   * they are not the recipient, AND the payment window is open.
+   * When the window is not yet open the locked-window banner is shown instead.
+   */
   get showPayContributionButton(): boolean {
     if (!this.darId || !this.currentRound || this.currentUserMemberId == null) {
       return false;
     }
-    return this.currentUserMemberId !== this.currentRound.recipientMemberId;
+    if (this.currentUserMemberId === this.currentRound.recipientMemberId) {
+      return false;
+    }
+    return true; // show button regardless of window — window state controls styling
+  }
+
+  /**
+   * True when the button should be rendered but the payment window is not open yet.
+   * The button is rendered in a disabled/locked state in this case.
+   */
+  get isPaymentLocked(): boolean {
+    return this.showPayContributionButton && !this.isPaymentWindowOpen;
   }
 
   /** Navigate to the pay-contribution page for this dart. */

@@ -38,6 +38,13 @@ export interface Round {
    */
   paidMemberIds?: string[];
 
+  /**
+   * Earliest date from which members are allowed to submit their payment
+   * for this round (= round date minus 5 days).
+   * When now < paymentOpenDate the payment window is not yet open.
+   */
+  paymentOpenDate?: string;
+
   /** Timestamp when the round was created */
   createdAt: string;
 

@@ -136,7 +136,7 @@
                     >{{ darDetails.currentCycle }}/{{
                       darDetails.totalCycles
                     }}
-                    Months</span
+                    Rounds</span
                   >
                 </div>
                 <div
@@ -185,11 +185,14 @@
               <span class="material-symbols-outlined text-[20px]">share</span>
               Share Link
             </button>
-            <!-- Pay contribution button — always visible for non-recipients when a current round exists.
-                 Shows "Pay again" (with a distinct green outline style) once the user has already paid
-                 but the round is still open because other members haven't contributed yet. -->
+            <!-- Pay contribution button — visible for non-recipients when a current round exists
+                 and the payment window is open (≤ 5 days before round date). -->
             <button
-              *ngIf="showPayContributionButton && !currentUserAlreadyPaid"
+              *ngIf="
+                showPayContributionButton &&
+                !currentUserAlreadyPaid &&
+                isPaymentWindowOpen
+              "
               (click)="goToPayContribution()"
               class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-bold text-black shadow-sm hover:bg-amber-600 transition-colors"
             >
@@ -201,7 +204,11 @@
 
             <!-- Pay-again variant: shown after the user has already paid but the round is still open -->
             <button
-              *ngIf="showPayContributionButton && currentUserAlreadyPaid"
+              *ngIf="
+                showPayContributionButton &&
+                currentUserAlreadyPaid &&
+                isPaymentWindowOpen
+              "
               (click)="goToPayContribution()"
               class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg border-2 border-green-500 bg-transparent px-5 py-2.5 text-sm font-bold text-green-600 dark:text-green-400 shadow-sm hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
             >
@@ -210,6 +217,25 @@
               >
               Paid · Pay again
             </button>
+
+            <!-- Payment window not yet open: locked button with opening date -->
+            <div
+              *ngIf="isPaymentLocked"
+              class="flex-1 md:flex-none flex flex-col items-center gap-1"
+            >
+              <button
+                disabled
+                class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 dark:bg-white/10 px-5 py-2.5 text-sm font-bold text-gray-400 dark:text-gray-500 cursor-not-allowed"
+              >
+                <span class="material-symbols-outlined text-[20px]">lock</span>
+                Payment locked
+              </button>
+              <span
+                class="text-xs text-gray-500 dark:text-gray-400 text-center"
+              >
+                Opens {{ paymentWindowOpensOn }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -656,6 +682,60 @@
                         <span class="text-gray-500">
                           ({{ getRelativeTime(round.date) }})
                         </span>
+                      </span>
+                    </div>
+
+                    <!-- Payment window open date -->
+                    <div
+                      *ngIf="
+                        round.paymentOpenDate && round.status === 'INPAYED'
+                      "
+                      class="flex items-center gap-2 text-sm"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[18px]"
+                        [ngClass]="
+                          currentRound?.id === round.id && isPaymentWindowOpen
+                            ? 'text-green-500'
+                            : currentRound?.id === round.id &&
+                                !isPaymentWindowOpen
+                              ? 'text-orange-400'
+                              : 'text-gray-400'
+                        "
+                      >
+                        {{
+                          currentRound?.id === round.id && isPaymentWindowOpen
+                            ? "lock_open"
+                            : "lock"
+                        }}
+                      </span>
+                      <span
+                        [ngClass]="
+                          currentRound?.id === round.id && isPaymentWindowOpen
+                            ? 'text-green-600 dark:text-green-400'
+                            : currentRound?.id === round.id &&
+                                !isPaymentWindowOpen
+                              ? 'text-orange-600 dark:text-orange-400'
+                              : 'text-gray-600 dark:text-gray-400'
+                        "
+                      >
+                        <span class="font-medium">Payment opens:</span>
+                        {{ formatRoundDate(round.paymentOpenDate) }}
+                        <span
+                          *ngIf="
+                            currentRound?.id === round.id && isPaymentWindowOpen
+                          "
+                          class="ml-1 font-semibold"
+                          >· Open now</span
+                        >
+                        <span
+                          *ngIf="
+                            currentRound?.id === round.id &&
+                            !isPaymentWindowOpen
+                          "
+                          class="ml-1 font-semibold"
+                          >· Not yet open</span
+                        >
                       </span>
                     </div>
 
