@@ -27,7 +27,8 @@ public interface DartMapper {
 
     /**
      * Maps a Dart entity to DartResponse with additional context from the current
-     * user.
+     * user. Round statistics default to zero — use the overload that accepts
+     * paidRounds/totalRounds/nextPayoutDate for a fully populated response.
      *
      * @param dart          the dart entity
      * @param currentUserId the ID of the current authenticated user
@@ -36,6 +37,33 @@ public interface DartMapper {
     default DartResponse toDtoWithContext(
         Dart dart,
         java.util.UUID currentUserId
+    ) {
+        return toDtoWithContext(
+            dart,
+            currentUserId,
+            0L,
+            dart.getMemberCount(),
+            null
+        );
+    }
+
+    /**
+     * Maps a Dart entity to DartResponse with real round statistics.
+     *
+     * @param dart           the dart entity
+     * @param currentUserId  the ID of the current authenticated user
+     * @param paidRounds     number of rounds whose status is PAYED
+     * @param totalRounds    total number of rounds created for this dart
+     *                       (falls back to memberCount when no rounds exist yet)
+     * @param nextPayoutDate date of the next INPAYED round, or null
+     * @return the dart response with complete information
+     */
+    default DartResponse toDtoWithContext(
+        Dart dart,
+        java.util.UUID currentUserId,
+        long paidRounds,
+        long totalRounds,
+        java.time.LocalDateTime nextPayoutDate
     ) {
         if (dart == null) {
             return null;
@@ -83,6 +111,10 @@ public interface DartMapper {
                 ? currentUserMember.getStatus().name()
                 : null;
 
+        // When no rounds have been created yet, fall back to member count
+        long effectiveTotalCycles =
+            totalRounds > 0 ? totalRounds : dart.getMemberCount();
+
         return DartResponse.builder()
             .id(dart.getId())
             .name(dart.getName())
@@ -110,10 +142,10 @@ public interface DartMapper {
             .isOrganizer(isOrganizer)
             .userPermission(userPermission)
             .userMemberStatus(userMemberStatus)
-            .currentCycle(0) // TODO: Calculate from rounds/payments
-            .totalCycles(dart.getMemberCount()) // Total cycles = member count
-            .nextPayoutDate(null) // TODO: Calculate from payment schedule
-            .image(null) // TODO: Add image field to Dart entity if needed
+            .currentCycle((int) paidRounds)
+            .totalCycles((int) effectiveTotalCycles)
+            .nextPayoutDate(nextPayoutDate)
+            .image(null)
             .customRules(dart.getCustomRules())
             .createdAt(dart.getCreatedAt())
             .updatedAt(dart.getUpdatedAt())
