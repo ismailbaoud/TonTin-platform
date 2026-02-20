@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,47 +43,113 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${stripe.webhook-secret:}")
     private String stripeWebhookSecret;
 
-    private String getStripeSecretKey() {
-        return stripeSecretKey != null ? stripeSecretKey.trim() : "";
-    }
-
     private final SecurityUtils securityUtils;
     private final MemberRepository memberRepository;
     private final DartRepository dartRepository;
     private final RoundRepository roundRepository;
     private final PaymentRepository paymentRepository;
 
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private String getStripeSecretKey() {
+        return stripeSecretKey != null ? stripeSecretKey.trim() : "";
+    }
+
+    /**
+     * Core idempotent logic: marks a payment as PAYED and closes the round
+     * when all contributing members have paid.
+     *
+     * This is shared by the webhook path (markPaymentSucceeded) and the
+     * synchronous client-side confirmation path (confirmPaymentById).
+     */
+    private void applyPaymentSuccess(Payment payment) {
+        if (payment.getPaymentStatus() == PaymentStatus.PAYED) {
+            log.debug(
+                "Payment {} is already PAYED — skipping.",
+                payment.getId()
+            );
+            return;
+        }
+
+        payment.setPaymentStatus(PaymentStatus.PAYED);
+        payment.setDate(LocalDateTime.now());
+        paymentRepository.save(payment);
+        log.info("Payment {} marked as PAYED.", payment.getId());
+
+        // Check if all non-recipient members of this round have now paid
+        Round round = payment.getRound();
+        Dart dart = round.getDart();
+        int activeCount = dart.getActiveMembers().size();
+        long paidCount = paymentRepository.countByRoundIdAndPaymentStatus(
+            round.getId(),
+            PaymentStatus.PAYED
+        );
+
+        // All payers = active members minus the one recipient
+        if (paidCount >= activeCount - 1) {
+            round.setStatus(RoundStatus.PAYED);
+            roundRepository.save(round);
+            log.info(
+                "Round {} marked as PAYED — all {} contributions received.",
+                round.getId(),
+                paidCount
+            );
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Service interface implementations
+    // -------------------------------------------------------------------------
+
     @Override
     @Transactional
-    public CreatePaymentIntentResponse createPaymentIntent(CreatePaymentIntentRequest request) {
+    public CreatePaymentIntentResponse createPaymentIntent(
+        CreatePaymentIntentRequest request
+    ) {
         UUID dartId = request.dartId();
         UUID userId = securityUtils.requireCurrentUserId();
 
         Member payer = memberRepository
             .findByDartIdAndUserId(dartId, userId)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.FORBIDDEN,
-                "You are not a member of this dart."
-            ));
+            .orElseThrow(() ->
+                new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not a member of this dart."
+                )
+            );
 
         Dart dart = dartRepository
             .findById(dartId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Dart not found."));
+            .orElseThrow(() ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Dart not found."
+                )
+            );
 
-        List<Round> current = roundRepository.findCurrentRoundByDartId(
-            dartId,
-            RoundStatus.INPAYED,
-            PageRequest.of(0, 1)
-        ).getContent();
+        List<Round> current = roundRepository
+            .findCurrentRoundByDartId(
+                dartId,
+                RoundStatus.INPAYED,
+                PageRequest.of(0, 1)
+            )
+            .getContent();
+
         if (current.isEmpty()) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "No current round to pay for. All rounds may be completed."
             );
         }
+
         Round round = current.get(0);
 
-        if (round.getRecipient() != null && round.getRecipient().getId().equals(payer.getId())) {
+        if (
+            round.getRecipient() != null &&
+            round.getRecipient().getId().equals(payer.getId())
+        ) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "You are the recipient of this round. You do not need to pay."
@@ -93,40 +158,60 @@ public class PaymentServiceImpl implements PaymentService {
 
         BigDecimal amount = dart.getMonthlyContribution();
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid contribution amount.");
-        }
-        long amountCents = amount.multiply(BigDecimal.valueOf(100)).longValue();
-        if (amountCents < 50) {
-            amountCents = 50; // Stripe minimum for USD
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Invalid contribution amount."
+            );
         }
 
-        // Idempotent: reuse existing PENDING payment for this payer/round, or create one
+        long amountCents = amount.multiply(BigDecimal.valueOf(100)).longValue();
+        if (amountCents < 50) {
+            amountCents = 50; // Stripe minimum
+        }
+
+        // Idempotent: reuse an existing PENDING payment for this payer/round
         Payment payment = null;
-        List<Payment> existing = paymentRepository.findAllByRoundIdAndPaymentStatus(
-            round.getId(),
-            PaymentStatus.PENDING
-        );
+        List<Payment> existing =
+            paymentRepository.findAllByRoundIdAndPaymentStatus(
+                round.getId(),
+                PaymentStatus.PENDING
+            );
+
         for (Payment p : existing) {
             if (!p.getPayer().getId().equals(payer.getId())) continue;
+
             String existingIntentId = p.getStripePaymentIntentId();
-            // Real Stripe ID (not mock): try to reuse
-            if (existingIntentId != null && !existingIntentId.startsWith("pi_mock_")) {
+            // Try to reuse a real (non-mock) Stripe intent
+            if (
+                existingIntentId != null &&
+                !existingIntentId.startsWith("pi_mock_")
+            ) {
                 try {
-                    PaymentIntent intent = PaymentIntent.retrieve(existingIntentId);
-                    if ("requires_payment_method".equals(intent.getStatus()) || "requires_confirmation".equals(intent.getStatus())) {
+                    PaymentIntent intent = PaymentIntent.retrieve(
+                        existingIntentId
+                    );
+                    if (
+                        "requires_payment_method".equals(intent.getStatus()) ||
+                        "requires_confirmation".equals(intent.getStatus())
+                    ) {
                         return CreatePaymentIntentResponse.builder()
                             .clientSecret(intent.getClientSecret())
                             .paymentId(p.getId())
                             .build();
                     }
                 } catch (Exception e) {
-                    log.warn("Could not retrieve existing intent, will create new one: {}", e.getMessage());
+                    log.warn(
+                        "Could not retrieve existing intent, will create new one: {}",
+                        e.getMessage()
+                    );
                 }
             }
-            // Reuse this payment (mock or failed retrieve): create new Stripe Intent and update it
+
+            // Reuse this payment record — create a fresh Stripe intent below
             payment = p;
             break;
         }
+
         if (payment == null) {
             payment = Payment.builder()
                 .amount(amount)
@@ -140,7 +225,11 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         String secretKey = getStripeSecretKey();
-        if (secretKey.length() > 0 && (secretKey.startsWith("sk_") || secretKey.startsWith("rk_"))) {
+        boolean isRealKey =
+            secretKey.length() > 0 &&
+            (secretKey.startsWith("sk_") || secretKey.startsWith("rk_"));
+
+        if (isRealKey) {
             try {
                 Stripe.apiKey = secretKey;
                 PaymentIntent intent = PaymentIntent.create(
@@ -164,13 +253,24 @@ public class PaymentServiceImpl implements PaymentService {
                     .paymentId(payment.getId())
                     .build();
             } catch (Exception e) {
-                log.error("Stripe PaymentIntent create failed: {}", e.getMessage(), e);
-                String msg = e.getMessage() != null && e.getMessage().contains("Invalid API Key") ? "Stripe secret key is invalid. Check STRIPE_SECRET_KEY in .env." : "Could not create payment session. Try again.";
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, msg);
+                log.error(
+                    "Stripe PaymentIntent create failed: {}",
+                    e.getMessage(),
+                    e
+                );
+                String msg =
+                    e.getMessage() != null &&
+                    e.getMessage().contains("Invalid API Key")
+                        ? "Stripe secret key is invalid. Check STRIPE_SECRET_KEY in .env."
+                        : "Could not create payment session. Try again.";
+                throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    msg
+                );
             }
         }
 
-        // Mock key: return a fake client secret so frontend can show form; confirm will fail until real key is set
+        // Mock key — return a fake client secret so the frontend can render the form
         String mockSecret = "pi_mock_" + payment.getId() + "_secret_mock";
         payment.setStripePaymentIntentId("pi_mock_" + payment.getId());
         paymentRepository.save(payment);
@@ -183,20 +283,35 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public void handleWebhook(String payload, String signature) {
-        String webhookSecret = stripeWebhookSecret != null ? stripeWebhookSecret.trim() : "";
+        String webhookSecret =
+            stripeWebhookSecret != null ? stripeWebhookSecret.trim() : "";
+
         if (webhookSecret.isBlank() || webhookSecret.startsWith("whsec_mock")) {
-            log.warn("Stripe webhook secret not configured; skipping verification.");
+            log.warn(
+                "Stripe webhook secret not configured; skipping verification."
+            );
             return;
         }
+
         Event event;
         try {
             event = Webhook.constructEvent(payload, signature, webhookSecret);
         } catch (SignatureVerificationException e) {
-            log.warn("Stripe webhook signature verification failed: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid signature");
+            log.warn(
+                "Stripe webhook signature verification failed: {}",
+                e.getMessage()
+            );
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Invalid signature"
+            );
         }
+
         if ("payment_intent.succeeded".equals(event.getType())) {
-            PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
+            PaymentIntent intent = (PaymentIntent) event
+                .getDataObjectDeserializer()
+                .getObject()
+                .orElse(null);
             if (intent != null) {
                 markPaymentSucceeded(intent.getId());
             }
@@ -208,34 +323,40 @@ public class PaymentServiceImpl implements PaymentService {
     public void markPaymentSucceeded(String stripePaymentIntentId) {
         paymentRepository
             .findByStripePaymentIntentId(stripePaymentIntentId)
-            .ifPresent(payment -> {
-                if (payment.getPaymentStatus() == PaymentStatus.PAYED) {
-                    return;
-                }
-                payment.setPaymentStatus(PaymentStatus.PAYED);
-                payment.setDate(LocalDateTime.now());
-                paymentRepository.save(payment);
-
-                Round round = payment.getRound();
-                Dart dart = round.getDart();
-                int activeCount = dart.getActiveMembers().size();
-                long paidCount = paymentRepository.countByRoundIdAndPaymentStatus(round.getId(), PaymentStatus.PAYED);
-                // All payers = active members except recipient
-                if (paidCount >= activeCount - 1) {
-                    round.setStatus(RoundStatus.PAYED);
-                    roundRepository.save(round);
-                    log.info("Round {} marked as PAYED (all contributions received).", round.getId());
-                }
-            });
+            .ifPresentOrElse(this::applyPaymentSuccess, () ->
+                log.warn(
+                    "No payment found for Stripe intent id: {}",
+                    stripePaymentIntentId
+                )
+            );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<UUID> getPaidPayerMemberIdsForRound(UUID roundId) {
-        return paymentRepository
-            .findAllByRoundIdAndPaymentStatus(roundId, PaymentStatus.PAYED)
-            .stream()
-            .map(p -> p.getPayer().getId())
-            .collect(Collectors.toList());
+    @Transactional
+    public void confirmPaymentById(UUID paymentId) {
+        UUID currentUserId = securityUtils.requireCurrentUserId();
+
+        Payment payment = paymentRepository
+            .findById(paymentId)
+            .orElseThrow(() ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Payment not found."
+                )
+            );
+
+        // Security: only the payer themselves can confirm their own payment
+        if (
+            payment.getPayer() == null ||
+            payment.getPayer().getUser() == null ||
+            !payment.getPayer().getUser().getId().equals(currentUserId)
+        ) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You are not authorised to confirm this payment."
+            );
+        }
+
+        applyPaymentSuccess(payment);
     }
 }
