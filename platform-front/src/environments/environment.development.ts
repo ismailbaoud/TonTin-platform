@@ -121,10 +121,11 @@ export const environment = {
     trackingId: "",
   },
 
-  // External Services
+  // External Services (replace with real keys in production; set in .env or here)
   external: {
     googleMapsApiKey: "",
-    stripePublicKey: "",
+    stripePublishableKey:
+      "pk_test_51T2atJKY7titwMaw32Q3dSngKgpuQP5BwerBwo3kypOvIzrGoBEeZXJegFBjhDoa2KujjnZPDydVcsMIFvbJ85Jz00YsnHQia0",
   },
 };
 
