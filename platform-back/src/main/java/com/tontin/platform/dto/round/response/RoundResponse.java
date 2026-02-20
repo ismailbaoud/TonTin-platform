@@ -4,6 +4,7 @@ import com.tontin.platform.domain.enums.round.RoundStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -15,15 +16,19 @@ import lombok.Builder;
  * including its number, status, date, amount, and associated dart.
  * </p>
  *
- * @param id          Unique identifier of the round
- * @param number      Round number (1-based)
- * @param status      Current status of the round
- * @param date        Date when the round occurs
- * @param amount      Amount for this round
- * @param dartId      ID of the associated dart
- * @param dartName    Name of the associated dart
- * @param createdAt   Timestamp when the round was created
- * @param updatedAt   Timestamp when the round was last updated
+ * @param id                    Unique identifier of the round
+ * @param number                Round number (1-based)
+ * @param status                Current status of the round
+ * @param date                  Date when the round occurs
+ * @param amount                Amount for this round
+ * @param dartId                ID of the associated dart
+ * @param dartName              Name of the associated dart
+ * @param recipientMemberId     Member ID of the recipient
+ * @param recipientMemberName   Name of the recipient member
+ * @param recipientMemberEmail  Email of the recipient member
+ * @param paidMemberIds         List of member IDs (payers) who have already paid for this round
+ * @param createdAt             Timestamp when the round was created
+ * @param updatedAt             Timestamp when the round was last updated
  */
 @Builder
 @Schema(description = "Response object containing round information")
@@ -54,10 +59,7 @@ public record RoundResponse(
     )
     LocalDateTime date,
 
-    @Schema(
-        description = "Amount for this round",
-        example = "1000.00"
-    )
+    @Schema(description = "Amount for this round", example = "1000.00")
     BigDecimal amount,
 
     @Schema(
@@ -91,6 +93,11 @@ public record RoundResponse(
     String recipientMemberEmail,
 
     @Schema(
+        description = "List of member IDs (payers) who have already paid their contribution for this round"
+    )
+    List<UUID> paidMemberIds,
+
+    @Schema(
         description = "Timestamp when the round was created",
         example = "2024-01-15T10:00:00"
     )
@@ -119,5 +126,15 @@ public record RoundResponse(
     public boolean isInPayed() {
         return status == RoundStatus.INPAYED;
     }
+
+    /**
+     * Checks if a specific member has already paid for this round.
+     *
+     * @param memberId the member ID to check
+     * @return true if the member has paid
+     */
+    public boolean hasMemberPaid(UUID memberId) {
+        if (paidMemberIds == null || memberId == null) return false;
+        return paidMemberIds.contains(memberId);
+    }
 }
- 
