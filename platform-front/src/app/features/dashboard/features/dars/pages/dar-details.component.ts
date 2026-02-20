@@ -7,7 +7,21 @@ import { DarService } from "../services/dar.service";
 import { RoundService } from "../services/round.service";
 import { AuthService } from "../../../../auth/services/auth.service";
 import { MemberStatus } from "../enums/member-status.enum";
-import { Round, RoundStatus, formatRoundDate, getRelativeTime, getRoundStatusLabel, getRoundStatusColor } from "../models/round.model";
+import {
+  Round,
+  RoundStatus,
+  formatRoundDate,
+  getRelativeTime,
+  getRoundStatusLabel,
+  getRoundStatusColor,
+} from "../models/round.model";
+
+/** Payment status of a member for the current round. */
+export type MemberPaymentStatus =
+  | "paid"
+  | "pending"
+  | "recipient"
+  | "not_started";
 
 interface Member {
   id: string;
@@ -17,8 +31,6 @@ interface Member {
   role: string;
   status: MemberStatus; // Member participation status (PENDING/ACTIVE/LEAVED)
   turnDate: string;
-  /** For current round: paid, pending, or recipient (no payment required) */
-  contributionStatus?: "paid" | "pending" | "recipient";
 }
 
 interface DarDetails {
@@ -74,8 +86,6 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   isLoadingRounds = false;
   /** Current user's member id in this dart (set when members load). Used to show/hide Pay contribution. */
   currentUserMemberId: string | null = null;
-  /** Member IDs who have paid for the current round (for showing Paid/Pending). */
-  paidMemberIdsForCurrentRound: string[] = [];
 
   // No more mock data - using real API
 
@@ -91,13 +101,6 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // When returning from successful payment, refresh contributions so "Paid" shows
-    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((q) => {
-      if (q.get("payment") === "success" && this.darId) {
-        this.loadCurrentRoundContributions();
-      }
-    });
-
     // Subscribe to route params changes to reload data when navigating between darts
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.darId = params.get("id");
@@ -151,7 +154,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
 
     if (!this.isValidUuid(this.darId)) {
       this.error =
-        "Invalid Dâr link. This page expects a valid Dâr ID. Use \"My Dârs\" to open a Dâr.";
+        'Invalid Dâr link. This page expects a valid Dâr ID. Use "My Dârs" to open a Dâr.';
       this.isLoading = false;
       return;
     }
@@ -232,16 +235,19 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
           this.loadMembers();
 
           // Load rounds if dart is active (check both uppercase and lowercase)
-          const status = data.status?.toUpperCase() || '';
+          const status = data.status?.toUpperCase() || "";
           console.log("🔍 Dart status check for rounds loading:", {
             rawStatus: data.status,
             upperCaseStatus: status,
-            willLoadRounds: status === 'ACTIVE'
+            willLoadRounds: status === "ACTIVE",
           });
-          if (status === 'ACTIVE') {
+          if (status === "ACTIVE") {
             this.loadRounds();
           } else {
-            console.log("⏸️ Dart is not active, skipping rounds load. Status:", status);
+            console.log(
+              "⏸️ Dart is not active, skipping rounds load. Status:",
+              status,
+            );
           }
         },
         error: (err) => {
@@ -295,7 +301,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
           console.log(`✅ Loaded ${members.length} members:`, members);
           const currentUser = this.authService.getStoredUser();
           const myMember = members.find(
-            (m: any) => m.user?.id === currentUser?.id
+            (m: any) => m.user?.id === currentUser?.id,
           );
           this.currentUserMemberId = myMember?.id ?? null;
 
@@ -308,17 +314,22 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
               role: m.permission === "ORGANIZER" ? "organizer" : "member",
               status: m.status as MemberStatus, // PENDING, ACTIVE, or LEAVED
               turnDate: "TBD", // Will be updated from rounds
-              contributionStatus: undefined as "paid" | "pending" | "recipient" | undefined,
             }));
             console.log(
               `📊 Mapped ${this.darDetails.members.length} members for display`,
             );
+            console.log(
+              `📋 Member IDs:`,
+              this.darDetails.members.map((m) => ({
+                name: m.name,
+                id: m.id,
+              })),
+            );
 
-            // Update turn dates and contribution status if rounds/contributions already loaded
+            // Update turn dates from rounds if rounds are already loaded
             if (this.rounds.length > 0) {
               this.updateMemberTurnDates();
             }
-            this.updateMemberContributionStatus();
           }
         },
         error: (err) => {
@@ -346,28 +357,28 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (rounds) => {
           console.log(`✅ Loaded ${rounds.length} rounds:`, rounds);
-          console.log("📋 Round details:", rounds.map(r => ({
-            id: r.id,
-            number: r.number,
-            recipientMemberId: r.recipientMemberId,
-            recipientMemberName: r.recipientMemberName,
-            date: r.date,
-            status: r.status
-          })));
-          
+          console.log(
+            "📋 Round details:",
+            rounds.map((r) => ({
+              id: r.id,
+              number: r.number,
+              recipientMemberId: r.recipientMemberId,
+              recipientMemberName: r.recipientMemberName,
+              date: r.date,
+              status: r.status,
+            })),
+          );
+
           this.rounds = rounds.sort((a, b) => a.number - b.number);
           this.isLoadingRounds = false;
 
           // Set current round = first INPAYED round (next to receive money)
-          this.currentRound = this.rounds.find((r) => r.status === 'INPAYED') ?? null;
-
-          // Load who has paid for the current round (for Paid/Pending badges)
-          this.loadCurrentRoundContributions();
+          this.currentRound =
+            this.rounds.find((r) => r.status === "INPAYED") ?? null;
 
           // Update member turn dates based on rounds (if members are already loaded)
           if (this.darDetails && this.darDetails.members.length > 0) {
             this.updateMemberTurnDates();
-            this.updateMemberContributionStatus();
           }
 
           // Optionally sync from backend (don't replace if we already have one)
@@ -379,53 +390,16 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
           console.error("❌ Error loading rounds:", err);
           console.error("  - Dart ID:", this.darId);
           console.error("  - Status Code:", err.status);
-          console.error("  - Error Message:", err.error?.message || err.message);
+          console.error(
+            "  - Error Message:",
+            err.error?.message || err.message,
+          );
           console.error("  - Full Error:", err);
           this.isLoadingRounds = false;
           // Show error in console but don't break the UI
           // Rounds might not exist yet if dart just started
         },
       });
-  }
-
-  /**
-   * Load which members have paid for the current round
-   */
-  private loadCurrentRoundContributions(): void {
-    if (!this.darId) return;
-
-    this.roundService
-      .getCurrentRoundContributions(this.darId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          this.paidMemberIdsForCurrentRound = res.paidMemberIds ?? [];
-          this.updateMemberContributionStatus();
-        },
-        error: () => {
-          this.paidMemberIdsForCurrentRound = [];
-        },
-      });
-  }
-
-  /**
-   * Set contributionStatus on each member (paid / pending / recipient) for current round
-   */
-  private updateMemberContributionStatus(): void {
-    if (!this.darDetails?.members.length) return;
-
-    const paidSet = new Set(this.paidMemberIdsForCurrentRound);
-    const recipientId = this.currentRound?.recipientMemberId ?? null;
-
-    this.darDetails.members.forEach((member) => {
-      if (recipientId && member.id === recipientId) {
-        member.contributionStatus = "recipient";
-      } else if (paidSet.has(member.id)) {
-        member.contributionStatus = "paid";
-      } else {
-        member.contributionStatus = "pending";
-      }
-    });
   }
 
   /**
@@ -445,7 +419,9 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
         error: () => {
           // Keep currentRound from rounds list; only clear if we never had one
           if (!this.currentRound) {
-            console.log("ℹ️ No current round from API (all rounds may be paid)");
+            console.log(
+              "ℹ️ No current round from API (all rounds may be paid)",
+            );
           }
         },
       });
@@ -458,42 +434,52 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
     if (!this.darDetails || !this.rounds.length) {
       console.log("⚠️ Cannot update turn dates - missing data:", {
         hasDarDetails: !!this.darDetails,
-        roundsCount: this.rounds.length
+        roundsCount: this.rounds.length,
       });
       return;
     }
 
     console.log("🔄 Updating member turn dates from rounds...");
-    console.log("📋 Rounds:", this.rounds.map(r => ({
-      number: r.number,
-      recipientMemberId: r.recipientMemberId,
-      date: r.date
-    })));
-    console.log("👥 Members:", this.darDetails.members.map(m => ({
-      name: m.name,
-      id: m.id
-    })));
+    console.log(
+      "📋 Rounds:",
+      this.rounds.map((r) => ({
+        number: r.number,
+        recipientMemberId: r.recipientMemberId,
+        date: r.date,
+      })),
+    );
+    console.log(
+      "👥 Members:",
+      this.darDetails.members.map((m) => ({
+        name: m.name,
+        id: m.id,
+      })),
+    );
 
     // Map rounds to members by recipient
     let updatedCount = 0;
     this.darDetails.members.forEach((member) => {
-      const round = this.rounds.find(
-        (r) => r.recipientMemberId === member.id
-      );
+      const round = this.rounds.find((r) => r.recipientMemberId === member.id);
       if (round) {
         member.turnDate = formatRoundDate(round.date);
         updatedCount++;
-        console.log(`✅ Updated ${member.name}: ${member.turnDate} (Round ${round.number})`);
+        console.log(
+          `✅ Updated ${member.name}: ${member.turnDate} (Round ${round.number})`,
+        );
       } else {
-        console.log(`⚠️ No round found for member ${member.name} (ID: ${member.id})`);
+        console.log(
+          `⚠️ No round found for member ${member.name} (ID: ${member.id})`,
+        );
         // Keep TBD if no round found
         if (!member.turnDate || member.turnDate === "TBD") {
           member.turnDate = "TBD";
         }
       }
     });
-    
-    console.log(`✅ Updated ${updatedCount} out of ${this.darDetails.members.length} member turn dates`);
+
+    console.log(
+      `✅ Updated ${updatedCount} out of ${this.darDetails.members.length} member turn dates`,
+    );
   }
 
   /**
@@ -750,6 +736,83 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
     alert("Share link functionality coming soon!");
   }
 
+  // -------------------------------------------------------------------------
+  // Payment status helpers
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns true when rounds have been created for this dart, meaning payment
+   * tracking is meaningful to display.
+   */
+  get hasRounds(): boolean {
+    return this.rounds.length > 0;
+  }
+
+  /**
+   * Returns the payment status of a given member for the CURRENT round:
+   * - "recipient"   → this member receives the pot this round (no payment needed)
+   * - "paid"        → member has a confirmed PAYED payment for this round
+   * - "pending"     → member is active but has not yet paid
+   * - "not_started" → no current round exists yet (dart not started / all done)
+   */
+  getMemberPaymentStatus(memberId: string): MemberPaymentStatus {
+    if (!this.currentRound) return "not_started";
+
+    if (this.currentRound.recipientMemberId === memberId) return "recipient";
+
+    const paidIds: string[] = this.currentRound.paidMemberIds ?? [];
+    if (paidIds.includes(memberId)) return "paid";
+
+    return "pending";
+  }
+
+  /** CSS classes for the payment status badge. */
+  getPaymentStatusClass(memberId: string): string {
+    const status = this.getMemberPaymentStatus(memberId);
+    switch (status) {
+      case "paid":
+        return "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 ring-green-600/20";
+      case "recipient":
+        return "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-blue-600/20";
+      case "pending":
+        return "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 ring-orange-600/20";
+      default:
+        return "bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 ring-gray-600/20";
+    }
+  }
+
+  /** Material icon for the payment status badge. */
+  getPaymentStatusIcon(memberId: string): string {
+    const status = this.getMemberPaymentStatus(memberId);
+    switch (status) {
+      case "paid":
+        return "check_circle";
+      case "recipient":
+        return "savings";
+      case "pending":
+        return "hourglass_empty";
+      default:
+        return "radio_button_unchecked";
+    }
+  }
+
+  /** Display label for the payment status badge. */
+  getPaymentStatusText(memberId: string): string {
+    const status = this.getMemberPaymentStatus(memberId);
+    switch (status) {
+      case "paid":
+        return "Paid";
+      case "recipient":
+        return "Recipient";
+      case "pending":
+        return "Not Paid";
+      default:
+        return "—";
+    }
+  }
+
+  // -------------------------------------------------------------------------
+
   /** True when current user is a member, there is a current (INPAYED) round, and they are not the recipient. */
   get showPayContributionButton(): boolean {
     if (!this.darId || !this.currentRound || this.currentUserMemberId == null) {
@@ -761,10 +824,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   /** Navigate to the pay-contribution page for this dart. */
   goToPayContribution(): void {
     if (this.darId) {
-      this.router.navigate([
-        "/dashboard/client/pay-contribution",
-        this.darId,
-      ]);
+      this.router.navigate(["/dashboard/client/pay-contribution", this.darId]);
     }
   }
 
@@ -884,38 +944,6 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
         return "Left";
       default:
         return "Unknown";
-    }
-  }
-
-  /**
-   * Get badge text for contribution status (current round)
-   */
-  getContributionStatusText(contributionStatus?: "paid" | "pending" | "recipient"): string {
-    switch (contributionStatus) {
-      case "paid":
-        return "Paid";
-      case "pending":
-        return "Pending";
-      case "recipient":
-        return "Recipient";
-      default:
-        return "—";
-    }
-  }
-
-  /**
-   * Get CSS classes for contribution status badge
-   */
-  getContributionStatusClass(contributionStatus?: "paid" | "pending" | "recipient"): string {
-    switch (contributionStatus) {
-      case "paid":
-        return "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 ring-green-600/20";
-      case "pending":
-        return "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 ring-amber-600/20";
-      case "recipient":
-        return "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-blue-600/20";
-      default:
-        return "bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 ring-gray-600/20";
     }
   }
 }

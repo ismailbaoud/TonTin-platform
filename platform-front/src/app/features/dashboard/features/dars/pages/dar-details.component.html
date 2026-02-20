@@ -31,7 +31,9 @@
           class="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary hover:underline"
         >
           Go to My Dârs
-          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          <span class="material-symbols-outlined text-[18px]"
+            >arrow_forward</span
+          >
         </a>
       </div>
       <button
@@ -187,7 +189,9 @@
               (click)="goToPayContribution()"
               class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-bold text-black shadow-sm hover:bg-amber-600 transition-colors"
             >
-              <span class="material-symbols-outlined text-[20px]">payments</span>
+              <span class="material-symbols-outlined text-[20px]"
+                >payments</span
+              >
               Pay contribution
             </button>
           </div>
@@ -276,7 +280,8 @@
               *ngIf="currentRound"
               class="text-xs text-gray-500 dark:text-gray-400 mt-1"
             >
-              {{ formatRoundDate(currentRound.date) }} • {{ getRelativeTime(currentRound.date) }}
+              {{ formatRoundDate(currentRound.date) }} •
+              {{ getRelativeTime(currentRound.date) }}
             </p>
           </div>
         </div>
@@ -395,7 +400,18 @@
                   <th class="px-6 py-4" scope="col">Role</th>
                   <th class="px-6 py-4" scope="col">Turn Date</th>
                   <th class="px-6 py-4 text-center" scope="col">Status</th>
-                  <th class="px-6 py-4 text-center" scope="col">Contribution</th>
+                  <th
+                    *ngIf="hasRounds"
+                    class="px-6 py-4 text-center"
+                    scope="col"
+                  >
+                    <div class="flex items-center justify-center gap-1">
+                      <span class="material-symbols-outlined text-[15px]"
+                        >payments</span
+                      >
+                      Current Round
+                    </div>
+                  </th>
                   <th class="px-6 py-4 text-right" scope="col">Actions</th>
                 </tr>
               </thead>
@@ -456,19 +472,29 @@
                       {{ getStatusText(member.status) }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-center">
-                    <span
-                      *ngIf="currentRound && member.contributionStatus"
-                      class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
-                      [ngClass]="getContributionStatusClass(member.contributionStatus)"
+
+                  <!-- Payment status for the current round -->
+                  <td *ngIf="hasRounds" class="px-6 py-4 text-center">
+                    <ng-container
+                      *ngIf="member.status === 'ACTIVE'; else noPaymentBadge"
                     >
-                      <span class="material-symbols-outlined text-[14px]">{{
-                        member.contributionStatus === 'paid' ? 'check_circle' : member.contributionStatus === 'pending' ? 'schedule' : 'account_balance_wallet'
-                      }}</span>
-                      {{ getContributionStatusText(member.contributionStatus) }}
-                    </span>
-                    <span *ngIf="!currentRound" class="text-gray-400">—</span>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
+                        [ngClass]="getPaymentStatusClass(member.id)"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">{{
+                          getPaymentStatusIcon(member.id)
+                        }}</span>
+                        {{ getPaymentStatusText(member.id) }}
+                      </span>
+                    </ng-container>
+                    <ng-template #noPaymentBadge>
+                      <span class="text-xs text-gray-400 dark:text-gray-600"
+                        >—</span
+                      >
+                    </ng-template>
                   </td>
+
                   <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">
                       <button
@@ -510,7 +536,7 @@
                 *ngIf="rounds.length > 0"
                 class="text-sm text-gray-600 dark:text-gray-400"
               >
-                {{ rounds.length }} round{{ rounds.length !== 1 ? 's' : '' }}
+                {{ rounds.length }} round{{ rounds.length !== 1 ? "s" : "" }}
               </span>
             </div>
           </div>
@@ -530,13 +556,12 @@
             *ngIf="!isLoadingRounds && rounds.length === 0"
             class="p-12 text-center"
           >
-            <span
-              class="material-symbols-outlined text-gray-400 text-6xl mb-4"
-            >
+            <span class="material-symbols-outlined text-gray-400 text-6xl mb-4">
               event_busy
             </span>
             <p class="text-gray-600 dark:text-gray-400">
-              No rounds created yet. Rounds will be created when the dart starts.
+              No rounds created yet. Rounds will be created when the dart
+              starts.
             </p>
           </div>
 
@@ -551,7 +576,8 @@
               [ngClass]="{
                 'bg-primary/10 dark:bg-primary/20 border-l-4 border-primary shadow-sm':
                   currentRound?.id === round.id,
-                'hover:bg-gray-50 dark:hover:bg-white/5': currentRound?.id !== round.id
+                'hover:bg-gray-50 dark:hover:bg-white/5':
+                  currentRound?.id !== round.id,
               }"
             >
               <!-- Next round: prominent card -->
@@ -576,11 +602,17 @@
                   <div class="flex items-center gap-3 mb-2">
                     <span
                       class="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm"
-                      [ngClass]="currentRound?.id === round.id ? 'bg-primary text-white' : 'bg-primary/10 text-primary'"
+                      [ngClass]="
+                        currentRound?.id === round.id
+                          ? 'bg-primary text-white'
+                          : 'bg-primary/10 text-primary'
+                      "
                     >
                       {{ round.number }}
                     </span>
-                    <h4 class="text-base font-bold text-text-light dark:text-white">
+                    <h4
+                      class="text-base font-bold text-text-light dark:text-white"
+                    >
                       Round {{ round.number }}
                     </h4>
                     <span
@@ -621,8 +653,12 @@
                         </span>
                         <span class="text-gray-600 dark:text-gray-400">
                           <span class="font-medium">Each pays:</span>
-                          <span class="font-semibold text-text-light dark:text-white">
-                            ${{ getContributionPerPerson(round) | number: '1.2-2' }}
+                          <span
+                            class="font-semibold text-text-light dark:text-white"
+                          >
+                            ${{
+                              getContributionPerPerson(round) | number: "1.2-2"
+                            }}
                           </span>
                         </span>
                       </div>
@@ -634,8 +670,10 @@
                         </span>
                         <span class="text-gray-600 dark:text-gray-400">
                           <span class="font-medium">Recipient gets:</span>
-                          <span class="font-semibold text-text-light dark:text-white">
-                            ${{ round.amount | number: '1.2-2' }}
+                          <span
+                            class="font-semibold text-text-light dark:text-white"
+                          >
+                            ${{ round.amount | number: "1.2-2" }}
                           </span>
                         </span>
                       </div>
@@ -653,13 +691,69 @@
                       </span>
                       <span class="text-gray-600 dark:text-gray-400">
                         <span class="font-medium">Recipient:</span>
-                        <span class="font-semibold text-text-light dark:text-white">
+                        <span
+                          class="font-semibold text-text-light dark:text-white"
+                        >
                           {{ round.recipientMemberName }}
                         </span>
-                        <span *ngIf="currentRound?.id === round.id" class="text-primary font-medium ml-1">
+                        <span
+                          *ngIf="currentRound?.id === round.id"
+                          class="text-primary font-medium ml-1"
+                        >
                           (no payment required)
                         </span>
                       </span>
+                    </div>
+
+                    <!-- Per-member payment progress (only when paidMemberIds available) -->
+                    <div
+                      *ngIf="
+                        round.paidMemberIds !== undefined &&
+                        darDetails?.members?.length
+                      "
+                      class="mt-3 pt-3 border-t border-border-light dark:border-border-dark"
+                    >
+                      <p
+                        class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
+                      >
+                        Contributions
+                        <span
+                          class="ml-1 font-bold text-text-light dark:text-white"
+                        >
+                          {{ round.paidMemberIds!.length }}
+                          / {{ darDetails!.members.length - 1 }}
+                        </span>
+                      </p>
+                      <div class="flex flex-wrap gap-2">
+                        <ng-container
+                          *ngFor="let member of darDetails!.members"
+                        >
+                          <!-- Skip the recipient -->
+                          <ng-container
+                            *ngIf="member.id !== round.recipientMemberId"
+                          >
+                            <span
+                              class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
+                              [ngClass]="
+                                round.paidMemberIds!.includes(member.id)
+                                  ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 ring-green-600/20'
+                                  : 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 ring-orange-600/20'
+                              "
+                            >
+                              <span
+                                class="material-symbols-outlined text-[12px]"
+                              >
+                                {{
+                                  round.paidMemberIds!.includes(member.id)
+                                    ? "check_circle"
+                                    : "hourglass_empty"
+                                }}
+                              </span>
+                              {{ member.name }}
+                            </span>
+                          </ng-container>
+                        </ng-container>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -671,7 +765,7 @@
                     [ngClass]="getRoundStatusColor(round.status)"
                   >
                     <span class="material-symbols-outlined text-[14px]">{{
-                      round.status === 'PAYED' ? 'check_circle' : 'pending'
+                      round.status === "PAYED" ? "check_circle" : "pending"
                     }}</span>
                     {{ getRoundStatusLabel(round.status) }}
                   </span>

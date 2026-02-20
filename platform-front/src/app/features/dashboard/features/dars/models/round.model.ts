@@ -32,6 +32,12 @@ export interface Round {
   /** Email of the member who receives money in this round */
   recipientMemberEmail?: string;
 
+  /**
+   * List of payer Member IDs (UUID strings) that have a confirmed (PAYED)
+   * payment for this round. Use this to display per-member payment status.
+   */
+  paidMemberIds?: string[];
+
   /** Timestamp when the round was created */
   createdAt: string;
 
@@ -44,9 +50,9 @@ export interface Round {
  */
 export enum RoundStatus {
   /** Round has been fully paid */
-  PAYED = 'PAYED',
+  PAYED = "PAYED",
   /** Round is pending payment */
-  INPAYED = 'INPAYED'
+  INPAYED = "INPAYED",
 }
 
 /**
@@ -68,8 +74,8 @@ export interface RoundStatistics {
  */
 export function getRoundStatusLabel(status: RoundStatus): string {
   const labels: Record<RoundStatus, string> = {
-    [RoundStatus.PAYED]: 'Paid',
-    [RoundStatus.INPAYED]: 'Pending Payment'
+    [RoundStatus.PAYED]: "Paid",
+    [RoundStatus.INPAYED]: "Pending Payment",
   };
   return labels[status] || status;
 }
@@ -79,10 +85,12 @@ export function getRoundStatusLabel(status: RoundStatus): string {
  */
 export function getRoundStatusColor(status: RoundStatus): string {
   const colors: Record<RoundStatus, string> = {
-    [RoundStatus.PAYED]: 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-600/20',
-    [RoundStatus.INPAYED]: 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-600/20'
+    [RoundStatus.PAYED]:
+      "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-600/20",
+    [RoundStatus.INPAYED]:
+      "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-600/20",
   };
-  return colors[status] || '';
+  return colors[status] || "";
 }
 
 /**
@@ -104,10 +112,10 @@ export function isRoundPending(status: RoundStatus): boolean {
  */
 export function formatRoundDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
@@ -116,12 +124,12 @@ export function formatRoundDate(dateString: string): string {
  */
 export function formatRoundDateTime(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -135,20 +143,20 @@ export function getRelativeTime(dateString: string): string {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
-    return 'Today';
+    return "Today";
   } else if (diffDays === 1) {
-    return 'Tomorrow';
+    return "Tomorrow";
   } else if (diffDays === -1) {
-    return 'Yesterday';
+    return "Yesterday";
   } else if (diffDays > 0) {
     if (diffDays < 7) {
       return `in ${diffDays} days`;
     } else if (diffDays < 30) {
       const weeks = Math.floor(diffDays / 7);
-      return `in ${weeks} week${weeks > 1 ? 's' : ''}`;
+      return `in ${weeks} week${weeks > 1 ? "s" : ""}`;
     } else {
       const months = Math.floor(diffDays / 30);
-      return `in ${months} month${months > 1 ? 's' : ''}`;
+      return `in ${months} month${months > 1 ? "s" : ""}`;
     }
   } else {
     const absDays = Math.abs(diffDays);
@@ -156,10 +164,10 @@ export function getRelativeTime(dateString: string): string {
       return `${absDays} days ago`;
     } else if (absDays < 30) {
       const weeks = Math.floor(absDays / 7);
-      return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+      return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
     } else {
       const months = Math.floor(absDays / 30);
-      return `${months} month${months > 1 ? 's' : ''} ago`;
+      return `${months} month${months > 1 ? "s" : ""} ago`;
     }
   }
 }
