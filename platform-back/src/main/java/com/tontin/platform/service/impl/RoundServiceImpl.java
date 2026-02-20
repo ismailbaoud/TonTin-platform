@@ -74,7 +74,10 @@ public class RoundServiceImpl implements RoundService {
                     p -> p.getRound().getId(),
                     Collectors.mapping(
                         p -> p.getPayer().getId(),
-                        Collectors.toList()
+                        Collectors.collectingAndThen(
+                            Collectors.toSet(),
+                            List::copyOf
+                        )
                     )
                 )
             );
@@ -90,6 +93,7 @@ public class RoundServiceImpl implements RoundService {
             .stream()
             .filter(p -> p.getPayer() != null)
             .map(p -> p.getPayer().getId())
+            .distinct()
             .collect(Collectors.toList());
     }
 

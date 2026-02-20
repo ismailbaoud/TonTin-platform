@@ -53,4 +53,18 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
         @Param("roundId") UUID roundId,
         @Param("status") PaymentStatus status
     );
+
+    /**
+     * Count distinct payers (by member id) who have a payment with the given
+     * status for a round. Used instead of countByRoundIdAndPaymentStatus so
+     * that a member who paid twice for the same round is only counted once
+     * when deciding whether the round should be closed.
+     */
+    @Query(
+        "SELECT COUNT(DISTINCT p.payer.id) FROM Payment p WHERE p.round.id = :roundId AND p.paymentStatus = :status"
+    )
+    long countDistinctPayersByRoundIdAndStatus(
+        @Param("roundId") UUID roundId,
+        @Param("status") PaymentStatus status
+    );
 }

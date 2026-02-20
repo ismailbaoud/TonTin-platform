@@ -78,14 +78,16 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.save(payment);
         log.info("Payment {} marked as PAYED.", payment.getId());
 
-        // Check if all non-recipient members of this round have now paid
+        // Check if all non-recipient members of this round have now paid.
+        // Use DISTINCT payer count so a member who paid twice is only counted once.
         Round round = payment.getRound();
         Dart dart = round.getDart();
         int activeCount = dart.getActiveMembers().size();
-        long paidCount = paymentRepository.countByRoundIdAndPaymentStatus(
-            round.getId(),
-            PaymentStatus.PAYED
-        );
+        long paidCount =
+            paymentRepository.countDistinctPayersByRoundIdAndStatus(
+                round.getId(),
+                PaymentStatus.PAYED
+            );
 
         // All payers = active members minus the one recipient
         if (paidCount >= activeCount - 1) {
