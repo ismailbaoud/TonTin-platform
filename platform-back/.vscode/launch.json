@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "PlatformApplication",
+      "request": "launch",
+      "mainClass": "com.tontin.platform.PlatformApplication",
+      "projectName": "platform"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - platform",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.tontin.platform.PlatformApplication",
+      "projectName": "platform",
+      "args": ""
+    }
+  ]
+}

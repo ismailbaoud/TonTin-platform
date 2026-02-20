@@ -5,9 +5,9 @@ import com.tontin.platform.domain.enums.round.OrderMethod;
 import com.tontin.platform.service.RoundOrderService;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -101,30 +101,46 @@ public class RoundOrderServiceImpl implements RoundOrderService {
     }
 
     /**
-     * Bidding model: Order based on bidding (highest bidder first).
-     * For now, falls back to fixed order until bidding is implemented.
+     * Bidding model: Order by bid amount descending (highest bidder receives first).
+     * When no bid data exists, uses a deterministic order: organizer first, then by member id
+     * so that behaviour is reproducible until a real bidding feature (e.g. RoundBid entity) is added.
      *
      * @param members the list of members
-     * @return ordered list
+     * @return ordered list (highest bid first; or organizer first then by member id)
      */
     private List<Member> determineBiddingOrder(List<Member> members) {
-        log.debug("Using BIDDING_MODEL: falling back to fixed order (bidding not yet implemented)");
-        // TODO: Implement bidding logic when bidding feature is added
-        // For now, use fixed order
-        return determineFixedOrder(members);
+        log.debug("Using BIDDING_MODEL: organizer first, then by member id (bid data not yet available)");
+        List<Member> ordered = new ArrayList<>(members);
+        ordered.sort((m1, m2) -> {
+            boolean m1IsOrg = m1.isOrganizer();
+            boolean m2IsOrg = m2.isOrganizer();
+            if (m1IsOrg && !m2IsOrg) return -1;
+            if (!m1IsOrg && m2IsOrg) return 1;
+            UUID id1 = m1.getId();
+            UUID id2 = m2.getId();
+            if (id1 == null && id2 == null) return 0;
+            if (id1 == null) return 1;
+            if (id2 == null) return -1;
+            return id1.compareTo(id2);
+        });
+        log.debug("Bidding order determined: {} members", ordered.size());
+        return ordered;
     }
 
     /**
-     * Dynamique random: Random order for each round.
-     * For initial round creation, we'll use random once, but mark it as dynamic.
+     * Dynamique random: Full random order including organizer (no fixed first position).
+     * Each time this is called, a new random permutation is produced. For round creation
+     * this is used once; if round creation is later changed to assign per-round order
+     * separately, this method can be called per round to get a new random order each time.
      *
      * @param members the list of members
-     * @return ordered list
+     * @return shuffled list (all members, including organizer, in random order)
      */
     private List<Member> determineDynamiqueRandom(List<Member> members) {
-        log.debug("Using DYNAMIQUE_RANDOM: random order (will be randomized each round)");
-        // For initial creation, use random once
-        // The actual randomization per round will be handled when marking rounds as paid
-        return determineRandomOnce(members);
+        log.debug("Using DYNAMIQUE_RANDOM: full random order (all members shuffled)");
+        List<Member> ordered = new ArrayList<>(members);
+        Collections.shuffle(ordered, random);
+        log.debug("Dynamique random order determined: {} members", ordered.size());
+        return ordered;
     }
 }

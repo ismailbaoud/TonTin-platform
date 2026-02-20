@@ -76,6 +76,9 @@ public class SecurityConfig {
                     // Health check endpoints - public access
                     .requestMatchers("/actuator/health", "/actuator/info")
                     .permitAll()
+                    // Stripe webhook - no auth (Stripe verifies with signature)
+                    .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook")
+                    .permitAll()
                     // Auth logout and profile - requires authentication (any role)
                     .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout")
                     .hasAnyRole("CLIENT", "ADMIN")
@@ -161,7 +164,8 @@ public class SecurityConfig {
                 "Content-Type",
                 "Accept",
                 "X-Requested-With",
-                "Cache-Control"
+                "Cache-Control",
+                "Stripe-Signature"
             )
         );
 

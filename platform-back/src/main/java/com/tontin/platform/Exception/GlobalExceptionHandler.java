@@ -16,6 +16,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
@@ -79,6 +80,29 @@ public class GlobalExceptionHandler {
             request,
             "VALIDATION_ERROR",
             fieldErrors
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiExceptionResponse> handleMethodArgumentTypeMismatch(
+        MethodArgumentTypeMismatchException ex,
+        HttpServletRequest request
+    ) {
+        String param = ex.getName();
+        Object value = ex.getValue();
+        String requiredType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        String message = String.format(
+            "Invalid value for parameter '%s': '%s' is not a valid %s. Use a valid identifier (e.g. UUID).",
+            param,
+            value,
+            requiredType
+        );
+        return buildErrorResponse(
+            HttpStatus.BAD_REQUEST,
+            message,
+            request,
+            "CLIENT_ERROR",
+            null
         );
     }
 

@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Maven: compile",
+      "type": "shell",
+      "command": "./mvnw",
+      "args": ["-q", "-DskipTests", "compile"],
+      "group": "build",
+      "presentation": { "reveal": "silent" }
+    },
+    {
+      "label": "Spring Boot: run",
+      "type": "shell",
+      "command": "./mvnw",
+      "args": ["spring-boot:run"],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "Maven: package",
+      "type": "shell",
+      "command": "./mvnw",
+      "args": ["clean", "package", "-DskipTests"],
+      "group": "build",
+      "presentation": { "reveal": "silent" }
+    }
+  ]
+}

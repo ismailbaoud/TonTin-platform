@@ -246,11 +246,17 @@ public class RoundServiceImpl implements RoundService {
     @Transactional
     public RoundResponse markRoundAsPaid(UUID dartId, UUID roundId) {
         log.info("Marking round {} as paid for dart {}", roundId, dartId);
-        // TODO: Implement mark round as paid logic
-        throw new ResponseStatusException(
-            HttpStatus.NOT_IMPLEMENTED,
-            "Mark round as paid not yet implemented"
-        );
+        Dart dart = findDartById(dartId);
+        Round round = findRoundById(roundId);
+        if (!round.getDart().getId().equals(dartId)) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Round does not belong to this dart"
+            );
+        }
+        round.setStatus(RoundStatus.PAYED);
+        round = roundRepository.save(round);
+        return roundMapper.toDtoWithDart(round, dart);
     }
 
     @Override

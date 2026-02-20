@@ -3,7 +3,9 @@ package com.tontin.platform.controller;
 import com.tontin.platform.dto.dart.response.PageResponse;
 import com.tontin.platform.dto.round.request.CreateRoundsRequest;
 import com.tontin.platform.dto.round.request.RoundRequest;
+import com.tontin.platform.dto.round.response.RoundContributionsResponse;
 import com.tontin.platform.dto.round.response.RoundResponse;
+import com.tontin.platform.service.PaymentService;
 import com.tontin.platform.service.RoundService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * REST Controller for Round management operations.
@@ -54,6 +58,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class RoundController {
 
     private final RoundService roundService;
+    private final PaymentService paymentService;
 
     /**
      * Create rounds for a dart when it starts.
@@ -358,6 +363,58 @@ public class RoundController {
         RoundResponse response = roundService.getCurrentRoundByDartId(dartId);
         log.info("Current round retrieved successfully for dart {}", dartId);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get contribution status for the current round (which members have paid).
+     *
+     * @param dartId the dart ID
+     * @return round id and list of payer member IDs who have paid (empty if no current round)
+     */
+    @GetMapping(value = "/dart/{dartId}/current/contributions", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @Operation(
+        summary = "Get current round contributions",
+        description = "Returns which members have paid for the current round. Used to show Paid/Pending in the UI."
+    )
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Contribution status (roundId may be null if no current round)",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = RoundContributionsResponse.class)
+                )
+            ),
+        }
+    )
+    public ResponseEntity<RoundContributionsResponse> getCurrentRoundContributions(
+        @Parameter(
+            description = "Unique identifier of the dart",
+            required = true,
+            example = "123e4567-e89b-12d3-a456-426614174000"
+        ) @PathVariable("dartId") UUID dartId
+    ) {
+        try {
+            RoundResponse current = roundService.getCurrentRoundByDartId(dartId);
+            List<UUID> paidMemberIds = paymentService.getPaidPayerMemberIdsForRound(current.id());
+            RoundContributionsResponse body = RoundContributionsResponse.builder()
+                .roundId(current.id())
+                .paidMemberIds(paidMemberIds != null ? paidMemberIds : Collections.emptyList())
+                .build();
+            return ResponseEntity.ok(body);
+        } catch (ResponseStatusException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return ResponseEntity.ok(
+                    RoundContributionsResponse.builder()
+                        .roundId(null)
+                        .paidMemberIds(Collections.emptyList())
+                        .build()
+                );
+            }
+            throw e;
+        }
     }
 
     /**
