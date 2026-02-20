@@ -5,6 +5,7 @@ import com.tontin.platform.domain.Dart;
 import com.tontin.platform.domain.Member;
 import com.tontin.platform.domain.User;
 import com.tontin.platform.domain.enums.dart.DartPermission;
+import com.tontin.platform.domain.enums.dart.DartStatus;
 import com.tontin.platform.domain.enums.member.MemberStatus;
 import com.tontin.platform.dto.member.request.MemberRequest;
 import com.tontin.platform.dto.member.response.MemberResponse;
@@ -41,6 +42,10 @@ public class MemberServiceImpl implements MemberService {
     private static final String PENDING_DELETION_MESSAGE =
         "Only pending members can be removed from the dart";
     private static final String ACCESS_DENIED_MESSAGE = "Access denied";
+    private static final String DART_ACTIVE_INVITE_MESSAGE =
+        "Cannot invite new members to a Dâr that has already started.";
+    private static final String DART_ACTIVE_REMOVE_MESSAGE =
+        "Cannot remove members from a Dâr that has already started.";
 
     private final MemberRepository memberRepository;
     private final UserRepository userRepository;
@@ -146,6 +151,17 @@ public class MemberServiceImpl implements MemberService {
             );
         }
 
+        // Block invitations once the dart is running
+        if (
+            dart.getStatus() == DartStatus.ACTIVE ||
+            dart.getStatus() == DartStatus.FINISHED
+        ) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                DART_ACTIVE_INVITE_MESSAGE
+            );
+        }
+
         Member member = memberMapper.toEntity(request);
         member.setStatus(MemberStatus.PENDING);
         member.setJoinedAt(LocalDateTime.now());
@@ -236,6 +252,19 @@ public class MemberServiceImpl implements MemberService {
 
         Member member = getMemberOrThrow(id, dartId);
 
+        // Block any removal once the dart is running
+        Dart dart = dartRepository
+            .findById(dartId)
+            .orElseThrow(() ->
+                notFound(HttpStatus.NOT_FOUND, DART_NOT_FOUND_TEMPLATE, dartId)
+            );
+        if (dart.getStatus() == DartStatus.ACTIVE) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                DART_ACTIVE_REMOVE_MESSAGE
+            );
+        }
+
         if (member.getStatus() != MemberStatus.PENDING) {
             throw new ResponseStatusException(
                 HttpStatus.CONFLICT,
@@ -250,9 +279,8 @@ public class MemberServiceImpl implements MemberService {
         if (member.getDart() != null) {
             member.getDart().removeMember(member);
         }
-    member.setUser(null);
-    member.setDart(null);
-
+        member.setUser(null);
+        member.setDart(null);
 
         memberRepository.delete(member);
         log.debug("Member {} removed from dart {}", id, dartId);
@@ -427,7 +455,7 @@ public class MemberServiceImpl implements MemberService {
         // Find the member record for current user in this dart
         Member member = memberRepository
             .findByDartIdAndUserId(dartId, currentUser.getId())
-            .orElseThrow(() -> 
+            .orElseThrow(() ->
                 new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "You are not a member of this dart"
@@ -435,13 +463,13 @@ public class MemberServiceImpl implements MemberService {
             );
 
         // Check if member is in PENDING status
-        if(member.getStatus() != MemberStatus.PENDING) {
+        if (member.getStatus() != MemberStatus.PENDING) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "Invitation has already been "+
-                (member.getStatus() == MemberStatus.ACTIVE
-                    ? "accepted"
-                    : "processed") 
+                "Invitation has already been " +
+                    (member.getStatus() == MemberStatus.ACTIVE
+                        ? "accepted"
+                        : "processed")
             );
         }
 
