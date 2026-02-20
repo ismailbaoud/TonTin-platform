@@ -741,6 +741,22 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   // -------------------------------------------------------------------------
 
   /**
+   * True when the current user has already confirmed a PAYED payment for the
+   * current round but the round is still INPAYED (others haven't paid yet).
+   * In this state the "Pay again" button is shown instead of "Pay contribution".
+   */
+  get currentUserAlreadyPaid(): boolean {
+    if (
+      !this.currentUserMemberId ||
+      !this.currentRound ||
+      !this.currentRound.paidMemberIds
+    ) {
+      return false;
+    }
+    return this.currentRound.paidMemberIds.includes(this.currentUserMemberId);
+  }
+
+  /**
    * Returns true when rounds have been created for this dart, meaning payment
    * tracking is meaningful to display.
    */

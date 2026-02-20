@@ -167,8 +167,9 @@
               Start Dâr
             </button>
 
+            <!-- Invite button: only visible to the organizer while the dart is still PENDING -->
             <button
-              *ngIf="isOrganizer"
+              *ngIf="isOrganizer && darDetails.status === 'pending'"
               (click)="inviteMember()"
               class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-black shadow-sm hover:bg-green-500 transition-colors"
             >
@@ -184,8 +185,11 @@
               <span class="material-symbols-outlined text-[20px]">share</span>
               Share Link
             </button>
+            <!-- Pay contribution button — always visible for non-recipients when a current round exists.
+                 Shows "Pay again" (with a distinct green outline style) once the user has already paid
+                 but the round is still open because other members haven't contributed yet. -->
             <button
-              *ngIf="showPayContributionButton"
+              *ngIf="showPayContributionButton && !currentUserAlreadyPaid"
               (click)="goToPayContribution()"
               class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-bold text-black shadow-sm hover:bg-amber-600 transition-colors"
             >
@@ -193,6 +197,18 @@
                 >payments</span
               >
               Pay contribution
+            </button>
+
+            <!-- Pay-again variant: shown after the user has already paid but the round is still open -->
+            <button
+              *ngIf="showPayContributionButton && currentUserAlreadyPaid"
+              (click)="goToPayContribution()"
+              class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg border-2 border-green-500 bg-transparent px-5 py-2.5 text-sm font-bold text-green-600 dark:text-green-400 shadow-sm hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+            >
+              <span class="material-symbols-outlined text-[20px]"
+                >check_circle</span
+              >
+              Paid · Pay again
             </button>
           </div>
         </div>
