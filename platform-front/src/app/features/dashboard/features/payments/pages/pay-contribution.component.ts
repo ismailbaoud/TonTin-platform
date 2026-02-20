@@ -10,7 +10,7 @@ import {
 import { CommonModule } from "@angular/common";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { FormsModule } from "@angular/forms";
-import { Subject, takeUntil, finalize, forkJoin, of, firstValueFrom } from "rxjs";
+import { Subject, takeUntil, finalize, forkJoin, of } from "rxjs";
 import { catchError } from "rxjs/operators";
 import { PaymentService } from "../services/payment.service";
 import { DarService } from "../../dars/services/dar.service";
@@ -19,7 +19,11 @@ import type { DarDetails } from "../../dars/models";
 import type { Round } from "../../dars/models";
 import { environment } from "../../../../../../environments/environment";
 import { loadStripe } from "@stripe/stripe-js";
-import type { Stripe, StripeElements, StripeCardElement } from "@stripe/stripe-js";
+import type {
+  Stripe,
+  StripeElements,
+  StripeCardElement,
+} from "@stripe/stripe-js";
 
 @Component({
   selector: "app-pay-contribution",
@@ -28,7 +32,9 @@ import type { Stripe, StripeElements, StripeCardElement } from "@stripe/stripe-j
   templateUrl: "./pay-contribution.component.html",
   styleUrl: "./pay-contribution.component.scss",
 })
-export class PayContributionComponent implements OnInit, OnDestroy, AfterViewInit {
+export class PayContributionComponent
+  implements OnInit, OnDestroy, AfterViewInit
+{
   @ViewChild("stripeCardMount") stripeCardMountRef!: ElementRef<HTMLDivElement>;
 
   private destroy$ = new Subject<void>();
@@ -45,6 +51,8 @@ export class PayContributionComponent implements OnInit, OnDestroy, AfterViewIni
   /** After createPaymentIntent we show card form */
   showStripeCard = false;
   clientSecret: string | null = null;
+  /** Internal payment record UUID returned by createPaymentIntent — used for client-side confirmation */
+  paymentId: string | null = null;
   stripeInstance: Stripe | null = null;
   stripeCardElement: StripeCardElement | null = null;
   stripeElements: StripeElements | null = null;
@@ -82,8 +90,15 @@ export class PayContributionComponent implements OnInit, OnDestroy, AfterViewIni
   }
 
   private get stripePublishableKey(): string {
-    const env = environment as { external?: { stripePublishableKey?: string }; services?: { stripe?: { publicKey?: string } } };
-    return env.external?.stripePublishableKey ?? env.services?.stripe?.publicKey ?? "";
+    const env = environment as {
+      external?: { stripePublishableKey?: string };
+      services?: { stripe?: { publicKey?: string } };
+    };
+    return (
+      env.external?.stripePublishableKey ??
+      env.services?.stripe?.publicKey ??
+      ""
+    );
   }
 
   loadDarAndRound(id: string): void {
@@ -94,30 +109,37 @@ export class PayContributionComponent implements OnInit, OnDestroy, AfterViewIni
 
     forkJoin({
       dar: this.darService.getDarDetails(id),
-      round: this.roundService.getCurrentRound(id).pipe(
-        catchError(() => of(null)),
-      ),
-    }).pipe(
-      takeUntil(this.destroy$),
-      finalize(() => (this.isLoading = false)),
-    ).subscribe({
-      next: ({ dar, round }) => {
-        this.darDetails = dar as DarDetails;
-        this.currentRound = round;
-        this.contributionAmount =
-          typeof dar.monthlyContribution === "number"
-            ? dar.monthlyContribution
-            : Number(dar.monthlyContribution) || 0;
-      },
-      error: (err) => {
-        console.error("Load dar/round failed:", err);
-        if (err?.status === 404 || err?.error?.message?.includes("current round")) {
-          this.error = "No current round to pay for this Dâr, or Dâr not found.";
-        } else {
-          this.error = err?.error?.message ?? "Failed to load Dâr. Please try again.";
-        }
-      },
-    });
+      round: this.roundService
+        .getCurrentRound(id)
+        .pipe(catchError(() => of(null))),
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.isLoading = false)),
+      )
+      .subscribe({
+        next: ({ dar, round }) => {
+          this.darDetails = dar as DarDetails;
+          this.currentRound = round;
+          this.contributionAmount =
+            typeof dar.monthlyContribution === "number"
+              ? dar.monthlyContribution
+              : Number(dar.monthlyContribution) || 0;
+        },
+        error: (err) => {
+          console.error("Load dar/round failed:", err);
+          if (
+            err?.status === 404 ||
+            err?.error?.message?.includes("current round")
+          ) {
+            this.error =
+              "No current round to pay for this Dâr, or Dâr not found.";
+          } else {
+            this.error =
+              err?.error?.message ?? "Failed to load Dâr. Please try again.";
+          }
+        },
+      });
   }
 
   loadDarsThenSelect(): void {
@@ -131,10 +153,12 @@ export class PayContributionComponent implements OnInit, OnDestroy, AfterViewIni
       )
       .subscribe({
         next: (res) => {
-          this.darsList = (res.content || []).map((d: { id: string; name: string }) => ({
-            id: d.id,
-            name: d.name,
-          }));
+          this.darsList = (res.content || []).map(
+            (d: { id: string; name: string }) => ({
+              id: d.id,
+              name: d.name,
+            }),
+          );
           if (this.darsList.length === 0) {
             this.error = "You have no active Dârs. Create or join one first.";
           }
@@ -190,6 +214,7 @@ export class PayContributionComponent implements OnInit, OnDestroy, AfterViewIni
       .subscribe({
         next: async (res) => {
           this.clientSecret = res.clientSecret;
+          this.paymentId = res.paymentId ?? null;
           const key = this.stripePublishableKey;
           if (!key || key.startsWith("pk_test_mock")) {
             this.error =
@@ -211,7 +236,8 @@ export class PayContributionComponent implements OnInit, OnDestroy, AfterViewIni
             setTimeout(() => {
               const mountEl = this.stripeCardMountRef?.nativeElement;
               if (!mountEl) {
-                this.error = "Could not display payment form. Please try again.";
+                this.error =
+                  "Could not display payment form. Please try again.";
                 this.cdr.detectChanges();
                 return;
               }
@@ -256,7 +282,7 @@ export class PayContributionComponent implements OnInit, OnDestroy, AfterViewIni
     this.isSubmitting = true;
     this.error = null;
 
-    const { error, paymentIntent } = await this.stripeInstance.confirmCardPayment(
+    const { error } = await this.stripeInstance.confirmCardPayment(
       this.clientSecret,
       { payment_method: { card: this.stripeCardElement } },
     );
@@ -267,19 +293,40 @@ export class PayContributionComponent implements OnInit, OnDestroy, AfterViewIni
       return;
     }
 
-    // Mark payment as paid in backend so member shows as paid immediately (don't wait for webhook)
-    if (paymentIntent?.id) {
-      await firstValueFrom(
-        this.paymentService.confirmPaymentSuccess(paymentIntent.id).pipe(
-          catchError(() => of(null)),
-        ),
-      );
+    // Stripe confirmed successfully on the client side.
+    // Immediately tell the backend to mark this payment as PAYED — this is the
+    // reliable synchronous path that works even when the Stripe webhook has not
+    // yet fired (e.g. local dev without the Stripe CLI running).
+    if (this.paymentId) {
+      this.paymentService
+        .confirmPaymentSuccess(this.paymentId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.isSubmitting = false;
+            this.router.navigate(["/dashboard/client/dar", this.darId], {
+              queryParams: { payment: "success" },
+            });
+          },
+          error: (err) => {
+            // The payment was confirmed on Stripe's side — don't block the user.
+            // The webhook will eventually sync it; just navigate anyway.
+            console.warn(
+              "Could not confirm payment on backend (will sync via webhook):",
+              err,
+            );
+            this.isSubmitting = false;
+            this.router.navigate(["/dashboard/client/dar", this.darId], {
+              queryParams: { payment: "success" },
+            });
+          },
+        });
+    } else {
+      this.isSubmitting = false;
+      this.router.navigate(["/dashboard/client/dar", this.darId], {
+        queryParams: { payment: "success" },
+      });
     }
-
-    this.isSubmitting = false;
-    this.router.navigate(["/dashboard/client/dar", this.darId], {
-      queryParams: { payment: "success" },
-    });
   }
 
   backToDar(): void {

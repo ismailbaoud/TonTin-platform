@@ -259,13 +259,20 @@ export class PaymentService {
   }
 
   /**
-   * Mark payment as succeeded after Stripe confirmCardPayment succeeds.
-   * Call this so the member shows as paid without waiting for the webhook.
+   * Confirm a payment as successfully completed using our internal payment record UUID.
+   *
+   * Call this immediately after stripe.confirmCardPayment() resolves successfully.
+   * This guarantees the payment is marked PAYED on the backend even when the Stripe
+   * webhook has not fired yet (e.g. in local development without the Stripe CLI).
+   *
+   * The operation is idempotent — calling it on an already-PAYED payment is a no-op.
+   *
+   * @param paymentId  UUID returned by createPaymentIntent
    */
-  confirmPaymentSuccess(paymentIntentId: string): Observable<{ status: string }> {
+  confirmPaymentSuccess(paymentId: string): Observable<{ status: string }> {
     return this.http.post<{ status: string }>(
-      `${this.apiV1Url}/confirm-success`,
-      { paymentIntentId },
+      `${this.apiV1Url}/${paymentId}/confirm-success`,
+      {},
     );
   }
 
