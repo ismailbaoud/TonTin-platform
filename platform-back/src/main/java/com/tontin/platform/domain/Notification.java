@@ -2,7 +2,9 @@ package com.tontin.platform.domain;
 
 import com.tontin.platform.domain.enums.notification.NotificationStatus;
 import com.tontin.platform.domain.enums.notification.NotificationType;
+import com.tontin.platform.domain.enums.notification.NotificationTypeConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -38,6 +40,12 @@ public class Notification extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "action_url", length = 500)
+    private String actionUrl;
+
+    @Column(name = "action_label", length = 100)
+    private String actionLabel;
+
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -45,8 +53,8 @@ public class Notification extends BaseEntity {
     private NotificationStatus status = NotificationStatus.UNREAD;
 
     @NotNull(message = "Type is required")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, length = 20)
+    @Convert(converter = NotificationTypeConverter.class)
+    @Column(name = "type", nullable = false, length = 50)
     private NotificationType type;
 
     @NotNull(message = "User is required")
