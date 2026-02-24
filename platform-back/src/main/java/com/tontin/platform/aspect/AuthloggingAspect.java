@@ -5,6 +5,7 @@ import com.tontin.platform.dto.auth.login.request.LoginRequest;
 import com.tontin.platform.dto.auth.register.request.RegisterRequest;
 import com.tontin.platform.repository.LogRepository;
 import java.time.LocalDateTime;
+import java.util.BitSet;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;

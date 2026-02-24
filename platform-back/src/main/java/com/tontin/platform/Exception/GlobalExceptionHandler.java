@@ -1,6 +1,7 @@
 package com.tontin.platform.Exception;
 
 import com.tontin.platform.dto.auth.exception.ApiExceptionResponse;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -9,7 +10,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailSendException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
@@ -118,6 +122,62 @@ public class GlobalExceptionHandler {
             ex.getMessage(),
             request,
             "CLIENT_ERROR",
+            null
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiExceptionResponse> handleDataIntegrityViolation(
+        DataIntegrityViolationException ex,
+        HttpServletRequest request
+    ) {
+        String message = ex.getMessage();
+        String detail;
+        if (message != null && (
+            message.contains("users_user_name_key") ||
+            message.contains("user_name") && message.contains("unique") ||
+            message.contains("username") && message.contains("unique")
+        )) {
+            detail = "Username already taken.";
+        } else if (message != null && (
+            message.contains("users_email_key") ||
+            message.contains("email") && message.contains("unique")
+        )) {
+            detail = "An account with this email already exists.";
+        } else if (message != null && message.contains("duplicate key")) {
+            detail = "An account with this email or username already exists.";
+        } else {
+            detail = "A database constraint was violated. Please check your data.";
+        }
+        log.warn("Data integrity violation on [{}]: {}", request.getRequestURI(), message);
+        return buildErrorResponse(
+            HttpStatus.CONFLICT,
+            detail,
+            request,
+            "CONFLICT",
+            null
+        );
+    }
+
+    @ExceptionHandler({
+        MailAuthenticationException.class,
+        MailSendException.class,
+        MessagingException.class,
+    })
+    public ResponseEntity<ApiExceptionResponse> handleMailExceptions(
+        Exception ex,
+        HttpServletRequest request
+    ) {
+        log.warn(
+            "Mail error on [{}]: {}",
+            request.getRequestURI(),
+            ex.getMessage()
+        );
+        return buildErrorResponse(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "Verification email could not be sent. Your account was created; you can try logging in or contact support to verify your email.",
+            request,
+            "MAIL_ERROR",
             null
         );
     }
