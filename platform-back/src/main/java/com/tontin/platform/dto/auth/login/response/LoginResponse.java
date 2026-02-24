@@ -27,7 +27,7 @@ public record LoginResponse(
     String token,
 
     @Schema(
-        description = "JWT refresh token for obtaining new access tokens (expires in 7 days)",
+        description = "JWT refresh token for obtaining new access tokens (expires in 30 days)",
         example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3MDYxODA0MDAsImV4cCI6MTcwNjc4NTIwMH0.signature",
         requiredMode = Schema.RequiredMode.REQUIRED
     )

@@ -21,14 +21,18 @@ import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
@@ -64,13 +68,31 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserResponse register(RegisterRequest request, String siteURL)
-        throws UnsupportedEncodingException, MessagingException {
+    public UserResponse register(RegisterRequest request, String siteURL) {
+        if (userRepository.findByEmail(request.email()).isPresent()) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "An account with this email already exists."
+            );
+        }
+        String userName = request.userName() != null ? request.userName().trim() : "";
+        if (userName.isEmpty()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Username is required."
+            );
+        }
+        if (userRepository.findByUserNameIgnoreCase(userName).isPresent()) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Username already taken."
+            );
+        }
         User user = new User();
         user.setEmail(request.email());
         user.setRole(UserRole.ROLE_CLIENT);
         user.setStatus(UserStatus.PENDING);
-        user.setUserName(request.userName());
+        user.setUserName(userName);
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setCreationDate(LocalDateTime.now().toString());
         user.setEmailConfirmed(Boolean.FALSE);
@@ -78,10 +100,18 @@ public class AuthServiceImpl implements AuthService {
         user.setResetPasswordDate(null);
         user.setPicture(null);
         String randomCode = TokenUtil.generate(64);
-        System.out.println(randomCode);
         user.setVerificationCode(randomCode);
         User userRes = userRepository.save(user);
-        sendVerificationEmail(user, siteURL);
+        try {
+            sendVerificationEmail(userRes, siteURL);
+        } catch (Exception e) {
+            // Do not fail registration if mail is misconfigured or unavailable
+            log.warn(
+                "Verification email could not be sent for {}: {}",
+                userRes.getEmail(),
+                e.getMessage()
+            );
+        }
         return userMapper.toDto(userRes);
     }
 
@@ -100,23 +130,23 @@ public class AuthServiceImpl implements AuthService {
 
         if (request.userName() != null) {
             String trimmedName = request.userName().trim();
-            if (
-                !trimmedName.isEmpty() &&
-                !trimmedName.equals(user.getUserName())
-            ) {
+            if (!trimmedName.isEmpty() && !trimmedName.equalsIgnoreCase(user.getUserName())) {
+                var existing = userRepository.findByUserNameIgnoreCase(trimmedName);
+                if (existing.isPresent() && !existing.get().getId().equals(user.getId())) {
+                    throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Username already taken."
+                    );
+                }
                 user.setUserName(trimmedName);
                 updated = true;
             }
         }
 
         if (request.password() != null && !request.password().isBlank()) {
-            if (
-                !passwordEncoder.matches(request.password(), user.getPassword())
-            ) {
-                user.setPassword(passwordEncoder.encode(request.password()));
-                user.setResetPasswordDate(LocalDateTime.now());
-                updated = true;
-            }
+            user.setPassword(passwordEncoder.encode(request.password()));
+            user.setResetPasswordDate(LocalDateTime.now());
+            updated = true;
         }
 
         if (request.picture() != null) {

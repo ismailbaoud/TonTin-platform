@@ -8,7 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -41,7 +40,7 @@ public class User extends BaseEntity {
         max = 50,
         message = "Username must be between 3 and 50 characters"
     )
-    @Column(name = "user_name", nullable = false, length = 50)
+    @Column(name = "user_name", nullable = false, unique = true, length = 50)
     private String userName;
 
     @NotBlank(message = "Email is required")
@@ -78,8 +77,7 @@ public class User extends BaseEntity {
     @Builder.Default
     private UserRole role = UserRole.ROLE_CLIENT;
 
-    @Lob
-    @Column(name = "picture")
+    @Column(name = "picture", columnDefinition = "bytea")
     private byte[] picture;
 
     @Enumerated(EnumType.STRING)
@@ -87,7 +85,11 @@ public class User extends BaseEntity {
     @Builder.Default
     private UserStatus status = UserStatus.PENDING;
 
-@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(name = "points", nullable = false)
+    @Builder.Default
+    private Integer points = 0;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 private List<Member> members = new ArrayList<>();
     // Business key equals/hashCode based on email (natural key)
     @Override

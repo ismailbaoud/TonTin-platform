@@ -92,7 +92,13 @@ public record UserResponse(
         description = "Timestamp when the user account was last updated",
         example = "2024-01-15T10:30:00"
     )
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+
+    @Schema(
+        description = "Trust points (for ranking). Earned from Dâr actions and payments.",
+        example = "150"
+    )
+    Integer points
 ) {
     /**
      * Checks if the user account is active.

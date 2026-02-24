@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
  * <ul>
  *   <li>Uses HS256 algorithm with a strong secret key (minimum 256 bits)</li>
  *   <li>Access tokens expire after 15 minutes</li>
- *   <li>Refresh tokens expire after 7 days</li>
+ *   <li>Refresh tokens expire after 30 days</li>
  *   <li>Tokens are signed to prevent tampering</li>
  *   <li>Secret key should be externalized via environment variables in production</li>
  * </ul>
@@ -66,9 +66,9 @@ public class JwtService {
 
     /**
      * Refresh token expiration time in milliseconds.
-     * Default: 7 days (604,800,000 ms)
+     * Default: 30 days (2,592,000,000 ms)
      */
-    @Value("${security.jwt.refresh-token.expiration:604800000}")
+    @Value("${security.jwt.refresh-token.expiration:2592000000}")
     private long refreshTokenExpiration;
 
     /**
@@ -115,7 +115,7 @@ public class JwtService {
     /**
      * Generates a refresh token for the given user.
      *
-     * <p>Refresh tokens are long-lived (7 days) and used to obtain new access tokens
+     * <p>Refresh tokens are long-lived (30 days) and used to obtain new access tokens
      * without requiring the user to log in again. They contain a "type: refresh" claim
      * to differentiate them from access tokens.</p>
      *

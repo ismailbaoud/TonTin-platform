@@ -17,11 +17,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import java.io.UnsupportedEncodingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -109,13 +107,11 @@ public class AuthController {
     }
 
     /**
-     * Registers a new user account.
+     * Registers a new user account. Sends a verification email when mail is configured.
      *
      * @param request the registration details
      * @param httpRequest the HTTP servlet request (used to generate verification URL)
      * @return response containing the newly created user information
-     * @throws UnsupportedEncodingException if email encoding fails
-     * @throws MessagingException if email sending fails
      */
     @PostMapping(
         value = "/register",
@@ -153,14 +149,11 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(
         @Valid @RequestBody RegisterRequest request,
         HttpServletRequest httpRequest
-    ) throws UnsupportedEncodingException, MessagingException {
+    ) {
         log.info("Registration attempt for email: {}", request.email());
         String siteUrl = getSiteUrl(httpRequest);
         UserResponse response = authService.register(request, siteUrl);
-        log.info(
-            "User registered successfully with email: {}. Verification email sent.",
-            request.email()
-        );
+        log.info("User registered successfully with email: {}", request.email());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
