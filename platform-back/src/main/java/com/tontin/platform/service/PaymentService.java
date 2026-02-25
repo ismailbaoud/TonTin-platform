@@ -1,13 +1,27 @@
 package com.tontin.platform.service;
 
 import com.tontin.platform.dto.payment.request.CreatePaymentIntentRequest;
+import com.tontin.platform.dto.payment.response.CanPayResponse;
 import com.tontin.platform.dto.payment.response.CreatePaymentIntentResponse;
+
+import java.util.List;
 import java.util.UUID;
 
 /**
  * Service for creating Stripe payment intents and handling webhooks.
  */
 public interface PaymentService {
+
+    /**
+     * Check whether the current user is allowed to access the payment page for the given dart.
+     * They must be a member (not the recipient of the current round) and the payment window
+     * (5 days before the round date) must be open.
+     *
+     * @param dartId the dart UUID
+     * @return CanPayResponse with canPay true if allowed
+     * @throws org.springframework.web.server.ResponseStatusException 403/400 with message if not allowed
+     */
+    CanPayResponse canPay(UUID dartId);
     /**
      * Create a Stripe PaymentIntent for the current user's contribution for the current round of the given dart.
      * The current user must be a member (not the recipient of the current round).
@@ -54,4 +68,12 @@ public interface PaymentService {
      *         403 if the caller is not the payer
      */
     void confirmPaymentById(UUID paymentId);
+
+    /**
+     * Returns the list of member IDs (payers) who have a PAYED payment for the given round.
+     *
+     * @param roundId round UUID
+     * @return list of payer member IDs, never null (may be empty)
+     */
+    List<UUID> getPaidPayerMemberIdsForRound(UUID roundId);
 }

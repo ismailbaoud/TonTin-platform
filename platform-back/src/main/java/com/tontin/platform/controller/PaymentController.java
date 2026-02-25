@@ -1,6 +1,7 @@
 package com.tontin.platform.controller;
 
 import com.tontin.platform.dto.payment.request.CreatePaymentIntentRequest;
+import com.tontin.platform.dto.payment.response.CanPayResponse;
 import com.tontin.platform.dto.payment.response.CreatePaymentIntentResponse;
 import com.tontin.platform.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,9 +20,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,6 +41,41 @@ import org.springframework.web.bind.annotation.RestController;
 public class PaymentController {
 
     private final PaymentService paymentService;
+
+    @GetMapping(value = "/can-pay", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(
+        summary = "Check if current user can access payment page",
+        description = "Returns whether the current user is allowed to pay for the given dart (member, not recipient, payment window open). Use this to guard the pay-contribution page."
+    )
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Check result",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = CanPayResponse.class)
+                )
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "No current round, or user is recipient, or payment not open yet"
+            ),
+            @ApiResponse(
+                responseCode = "403",
+                description = "Not a member of the dart"
+            ),
+            @ApiResponse(responseCode = "404", description = "Dart not found"),
+        }
+    )
+    public ResponseEntity<CanPayResponse> canPay(
+        @RequestParam(name = "dartId") UUID dartId
+    ) {
+        CanPayResponse response = paymentService.canPay(dartId);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping(
         value = "/create-intent",

@@ -10,15 +10,20 @@ import com.tontin.platform.domain.Dart;
 import com.tontin.platform.domain.Member;
 import com.tontin.platform.domain.Payment;
 import com.tontin.platform.domain.Round;
+import com.tontin.platform.domain.enums.notification.NotificationType;
 import com.tontin.platform.domain.enums.payment.PaymentStatus;
+import com.tontin.platform.domain.enums.rank.PointAction;
 import com.tontin.platform.domain.enums.round.RoundStatus;
 import com.tontin.platform.dto.payment.request.CreatePaymentIntentRequest;
+import com.tontin.platform.dto.payment.response.CanPayResponse;
 import com.tontin.platform.dto.payment.response.CreatePaymentIntentResponse;
 import com.tontin.platform.repository.DartRepository;
 import com.tontin.platform.repository.MemberRepository;
 import com.tontin.platform.repository.PaymentRepository;
 import com.tontin.platform.repository.RoundRepository;
+import com.tontin.platform.service.NotificationService;
 import com.tontin.platform.service.PaymentService;
+import com.tontin.platform.service.PointsService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,6 +53,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final DartRepository dartRepository;
     private final RoundRepository roundRepository;
     private final PaymentRepository paymentRepository;
+    private final NotificationService notificationService;
+    private final PointsService pointsService;
 
     // -------------------------------------------------------------------------
     // Helpers
@@ -78,6 +85,25 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.save(payment);
         log.info("Payment {} marked as PAYED.", payment.getId());
 
+        // Notify the payer that their payment was received
+        Member payer = payment.getPayer();
+        if (payer != null && payer.getUser() != null) {
+            Round r = payment.getRound();
+            Dart d = r != null ? r.getDart() : null;
+            String dartName = d != null && d.getName() != null ? d.getName() : "the Dâr";
+            notificationService.create(
+                payer.getUser().getId(),
+                NotificationType.PAYMENT_RECEIVED,
+                "Payment received",
+                String.format("Your contribution for \"%s\" has been received.", dartName),
+                d != null ? "/dashboard/client/dar/" + d.getId() : null,
+                "View Dâr"
+            );
+            if (d != null) {
+                pointsService.addPoints(payer.getUser().getId(), PointAction.PAYMENT_ON_TIME, d.getId());
+            }
+        }
+
         // Check if all non-recipient members of this round have now paid.
         // Use DISTINCT payer count so a member who paid twice is only counted once.
         Round round = payment.getRound();
@@ -98,6 +124,27 @@ public class PaymentServiceImpl implements PaymentService {
                 round.getId(),
                 paidCount
             );
+            // Notify the round recipient that their payout is ready
+            Member recipient = round.getRecipient();
+            if (recipient != null && recipient.getUser() != null) {
+                UUID recipientUserId = recipient.getUser().getId();
+                String dartName = dart.getName() != null ? dart.getName() : "Your Dâr";
+                String title = "Payout ready";
+                String description = String.format(
+                    "All contributions for this round of \"%s\" have been received. Your payout is ready.",
+                    dartName
+                );
+                String actionUrl = "/dashboard/client/dar/" + dart.getId();
+                notificationService.create(
+                    recipientUserId,
+                    NotificationType.PAYOUT_READY,
+                    title,
+                    description,
+                    actionUrl,
+                    "View Dâr"
+                );
+                pointsService.addPoints(recipientUserId, PointAction.PAYOUT_RECEIVED, dart.getId());
+            }
         }
     }
 
@@ -106,11 +153,8 @@ public class PaymentServiceImpl implements PaymentService {
     // -------------------------------------------------------------------------
 
     @Override
-    @Transactional
-    public CreatePaymentIntentResponse createPaymentIntent(
-        CreatePaymentIntentRequest request
-    ) {
-        UUID dartId = request.dartId();
+    @Transactional(readOnly = true)
+    public CanPayResponse canPay(UUID dartId) {
         UUID userId = securityUtils.requireCurrentUserId();
 
         Member payer = memberRepository
@@ -118,7 +162,7 @@ public class PaymentServiceImpl implements PaymentService {
             .orElseThrow(() ->
                 new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "You are not a member of this dart."
+                    "You are not a member of this Dâr."
                 )
             );
 
@@ -127,7 +171,7 @@ public class PaymentServiceImpl implements PaymentService {
             .orElseThrow(() ->
                 new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Dart not found."
+                    "This Dâr was not found."
                 )
             );
 
@@ -142,26 +186,19 @@ public class PaymentServiceImpl implements PaymentService {
         if (current.isEmpty()) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "No current round to pay for. All rounds may be completed."
+                "There is no contribution due for this Dâr right now. All rounds may be completed."
             );
         }
 
         Round round = current.get(0);
 
-        // Enforce payment window: members can only pay starting 5 days before the round date
         if (round.getDate() != null) {
-            java.time.LocalDateTime paymentOpenDate = round
-                .getDate()
-                .minusDays(5);
-            if (java.time.LocalDateTime.now().isBefore(paymentOpenDate)) {
+            LocalDateTime paymentOpenDate = round.getDate().minusDays(5);
+            if (LocalDateTime.now().isBefore(paymentOpenDate)) {
                 throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Payment for this round is not open yet. " +
-                        "You can pay starting " +
-                        paymentOpenDate.toLocalDate() +
-                        " (5 days before the round date of " +
-                        round.getDate().toLocalDate() +
-                        ")."
+                    "Payments open 5 days before each round. You can pay from " +
+                        paymentOpenDate.toLocalDate() + "."
                 );
             }
         }
@@ -172,7 +209,87 @@ public class PaymentServiceImpl implements PaymentService {
         ) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "You are the recipient of this round. You do not need to pay."
+                "You are receiving this round — no payment needed from you."
+            );
+        }
+
+        return CanPayResponse.builder().canPay(true).build();
+    }
+
+    @Override
+    @Transactional
+    public CreatePaymentIntentResponse createPaymentIntent(
+        CreatePaymentIntentRequest request
+    ) {
+        UUID dartId = request.dartId();
+        UUID userId = securityUtils.requireCurrentUserId();
+
+        Member payer = memberRepository
+            .findByDartIdAndUserId(dartId, userId)
+            .orElseThrow(() ->
+                new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not a member of this Dâr."
+                )
+            );
+
+        Dart dart = dartRepository
+            .findById(dartId)
+            .orElseThrow(() ->
+                new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "This Dâr was not found."
+                )
+            );
+
+        List<Round> current = roundRepository
+            .findCurrentRoundByDartId(
+                dartId,
+                RoundStatus.INPAYED,
+                PageRequest.of(0, 1)
+            )
+            .getContent();
+
+        if (current.isEmpty()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "There is no contribution due for this Dâr right now. All rounds may be completed."
+            );
+        }
+
+        Round round = current.get(0);
+
+        // Enforce payment window: members can only pay starting 5 days before the round date
+        if (round.getDate() != null) {
+            LocalDateTime paymentOpenDate = round.getDate().minusDays(5);
+            if (LocalDateTime.now().isBefore(paymentOpenDate)) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Payments open 5 days before each round. You can pay from " +
+                        paymentOpenDate.toLocalDate() + "."
+                );
+            }
+        }
+
+        if (
+            round.getRecipient() != null &&
+            round.getRecipient().getId().equals(payer.getId())
+        ) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "You are receiving this round — no payment needed from you."
+            );
+        }
+
+        // Block paying again in the same round
+        boolean alreadyPaid = paymentRepository
+            .findAllByRoundIdAndPaymentStatus(round.getId(), PaymentStatus.PAYED)
+            .stream()
+            .anyMatch(p -> p.getPayer().getId().equals(payer.getId()));
+        if (alreadyPaid) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "You have already paid for this round. You cannot pay again for the same tour."
             );
         }
 
@@ -378,5 +495,15 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         applyPaymentSuccess(payment);
+    }
+
+    @Override
+    public List<UUID> getPaidPayerMemberIdsForRound(UUID roundId) {
+        return paymentRepository
+            .findAllByRoundIdAndPaymentStatus(roundId, PaymentStatus.PAYED)
+            .stream()
+            .map(p -> p.getPayer().getId())
+            .distinct()
+            .toList();
     }
 }
