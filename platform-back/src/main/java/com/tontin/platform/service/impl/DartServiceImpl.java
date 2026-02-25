@@ -7,15 +7,23 @@ import com.tontin.platform.domain.User;
 import com.tontin.platform.domain.enums.dart.DartPermission;
 import com.tontin.platform.domain.enums.dart.DartStatus;
 import com.tontin.platform.domain.enums.member.MemberStatus;
+import com.tontin.platform.domain.enums.notification.NotificationType;
+import com.tontin.platform.domain.enums.rank.PointAction;
 import com.tontin.platform.domain.enums.round.RoundStatus;
+import com.tontin.platform.domain.Member;
 import com.tontin.platform.dto.dart.request.DartRequest;
+import com.tontin.platform.dto.dart.request.StartDartRequest;
 import com.tontin.platform.dto.dart.response.DartResponse;
 import com.tontin.platform.dto.dart.response.PageResponse;
 import com.tontin.platform.mapper.DartMapper;
+import com.tontin.platform.repository.DartMessageRepository;
 import com.tontin.platform.repository.DartRepository;
+import com.tontin.platform.repository.MemberRepository;
 import com.tontin.platform.repository.RoundRepository;
 import com.tontin.platform.service.DartService;
 import com.tontin.platform.service.MemberService;
+import com.tontin.platform.service.NotificationService;
+import com.tontin.platform.service.PointsService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -35,11 +43,15 @@ import org.springframework.web.server.ResponseStatusException;
 public class DartServiceImpl implements DartService {
 
     private final DartRepository dartRepository;
+    private final DartMessageRepository dartMessageRepository;
+    private final MemberRepository memberRepository;
     private final RoundRepository roundRepository;
     private final MemberService memberService;
     private final DartMapper dartMapper;
     private final SecurityUtils securityUtils;
     private final com.tontin.platform.service.RoundService roundService;
+    private final NotificationService notificationService;
+    private final PointsService pointsService;
 
     // -------------------------------------------------------------------------
     // Helper
@@ -95,6 +107,7 @@ public class DartServiceImpl implements DartService {
             "Organizer member created for dart id: {}",
             savedDart.getId()
         );
+        pointsService.addPoints(organizer.getId(), PointAction.DAR_CREATED, savedDart.getId());
 
         // Newly created dart has no rounds yet
         return dartMapper.toDtoWithContext(
@@ -127,6 +140,13 @@ public class DartServiceImpl implements DartService {
         validateId(id);
         Dart dart = findDartById(id);
         User currentUser = securityUtils.requireCurrentUser();
+        var member = memberRepository.findByDartIdAndUserId(id, currentUser.getId());
+        if (member.isEmpty() || member.get().getStatus() == MemberStatus.LEAVED) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You no longer have access to this Dâr."
+            );
+        }
         return buildResponse(dart, currentUser.getId());
     }
 
@@ -136,14 +156,11 @@ public class DartServiceImpl implements DartService {
         log.info("Deleting dart with id: {}", id);
         validateId(id);
         Dart dart = findDartById(id);
-        if (dart.isActive() && !dart.getActiveMembers().isEmpty()) {
-            log.warn(
-                "Attempt to delete active dart {} with active members",
-                id
-            );
+        if (dart.getStatus() != DartStatus.PENDING) {
+            log.warn("Attempt to delete dart {} which is not PENDING (status: {})", id, dart.getStatus());
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Cannot delete an active dart with active members"
+                HttpStatus.BAD_REQUEST,
+                "You can only delete a Dâr before it has started."
             );
         }
         User currentUser = securityUtils.requireCurrentUser();
@@ -181,6 +198,14 @@ public class DartServiceImpl implements DartService {
         dart.setOrderMethod(request.orderMethod());
         dart.setDescription(request.description());
         dart.setPaymentFrequency(request.paymentFrequency());
+        if (request.customRules() != null) {
+            dart.setCustomRules(request.customRules());
+        }
+        if (request.picture() != null) {
+            dart.setPicture(
+                request.picture().length == 0 ? null : request.picture()
+            );
+        }
     }
 
     private void validateRequest(DartRequest request) {
@@ -259,9 +284,10 @@ public class DartServiceImpl implements DartService {
 
     @Override
     @Transactional
-    public DartResponse startDart(UUID id) {
+    public DartResponse startDart(UUID id, StartDartRequest request) {
         log.info("Starting dart with id: {}", id);
         validateId(id);
+        boolean startAnyway = request != null && request.startAnyway();
 
         Dart dart = findDartById(id);
         User currentUser = securityUtils.requireCurrentUser();
@@ -297,12 +323,32 @@ public class DartServiceImpl implements DartService {
             );
         }
 
-        // Check minimum members (e.g., at least 2 members including organizer)
+        // Check for pending members: block start unless startAnyway
+        List<Member> pendingMembers = dart
+            .getMembers()
+            .stream()
+            .filter(m -> m.getStatus() == MemberStatus.PENDING)
+            .toList();
+        if (!pendingMembers.isEmpty() && !startAnyway) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "You can't start the dart while there are pending users. Start anyway to remove them from the dart."
+            );
+        }
+        if (!pendingMembers.isEmpty() && startAnyway) {
+            for (Member m : pendingMembers) {
+                m.setStatus(MemberStatus.LEAVED);
+                memberRepository.save(m);
+            }
+            log.info("Set {} pending member(s) to LEAVED for dart {}", pendingMembers.size(), id);
+        }
+
+        // Check minimum active members (at least 2 including organizer)
         if (dart.getActiveMembers().size() < 2) {
             log.warn("Dart {} does not have minimum members", id);
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "Cannot start dart: minimum 2 members required"
+                "Cannot start dart: minimum 2 active members required"
             );
         }
 
@@ -312,6 +358,25 @@ public class DartServiceImpl implements DartService {
 
         Dart updatedDart = dartRepository.save(dart);
         log.info("Dart {} started successfully", id);
+
+        // Notify all active members that the Dâr has started
+        String dartName = updatedDart.getName() != null ? updatedDart.getName() : "Your Dâr";
+        String title = "Dâr started";
+        String description = String.format("\"%s\" has started. You can now view rounds and make contributions.", dartName);
+        String actionUrl = "/dashboard/client/dar/" + id;
+        for (var m : updatedDart.getActiveMembers()) {
+            if (m.getUser() != null) {
+                notificationService.create(
+                    m.getUser().getId(),
+                    NotificationType.SYSTEM,
+                    title,
+                    description,
+                    actionUrl,
+                    "View Dâr"
+                );
+            }
+        }
+        pointsService.addPoints(currentUser.getId(), PointAction.DAR_STARTED, id);
 
         // Automatically create rounds for the dart based on order method and payment frequency
         try {
@@ -332,6 +397,37 @@ public class DartServiceImpl implements DartService {
             // But log the error for investigation
         }
 
+        return buildResponse(updatedDart, currentUser.getId());
+    }
+
+    @Override
+    @Transactional
+    public DartResponse finishDart(UUID id) {
+        log.info("Finishing dart with id: {}", id);
+        validateId(id);
+        Dart dart = findDartById(id);
+        User currentUser = securityUtils.requireCurrentUser();
+
+        boolean isOrganizer = dart
+            .getMembers()
+            .stream()
+            .anyMatch(
+                m ->
+                    m.getUser().getId().equals(currentUser.getId()) &&
+                    m.getPermission() == DartPermission.ORGANIZER
+            );
+
+        if (!isOrganizer) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Only organizers can finish a dart"
+            );
+        }
+
+        dartMessageRepository.deleteAllByDartId(id);
+        dart.finish();
+        Dart updatedDart = dartRepository.save(dart);
+        log.info("Dart {} finished; messages deleted", id);
         return buildResponse(updatedDart, currentUser.getId());
     }
 }

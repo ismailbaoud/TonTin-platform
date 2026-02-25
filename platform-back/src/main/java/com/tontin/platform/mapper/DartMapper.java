@@ -145,7 +145,11 @@ public interface DartMapper {
             .currentCycle((int) paidRounds)
             .totalCycles((int) effectiveTotalCycles)
             .nextPayoutDate(nextPayoutDate)
-            .image(null)
+            .image(
+                dart.getPicture() != null && dart.getPicture().length > 0
+                    ? java.util.Base64.getEncoder().encodeToString(dart.getPicture())
+                    : null
+            )
             .customRules(dart.getCustomRules())
             .createdAt(dart.getCreatedAt())
             .updatedAt(dart.getUpdatedAt())

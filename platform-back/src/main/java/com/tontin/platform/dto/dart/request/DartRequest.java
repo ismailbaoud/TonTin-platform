@@ -91,7 +91,14 @@ public record DartRequest(
         requiredMode = Schema.RequiredMode.REQUIRED,
         allowableValues = { "WEEKLY", "BI-WEEKLY", "MONTH", "QUARTERLY" }
     )
-    String paymentFrequency
+    String paymentFrequency,
+
+    @Nullable
+    @Schema(
+        description = "Cover picture as base64-encoded bytes (e.g. JPEG/PNG). Omit or null to leave unchanged.",
+        nullable = true
+    )
+    byte[] picture
 ) {
     /**
      * Compact constructor for additional validation.

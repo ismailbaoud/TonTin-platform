@@ -67,9 +67,16 @@ public class Dart extends BaseEntity {
     @Column(name = "payment_frequency", nullable = false, length = 50)
     private String paymentFrequency;
 
+    @Column(name = "picture", columnDefinition = "bytea")
+    private byte[] picture;
+
     @OneToMany(mappedBy = "dart", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @Builder.Default
     private List<Member> members = new ArrayList<>();
+
+    @OneToMany(mappedBy = "dart", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @Builder.Default
+    private List<DartMessage> messages = new ArrayList<>();
 
     // Business key equals/hashCode based on name and startDate
     @Override
