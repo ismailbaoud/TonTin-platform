@@ -85,7 +85,8 @@ public record MemberResponse(
         @Schema(
             description = "User email address",
             example = "john.doe@example.com"
-        ) String email
+        ) String email,
+        @Schema(description = "Profile picture as base64 (JPEG/PNG)") String picture
     ) {}
 
     /**

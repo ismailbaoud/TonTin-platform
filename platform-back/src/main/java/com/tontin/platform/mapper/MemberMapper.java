@@ -40,10 +40,14 @@ public class MemberMapper {
             return null;
         }
 
+        String pictureB64 = user.getPicture() != null && user.getPicture().length > 0
+            ? java.util.Base64.getEncoder().encodeToString(user.getPicture())
+            : null;
         return MemberResponse.UserInfo.builder()
             .id(user.getId())
             .userName(user.getUserName())
             .email(user.getEmail())
+            .picture(pictureB64)
             .build();
     }
 

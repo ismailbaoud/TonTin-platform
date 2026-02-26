@@ -7,6 +7,8 @@ import com.tontin.platform.domain.User;
 import com.tontin.platform.domain.enums.dart.DartPermission;
 import com.tontin.platform.domain.enums.dart.DartStatus;
 import com.tontin.platform.domain.enums.member.MemberStatus;
+import com.tontin.platform.domain.enums.notification.NotificationType;
+import com.tontin.platform.domain.enums.rank.PointAction;
 import com.tontin.platform.dto.member.request.MemberRequest;
 import com.tontin.platform.dto.member.response.MemberResponse;
 import com.tontin.platform.mapper.MemberMapper;
@@ -14,6 +16,8 @@ import com.tontin.platform.repository.DartRepository;
 import com.tontin.platform.repository.MemberRepository;
 import com.tontin.platform.repository.UserRepository;
 import com.tontin.platform.service.MemberService;
+import com.tontin.platform.service.NotificationService;
+import com.tontin.platform.service.PointsService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -39,8 +43,6 @@ public class MemberServiceImpl implements MemberService {
         "Cannot remove the last organizer from the dart";
     private static final String ORGANIZER_REQUIRED_MESSAGE =
         "Only organizers can perform this action";
-    private static final String PENDING_DELETION_MESSAGE =
-        "Only pending members can be removed from the dart";
     private static final String ACCESS_DENIED_MESSAGE = "Access denied";
     private static final String DART_ACTIVE_INVITE_MESSAGE =
         "Cannot invite new members to a Dâr that has already started.";
@@ -52,6 +54,8 @@ public class MemberServiceImpl implements MemberService {
     private final DartRepository dartRepository;
     private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
+    private final NotificationService notificationService;
+    private final PointsService pointsService;
 
     @Override
     @Transactional
@@ -175,6 +179,31 @@ public class MemberServiceImpl implements MemberService {
             savedMember.getId(),
             dartId
         );
+
+        // Notify the invited user (best-effort; do not fail the invite if notification fails)
+        try {
+            User organizer = securityUtils.requireCurrentUser();
+            String organizerName = organizer.getUserName() != null ? organizer.getUserName() : "Someone";
+            String dartName = dart.getName() != null ? dart.getName() : "a Dâr";
+            String title = "Invitation to join a Dâr";
+            String description = String.format(
+                "%s invited you to join \"%s\". Open My Dârs to accept or decline.",
+                organizerName,
+                dartName
+            );
+            String actionUrl = "/dashboard/client/dar/" + dartId;
+            notificationService.create(
+                userId,
+                NotificationType.DAR_INVITATION,
+                title,
+                description,
+                actionUrl,
+                "View invitation"
+            );
+        } catch (Exception e) {
+            log.warn("Could not create invitation notification for user {} (invite still succeeded): {}", userId, e.getMessage());
+        }
+
         return memberMapper.toDto(savedMember);
     }
 
@@ -235,9 +264,11 @@ public class MemberServiceImpl implements MemberService {
         ensureDartExists(dartId);
         // requireOrganizer(dartId);
 
+        // Return ACTIVE and PENDING so organizer can manage members (remove/cancel invite) before start; exclude LEAVED
         return memberRepository
             .findAllByDartId(dartId)
             .stream()
+            .filter(m -> m.getStatus() == MemberStatus.ACTIVE || m.getStatus() == MemberStatus.PENDING)
             .map(memberMapper::toDto)
             .toList();
     }
@@ -252,26 +283,38 @@ public class MemberServiceImpl implements MemberService {
 
         Member member = getMemberOrThrow(id, dartId);
 
-        // Block any removal once the dart is running
-        Dart dart = dartRepository
-            .findById(dartId)
-            .orElseThrow(() ->
-                notFound(HttpStatus.NOT_FOUND, DART_NOT_FOUND_TEMPLATE, dartId)
+        // Use the dart this member belongs to (same as dartId) to decide if removal is allowed
+        Dart dart = member.getDart();
+        if (dart == null) {
+            dart = dartRepository
+                .findById(dartId)
+                .orElseThrow(() ->
+                    notFound(HttpStatus.NOT_FOUND, DART_NOT_FOUND_TEMPLATE, dartId)
+                );
+        }
+        // Block removal only once the dart has been started (ACTIVE or FINISHED).
+        // Before start (dart PENDING): organizer can remove ANY member regardless of status (ACTIVE or PENDING).
+        if (dart.getStatus() == DartStatus.ACTIVE || dart.getStatus() == DartStatus.FINISHED) {
+            log.warn(
+                "Cannot remove member {} from dart {}: dart status is {}",
+                id,
+                dartId,
+                dart.getStatus()
             );
-        if (dart.getStatus() == DartStatus.ACTIVE) {
             throw new ResponseStatusException(
                 HttpStatus.CONFLICT,
                 DART_ACTIVE_REMOVE_MESSAGE
             );
         }
 
-        if (member.getStatus() != MemberStatus.PENDING) {
-            throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                PENDING_DELETION_MESSAGE
-            );
-        }
-
+        // Intentionally no check on member.getStatus(): organizer can remove ANY member (ACTIVE or PENDING) before dart start.
+        MemberStatus memberStatus = member.getStatus();
+        log.info(
+            "Removing member {} (status={}) from dart {} — allowed because dart is not started",
+            id,
+            memberStatus,
+            dartId
+        );
         if (member.getPermission() == DartPermission.ORGANIZER) {
             enforceAtLeastOneOrganizer(id, dartId);
         }
@@ -433,6 +476,36 @@ public class MemberServiceImpl implements MemberService {
             currentUser.getId(),
             dartId
         );
+
+        // Notify organizers that the member joined
+        Dart dart = member.getDart();
+        String memberName = currentUser.getUserName() != null ? currentUser.getUserName() : "A member";
+        String dartName = dart != null && dart.getName() != null ? dart.getName() : "the Dâr";
+        String title = "Member joined your Dâr";
+        String description = String.format(
+            "%s accepted the invitation and joined \"%s\".",
+            memberName,
+            dartName
+        );
+        String actionUrl = "/dashboard/client/dar/" + dartId;
+        for (Member m : memberRepository.findAllByDartId(dartId)) {
+            if (m.getPermission() == DartPermission.ORGANIZER && m.getUser() != null) {
+                UUID organizerId = m.getUser().getId();
+                if (!organizerId.equals(currentUser.getId())) {
+                    notificationService.create(
+                        organizerId,
+                        NotificationType.MEMBER_JOINED,
+                        title,
+                        description,
+                        actionUrl,
+                        "View Dâr"
+                    );
+                    pointsService.addPoints(organizerId, PointAction.MEMBER_JOINED_YOUR_DAR, dartId);
+                }
+            }
+        }
+        pointsService.addPoints(currentUser.getId(), PointAction.INVITATION_ACCEPTED, dartId);
+
         return memberMapper.toDto(savedMember);
     }
 
@@ -482,6 +555,35 @@ public class MemberServiceImpl implements MemberService {
             currentUser.getId(),
             dartId
         );
+        pointsService.addPoints(currentUser.getId(), PointAction.INVITATION_REJECTED, dartId);
+
+        // Notify organizers that the member declined
+        Dart dart = member.getDart();
+        String memberName = currentUser.getUserName() != null ? currentUser.getUserName() : "A user";
+        String dartName = dart != null && dart.getName() != null ? dart.getName() : "the Dâr";
+        String title = "Invitation declined";
+        String description = String.format(
+            "%s declined the invitation to join \"%s\".",
+            memberName,
+            dartName
+        );
+        String actionUrl = "/dashboard/client/dar/" + dartId;
+        for (Member m : memberRepository.findAllByDartId(dartId)) {
+            if (m.getPermission() == DartPermission.ORGANIZER && m.getUser() != null) {
+                UUID organizerId = m.getUser().getId();
+                if (!organizerId.equals(currentUser.getId())) {
+                    notificationService.create(
+                        organizerId,
+                        NotificationType.MEMBER_LEFT,
+                        title,
+                        description,
+                        actionUrl,
+                        "View Dâr"
+                    );
+                }
+            }
+        }
+
         return memberMapper.toDto(savedMember);
     }
 }
