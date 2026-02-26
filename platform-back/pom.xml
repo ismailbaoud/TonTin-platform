@@ -171,6 +171,12 @@
 			<version>${stripe.version}</version>
 		</dependency>
 
+		<!-- H2 in-memory DB: for tests and for embedded profile (run without PostgreSQL) -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>
