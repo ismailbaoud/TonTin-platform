@@ -1,0 +1,9 @@
+# Environment and secrets (do not commit)
+.env
+.env.local
+.env.*.local
+
+# Markdown docs (keep only README.md in repo)
+*.md
+!README.md
+!**/README.md
