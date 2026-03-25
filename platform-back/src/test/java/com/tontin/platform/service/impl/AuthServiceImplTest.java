@@ -17,10 +17,7 @@ import com.tontin.platform.dto.auth.register.request.RegisterRequest;
 import com.tontin.platform.dto.auth.user.UserResponse;
 import com.tontin.platform.mapper.UserMapper;
 import com.tontin.platform.repository.UserRepository;
-import jakarta.mail.Session;
-import jakarta.mail.internet.MimeMessage;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,7 +71,8 @@ class AuthServiceImplTest {
         when(userRepository.findByUserNameIgnoreCase("test_user")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("Password123@")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        // Mail @Value fields are unset in this unit test; sendVerificationEmail fails fast and is caught
+        // (no stub needed for mailSender).
 
         UserResponse expected = UserResponse.builder().email("test@mail.com").userName("test_user").build();
         when(userMapper.toDto(any(User.class))).thenReturn(expected);
@@ -125,7 +123,6 @@ class AuthServiceImplTest {
         when(userRepository.findByUserNameIgnoreCase("test_user")).thenReturn(Optional.of(existingPending));
         when(passwordEncoder.encode("Password123@")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
         when(userMapper.toDto(any(User.class)))
             .thenReturn(UserResponse.builder().email("test@mail.com").userName("test_user").build());
 
