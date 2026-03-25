@@ -1,6 +1,8 @@
 import { inject } from "@angular/core";
 import { Router, CanActivateFn, ActivatedRouteSnapshot } from "@angular/router";
 import { AuthService } from "../../features/auth/services/auth.service";
+import { Observable, of } from "rxjs";
+import { catchError, map } from "rxjs/operators";
 
 /**
  * Role Guard
@@ -12,14 +14,6 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const user = authService.getStoredUser();
-
-  if (!user) {
-    console.log("❌ Role Guard: No user found, redirecting to login");
-    router.navigate(["/auth/login"]);
-    return false;
-  }
-
   // Get required roles from route data
   const requiredRoles = route.data["roles"] as string[];
 
@@ -28,35 +22,59 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
     return true;
   }
 
-  // Normalize user role (backend sends ROLE_ADMIN, ROLE_CLIENT)
-  const userRole = user.role.toUpperCase();
+  const hasRequiredRole = (role: string): boolean => {
+    const userRole = role.toUpperCase();
+    return requiredRoles.some((requiredRole) => {
+      const normalizedRequiredRole = requiredRole.toUpperCase();
+      return (
+        userRole === normalizedRequiredRole ||
+        userRole === `ROLE_${normalizedRequiredRole}` ||
+        `ROLE_${userRole}` === normalizedRequiredRole
+      );
+    });
+  };
 
-  // Check if user has one of the required roles
-  // Support both with and without ROLE_ prefix
-  const hasRole = requiredRoles.some((role) => {
-    const normalizedRole = role.toUpperCase();
-    return (
-      userRole === normalizedRole ||
-      userRole === `ROLE_${normalizedRole}` ||
-      `ROLE_${userRole}` === normalizedRole
-    );
-  });
+  const redirectByRole = (role: string): boolean => {
+    const userRole = role.toUpperCase();
+    if (userRole === "ROLE_ADMIN" || userRole === "ADMIN") {
+      router.navigate(["/dashboard/admin"]);
+      return false;
+    }
 
-  if (hasRole) {
-    console.log(`✅ Role Guard: User has required role: ${userRole}`);
-    return true;
-  }
-
-  console.log(
-    `❌ Role Guard: User role ${userRole} not authorized, redirecting`,
-  );
-
-  // Redirect to appropriate dashboard based on user's actual role
-  if (userRole === "ROLE_ADMIN" || userRole === "ADMIN") {
-    router.navigate(["/dashboard/admin"]);
-  } else {
     router.navigate(["/dashboard/client"]);
+    return false;
+  };
+
+  const allowByRole = (role: string): boolean => {
+    if (hasRequiredRole(role)) {
+      console.log(`✅ Role Guard: User has required role: ${role.toUpperCase()}`);
+      return true;
+    }
+
+    console.log(
+      `❌ Role Guard: User role ${role.toUpperCase()} not authorized, redirecting`,
+    );
+    return redirectByRole(role);
+  };
+
+  const storedUser = authService.getStoredUser();
+  if (storedUser?.role) {
+    return allowByRole(storedUser.role);
   }
 
-  return false;
+  if (!authService.getToken()) {
+    console.log("❌ Role Guard: No token found, redirecting to login");
+    router.navigate(["/auth/login"]);
+    return false;
+  }
+
+  // Fallback: resolve user profile from API when storage is empty/stale.
+  return authService.getCurrentUser().pipe(
+    map((user) => allowByRole(user.role)),
+    catchError((): Observable<boolean> => {
+      console.log("❌ Role Guard: Failed to resolve user profile");
+      router.navigate(["/auth/login"]);
+      return of(false);
+    }),
+  );
 };

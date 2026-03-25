@@ -60,6 +60,13 @@ export class PayContributionComponent
   /** All dârs for dropdown when no darId in route */
   darsList: { id: string; name: string }[] = [];
 
+  /**
+   * Publishable key from GET /v1/payments/config/stripe-public, merged with environment fallback.
+   */
+  resolvedStripePublishableKey = "";
+  /** False until the first config response (or error with fallback) is applied */
+  stripePublishableKeyReady = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -70,6 +77,18 @@ export class PayContributionComponent
   ) {}
 
   ngOnInit(): void {
+    this.paymentService
+      .getStripePublicConfig()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => of({ publishableKey: "" })),
+      )
+      .subscribe({
+        next: (res) => {
+          this.applyResolvedStripeKey(res.publishableKey ?? "");
+        },
+      });
+
     this.darId = this.route.snapshot.paramMap.get("id");
 
     if (this.darId) {
@@ -90,15 +109,21 @@ export class PayContributionComponent
   }
 
   private get stripePublishableKey(): string {
+    return this.resolvedStripePublishableKey;
+  }
+
+  private applyResolvedStripeKey(apiKey: string): void {
+    const fromApi = apiKey.trim();
     const env = environment as {
       external?: { stripePublishableKey?: string };
       services?: { stripe?: { publicKey?: string } };
     };
-    return (
-      env.external?.stripePublishableKey ??
-      env.services?.stripe?.publicKey ??
-      ""
-    );
+    const fromEnv =
+      (env.external?.stripePublishableKey ?? "").trim() ||
+      (env.services?.stripe?.publicKey ?? "").trim();
+    this.resolvedStripePublishableKey = fromApi || fromEnv;
+    this.stripePublishableKeyReady = true;
+    this.cdr.detectChanges();
   }
 
   loadDarAndRound(id: string): void {
@@ -187,12 +212,44 @@ export class PayContributionComponent
   }
 
   get canPayWithStripe(): boolean {
+    if (!this.stripePublishableKeyReady) {
+      return false;
+    }
+    const key = this.stripePublishableKey;
     return !!(
       this.darId &&
       this.darDetails &&
       this.currentRound &&
       this.contributionAmount > 0 &&
-      this.stripePublishableKey
+      key &&
+      !key.startsWith("pk_test_mock")
+    );
+  }
+
+  /** True when Stripe keys are missing/placeholder but the rest of the pay flow is valid */
+  get showStripeConfigHint(): boolean {
+    return (
+      this.stripePublishableKeyReady &&
+      !!this.darId &&
+      !!this.darDetails &&
+      !!this.currentRound &&
+      this.contributionAmount > 0 &&
+      (!this.stripePublishableKey ||
+        this.stripePublishableKey.startsWith("pk_test_mock"))
+    );
+  }
+
+  private extractApiErrorMessage(err: unknown, fallback: string): string {
+    const e = err as {
+      error?: { message?: string; detail?: string; title?: string };
+      message?: string;
+    };
+    return (
+      e?.error?.message ||
+      e?.error?.detail ||
+      e?.error?.title ||
+      e?.message ||
+      fallback
     );
   }
 
@@ -206,66 +263,104 @@ export class PayContributionComponent
     this.error = null;
 
     this.paymentService
-      .createPaymentIntent(this.darId)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => (this.isSubmitting = false)),
-      )
+      .canPay(this.darId)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: async (res) => {
-          this.clientSecret = res.clientSecret;
-          this.paymentId = res.paymentId ?? null;
-          const key = this.stripePublishableKey;
-          if (!key || key.startsWith("pk_test_mock")) {
-            this.error =
-              "Stripe is not configured. Add your Stripe publishable key in environment (e.g. environment.development.ts).";
+        next: (canPayRes) => {
+          if (!canPayRes?.canPay) {
+            this.error = "You cannot pay this Dâr right now.";
+            this.isSubmitting = false;
             return;
           }
-          try {
-            const stripe = await loadStripe(key);
-            if (!stripe) {
-              this.error =
-                "Could not load Stripe. Check your key (use pk_test_* for localhost; live keys require HTTPS).";
-              return;
-            }
-            this.stripeInstance = stripe;
-            // Show card container first so #stripeCardMount is in the DOM
-            this.showStripeCard = true;
-            this.cdr.detectChanges();
-            // Mount after the view has rendered (next tick)
-            setTimeout(() => {
-              const mountEl = this.stripeCardMountRef?.nativeElement;
-              if (!mountEl) {
-                this.error =
-                  "Could not display payment form. Please try again.";
-                this.cdr.detectChanges();
-                return;
-              }
-              this.stripeElements = stripe.elements();
-              this.stripeCardElement = this.stripeElements.create("card", {
-                style: {
-                  base: {
-                    fontSize: "16px",
-                    color: "#1f2937",
-                    "::placeholder": { color: "#9ca3af" },
-                  },
-                },
-              });
-              this.stripeCardElement.mount(mountEl);
-              this.cdr.detectChanges();
-            }, 0);
-          } catch (e) {
-            console.error("Stripe init error:", e);
-            this.error = "Could not load payment form. Try again.";
-          }
+
+          this.paymentService
+            .createPaymentIntent(this.darId!)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: async (res) => {
+                this.clientSecret = res.clientSecret;
+                this.paymentId = res.paymentId ?? null;
+
+                const key = this.stripePublishableKey;
+                if (!key || key.startsWith("pk_test_mock")) {
+                  this.error =
+                    "Stripe is not configured. Set STRIPE_PUBLISHABLE_KEY in platform-back/.env (same account as STRIPE_SECRET_KEY), or external.stripePublishableKey in the Angular environment.";
+                  this.isSubmitting = false;
+                  return;
+                }
+                try {
+                  const stripe = await loadStripe(key);
+                  if (!stripe) {
+                    this.error =
+                      "Could not load Stripe. Check your key (use pk_test_* for localhost; live keys require HTTPS).";
+                    this.isSubmitting = false;
+                    return;
+                  }
+                  this.stripeInstance = stripe;
+                  // Show card container first so #stripeCardMount is in the DOM
+                  this.showStripeCard = true;
+                  this.cdr.detectChanges();
+                  // Mount after the view has rendered (next tick)
+                  setTimeout(() => {
+                    const mountEl = this.stripeCardMountRef?.nativeElement;
+                    if (!mountEl) {
+                      this.error =
+                        "Could not display payment form. Please try again.";
+                      this.isSubmitting = false;
+                      this.cdr.detectChanges();
+                      return;
+                    }
+                    this.stripeElements = stripe.elements();
+                    this.stripeCardElement = this.stripeElements.create("card", {
+                      style: {
+                        base: {
+                          fontSize: "16px",
+                          color: "#1f2937",
+                          "::placeholder": { color: "#9ca3af" },
+                        },
+                      },
+                    });
+                    this.stripeCardElement.mount(mountEl);
+                    this.isSubmitting = false;
+                    this.cdr.detectChanges();
+                  }, 0);
+                } catch (e) {
+                  console.error("Stripe init error:", e);
+                  this.error = "Could not load payment form. Try again.";
+                  this.isSubmitting = false;
+                }
+              },
+              error: (err) => {
+                console.error("Create payment intent failed:", err);
+                this.error = this.extractApiErrorMessage(
+                  err,
+                  "Could not start payment. You may not be a payer for this round.",
+                );
+                this.isSubmitting = false;
+              },
+            });
         },
         error: (err) => {
-          console.error("Create payment intent failed:", err);
-          this.error =
-            err?.error?.message ??
-            "Could not start payment. You may not be a payer for this round.";
+          console.error("Can-pay check failed:", err);
+          this.error = this.extractApiErrorMessage(
+            err,
+            "You cannot pay this Dâr right now.",
+          );
+          this.isSubmitting = false;
         },
       });
+  }
+
+  cancelPaymentFlow(): void {
+    this.showStripeCard = false;
+    this.clientSecret = null;
+    this.paymentId = null;
+    if (this.stripeCardElement && this.stripeCardMountRef?.nativeElement) {
+      this.stripeCardElement.destroy();
+      this.stripeCardElement = null;
+    }
+    this.stripeElements = null;
+    this.stripeInstance = null;
   }
 
   async confirmStripePayment(): Promise<void> {

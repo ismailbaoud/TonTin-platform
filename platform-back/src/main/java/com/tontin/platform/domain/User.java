@@ -85,6 +85,11 @@ public class User extends BaseEntity {
     @Builder.Default
     private UserStatus status = UserStatus.PENDING;
 
+    /**
+     * Legacy DB compatibility field.
+     * Kept only because existing database schema still enforces NOT NULL on users.points.
+     * Business score/ranking features are not used by the application anymore.
+     */
     @Column(name = "points", nullable = false)
     @Builder.Default
     private Integer points = 0;

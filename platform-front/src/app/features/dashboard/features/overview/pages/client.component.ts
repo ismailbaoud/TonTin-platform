@@ -7,6 +7,7 @@ import {
 } from "../../../../auth/services/auth.service";
 import { DarService } from "../../dars/services/dar.service";
 import { Dar } from "../../dars/models";
+import { PaymentService, PaymentSummary } from "../../payments/services/payment.service";
 import {
   DarStatus,
   getDarStatusLabel,
@@ -25,16 +26,19 @@ export class ClientComponent implements OnInit {
   isLoading = false;
   dars: Dar[] = [];
   isLoadingDars = false;
+  paymentSummary: PaymentSummary | null = null;
 
   constructor(
     private authService: AuthService,
     private router: Router,
     private darService: DarService,
+    private paymentService: PaymentService,
   ) {}
 
   ngOnInit(): void {
     this.loadUserData();
     this.loadDars();
+    this.loadPaymentSummary();
   }
 
   private loadDars(): void {
@@ -72,6 +76,17 @@ export class ClientComponent implements OnInit {
     }
   }
 
+  private loadPaymentSummary(): void {
+    this.paymentService.getPaymentSummary().subscribe({
+      next: (summary) => {
+        this.paymentSummary = summary;
+      },
+      error: () => {
+        this.paymentSummary = null;
+      },
+    });
+  }
+
   // Navigation methods
   navigateToMyDars(): void {
     this.router.navigate(["/dashboard/client/my-dars"]);
@@ -101,5 +116,25 @@ export class ClientComponent implements OnInit {
   getStatusColor(status: string): string {
     const normalized = (status || "").toLowerCase() as DarStatus;
     return getDarStatusColor(normalized) || "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+  }
+
+  get activeDarsCount(): number {
+    return this.dars.filter((d) => (d.status || "").toLowerCase() === "active").length;
+  }
+
+  get nextPaymentAmount(): number {
+    return this.paymentSummary?.nextPaymentDue?.amount ?? 0;
+  }
+
+  get nextPaymentLabel(): string {
+    return this.paymentSummary?.nextPaymentDue?.darName ?? "No upcoming payment";
+  }
+
+  get totalContributions(): number {
+    return this.paymentSummary?.totalContributions ?? 0;
+  }
+
+  get completedCycles(): number {
+    return this.dars.reduce((total, dar) => total + (dar.currentCycle || 0), 0);
   }
 }

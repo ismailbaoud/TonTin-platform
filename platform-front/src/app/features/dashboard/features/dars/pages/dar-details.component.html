@@ -370,19 +370,6 @@
               Tours
             </button>
 
-            <button
-              (click)="setTab('messages')"
-              class="whitespace-nowrap border-b-[3px] py-4 px-1 text-sm font-medium flex items-center gap-2 transition-colors"
-              [ngClass]="{
-                'border-primary text-text-light dark:text-white':
-                  activeTab === 'messages',
-                'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200':
-                  activeTab !== 'messages',
-              }"
-            >
-              <span class="material-symbols-outlined text-[20px]">chat</span>
-              Messages
-            </button>
 
             <button
               (click)="setTab('settings')"
@@ -871,25 +858,6 @@
           </div>
         </div>
 
-        <!-- Messages Tab Content -->
-        <div
-          *ngIf="activeTab === 'messages'"
-          class="bg-white dark:bg-[#15281e] rounded-xl border border-border-light dark:border-border-dark p-6"
-        >
-          <div class="flex items-center justify-between mb-4">
-            <h3
-              class="text-lg font-bold text-text-light dark:text-white flex items-center gap-2"
-            >
-              <span class="material-symbols-outlined">chat</span>
-              Messages
-            </h3>
-          </div>
-          <div class="text-center py-12 text-gray-500 dark:text-gray-400">
-            <span class="material-symbols-outlined text-4xl mb-2">forum</span>
-            <p>Messages will be displayed here</p>
-          </div>
-        </div>
-
         <!-- Settings Tab Content -->
         <div
           *ngIf="activeTab === 'settings'"
@@ -903,9 +871,107 @@
               Dâr Settings
             </h3>
           </div>
-          <div class="text-center py-12 text-gray-500 dark:text-gray-400">
-            <span class="material-symbols-outlined text-4xl mb-2">tune</span>
-            <p>Settings will be displayed here</p>
+          <div *ngIf="!isOrganizer" class="text-center py-12 text-gray-500 dark:text-gray-400">
+            <span class="material-symbols-outlined text-4xl mb-2">lock</span>
+            <p>Only the organizer can change Dâr settings.</p>
+          </div>
+          <div *ngIf="isOrganizer" class="space-y-5">
+            <div class="flex items-center gap-5">
+              <div
+                class="h-24 w-24 rounded-lg bg-cover bg-center border border-border-light dark:border-border-dark"
+                [style.background-image]="'url(' + settingsForm.image + ')'"
+              ></div>
+              <div class="flex gap-2">
+                <label
+                  class="px-4 py-2 rounded-lg border border-border-light dark:border-border-dark text-sm font-semibold cursor-pointer"
+                >
+                  Change picture
+                  <input type="file" accept="image/*" class="hidden" (change)="onDarImageChange($event)" />
+                </label>
+                <button
+                  (click)="onRemoveDarImage()"
+                  class="px-4 py-2 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="md:col-span-2">
+                <label class="text-sm font-semibold">Name</label>
+                <input
+                  [(ngModel)]="settingsForm.name"
+                  class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark px-3 py-2"
+                  type="text"
+                />
+              </div>
+
+              <div>
+                <label class="text-sm font-semibold">Monthly contribution</label>
+                <input
+                  [(ngModel)]="settingsForm.monthlyContribution"
+                  class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark px-3 py-2"
+                  type="number"
+                  min="1"
+                />
+              </div>
+
+              <div>
+                <label class="text-sm font-semibold">Payment frequency</label>
+                <select
+                  [(ngModel)]="settingsForm.paymentFrequency"
+                  class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark px-3 py-2"
+                >
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="BI-WEEKLY">Bi-Weekly</option>
+                  <option value="MONTH">Monthly</option>
+                  <option value="QUARTERLY">Quarterly</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-sm font-semibold">Order method</label>
+                <select
+                  [(ngModel)]="settingsForm.orderMethod"
+                  class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark px-3 py-2"
+                >
+                  <option value="FIXED_ORDER">Fixed order</option>
+                  <option value="RANDOM_ONCE">Random once</option>
+                  <option value="BIDDING_MODEL">Bidding model</option>
+                  <option value="DYNAMIQUE_RANDOM">Dynamic random</option>
+                </select>
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="text-sm font-semibold">Description</label>
+                <textarea
+                  [(ngModel)]="settingsForm.description"
+                  class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark px-3 py-2"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="text-sm font-semibold">Custom rules</label>
+                <textarea
+                  [(ngModel)]="settingsForm.customRules"
+                  class="mt-1 w-full rounded-lg border border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark px-3 py-2"
+                  rows="4"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                (click)="saveDarSettings()"
+                [disabled]="isSavingSettings"
+                class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-black hover:bg-green-500 disabled:opacity-60"
+              >
+                <span *ngIf="isSavingSettings" class="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+                {{ isSavingSettings ? "Saving..." : "Save settings" }}
+              </button>
+            </div>
           </div>
         </div>
       </div>

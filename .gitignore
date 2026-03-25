@@ -1,7 +1,13 @@
+# Stripe CLI binary (downloaded locally)
+platform-back/.tools/
+
 # Environment and secrets (do not commit)
 .env
 .env.local
 .env.*.local
+
+# npm dependencies (do not commit backend node_modules)
+platform-back/node_modules/
 
 # Markdown docs (keep only README.md in repo)
 *.md

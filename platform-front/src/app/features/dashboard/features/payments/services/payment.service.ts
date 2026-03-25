@@ -18,9 +18,13 @@ export interface PaymentMethod {
 }
 
 export interface Payment {
-  id: number;
-  darId: number;
+  id: string | number;
+  darId: string | number;
   darName: string;
+  payerMemberId?: string;
+  payerUserId?: string;
+  payerUserName?: string;
+  payerEmail?: string;
   userId: number;
   amount: number;
   fee: number;
@@ -116,7 +120,7 @@ export interface PaymentSummary {
   pendingContributions: number;
   overdueContributions: number;
   nextPaymentDue?: {
-    darId: number;
+    darId: string;
     darName: string;
     amount: number;
     dueDate: string;
@@ -137,8 +141,11 @@ export interface PaginatedResponse<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  pageNumber: number;
-  pageSize: number;
+  /** Backend PageResponse uses `page` (0-based) */
+  page?: number;
+  pageNumber?: number;
+  size?: number;
+  pageSize?: number;
   last: boolean;
   first: boolean;
 }
@@ -148,12 +155,29 @@ export interface CreatePaymentIntentResponse {
   paymentId: string;
 }
 
+export interface CanPayResponse {
+  canPay: boolean;
+}
+
+/** GET /v1/payments/config/stripe-public — publishable key from backend (.env) */
+export interface StripePublicConfigResponse {
+  publishableKey: string;
+}
+
+/** Monthly bar for reports chart (API: GET /v1/payments/chart/monthly) */
+export interface MonthlyChartPoint {
+  month: string;
+  value: number;
+}
+
 @Injectable({
   providedIn: "root",
 })
 export class PaymentService {
   private apiUrl = `${environment.apiUrl}/payments`;
   private apiV1Url = `${environment.apiUrl}/v1/payments`;
+  /** Reports, summary, CSV — aligned with Spring `/api/v1/payments` */
+  private apiV1Payments = `${environment.apiUrl}/v1/payments`;
   private walletApiUrl = `${environment.apiUrl}/wallet`;
   private paymentMethodsApiUrl = `${environment.apiUrl}/payment-methods`;
 
@@ -166,20 +190,94 @@ export class PaymentService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get payment summary for current user
+   * Stripe publishable key from the API (backed by STRIPE_PUBLISHABLE_KEY in platform-back/.env).
    */
-  getPaymentSummary(): Observable<PaymentSummary> {
-    return this.http.get<PaymentSummary>(`${this.apiUrl}/summary`);
+  getStripePublicConfig(): Observable<StripePublicConfigResponse> {
+    return this.http.get<StripePublicConfigResponse>(
+      `${this.apiV1Url}/config/stripe-public`,
+    );
   }
 
   /**
-   * Get payment history
+   * Get payment summary for current user (filtered by period / dart)
+   */
+  getPaymentSummary(
+    startDate?: string,
+    endDate?: string,
+    dartId?: string | null,
+  ): Observable<PaymentSummary> {
+    let params = new HttpParams();
+    if (startDate) {
+      params = params.set("startDate", startDate);
+    }
+    if (endDate) {
+      params = params.set("endDate", endDate);
+    }
+    if (dartId) {
+      params = params.set("dartId", dartId);
+    }
+    return this.http.get<PaymentSummary>(`${this.apiV1Payments}/summary`, {
+      params,
+    });
+  }
+
+  /**
+   * Admin/global payment summary (all users).
+   */
+  getAdminPaymentSummary(
+    startDate?: string,
+    endDate?: string,
+    dartId?: string | null,
+  ): Observable<PaymentSummary> {
+    let params = new HttpParams();
+    if (startDate) {
+      params = params.set("startDate", startDate);
+    }
+    if (endDate) {
+      params = params.set("endDate", endDate);
+    }
+    if (dartId) {
+      params = params.set("dartId", dartId);
+    }
+    return this.http.get<PaymentSummary>(`${this.apiV1Payments}/admin/summary`, {
+      params,
+    });
+  }
+
+  /**
+   * Monthly contribution totals for the reports chart
+   */
+  getMonthlyChart(
+    startDate?: string,
+    endDate?: string,
+    dartId?: string | null,
+  ): Observable<MonthlyChartPoint[]> {
+    let params = new HttpParams();
+    if (startDate) {
+      params = params.set("startDate", startDate);
+    }
+    if (endDate) {
+      params = params.set("endDate", endDate);
+    }
+    if (dartId) {
+      params = params.set("dartId", dartId);
+    }
+    return this.http.get<MonthlyChartPoint[]>(
+      `${this.apiV1Payments}/chart/monthly`,
+      { params },
+    );
+  }
+
+  /**
+   * Get payment history (paginated)
    */
   getPayments(
     page: number = 0,
     size: number = 20,
     status?: string,
-    darId?: number,
+    darId?: string | null,
+    startDate?: string,
+    endDate?: string,
   ): Observable<PaginatedResponse<Payment>> {
     let params = new HttpParams()
       .set("page", page.toString())
@@ -189,10 +287,52 @@ export class PaymentService {
       params = params.set("status", status);
     }
     if (darId) {
-      params = params.set("darId", darId.toString());
+      params = params.set("dartId", darId);
+    }
+    if (startDate) {
+      params = params.set("startDate", startDate);
+    }
+    if (endDate) {
+      params = params.set("endDate", endDate);
     }
 
-    return this.http.get<PaginatedResponse<Payment>>(this.apiUrl, { params });
+    return this.http.get<PaginatedResponse<Payment>>(`${this.apiV1Payments}/me`, {
+      params,
+    });
+  }
+
+  /**
+   * Admin/global payment history (all users).
+   */
+  getAdminPayments(
+    page: number = 0,
+    size: number = 20,
+    status?: string,
+    darId?: string | null,
+    startDate?: string,
+    endDate?: string,
+  ): Observable<PaginatedResponse<Payment>> {
+    let params = new HttpParams()
+      .set("page", page.toString())
+      .set("size", size.toString());
+
+    if (status) {
+      params = params.set("status", status);
+    }
+    if (darId) {
+      params = params.set("dartId", darId);
+    }
+    if (startDate) {
+      params = params.set("startDate", startDate);
+    }
+    if (endDate) {
+      params = params.set("endDate", endDate);
+    }
+
+    return this.http.get<PaginatedResponse<Payment>>(
+      `${this.apiV1Payments}/admin/list`,
+      { params },
+    );
   }
 
   /**
@@ -256,6 +396,14 @@ export class PaymentService {
       `${this.apiV1Url}/create-intent`,
       { dartId },
     );
+  }
+
+  /**
+   * Check if current user can pay for a dart right now.
+   */
+  canPay(dartId: string): Observable<CanPayResponse> {
+    const params = new HttpParams().set("dartId", dartId);
+    return this.http.get<CanPayResponse>(`${this.apiV1Url}/can-pay`, { params });
   }
 
   /**
@@ -487,6 +635,7 @@ export class PaymentService {
   downloadPaymentHistory(
     startDate?: string,
     endDate?: string,
+    dartId?: string | null,
   ): Observable<Blob> {
     let params = new HttpParams();
     if (startDate) {
@@ -495,8 +644,11 @@ export class PaymentService {
     if (endDate) {
       params = params.set("endDate", endDate);
     }
+    if (dartId) {
+      params = params.set("dartId", dartId);
+    }
 
-    return this.http.get(`${this.apiUrl}/export`, {
+    return this.http.get(`${this.apiV1Payments}/export`, {
       params,
       responseType: "blob",
     });

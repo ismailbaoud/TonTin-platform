@@ -1,8 +1,15 @@
 package com.tontin.platform.controller;
 
+import com.tontin.platform.config.SecurityUtils;
+import com.tontin.platform.domain.enums.payment.PaymentStatus;
+import com.tontin.platform.dto.dart.response.PageResponse;
 import com.tontin.platform.dto.payment.request.CreatePaymentIntentRequest;
 import com.tontin.platform.dto.payment.response.CanPayResponse;
 import com.tontin.platform.dto.payment.response.CreatePaymentIntentResponse;
+import com.tontin.platform.dto.payment.response.MonthlyChartPointResponse;
+import com.tontin.platform.dto.payment.response.PaymentReportItemResponse;
+import com.tontin.platform.dto.payment.response.PaymentReportSummaryResponse;
+import com.tontin.platform.service.PaymentReportService;
 import com.tontin.platform.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,10 +19,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,6 +55,185 @@ import org.springframework.web.bind.annotation.RestController;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final PaymentReportService paymentReportService;
+    private final SecurityUtils securityUtils;
+
+    @Value("${stripe.publishable-key:}")
+    private String stripePublishableKey;
+
+    @GetMapping(value = "/config/stripe-public", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Stripe publishable key (safe to expose in the browser)")
+    public ResponseEntity<Map<String, String>> stripePublicConfig() {
+        String key = stripePublishableKey != null ? stripePublishableKey : "";
+        return ResponseEntity.ok(Map.of("publishableKey", key));
+    }
+
+    private static LocalDateTime[] resolveDateRange(LocalDate start, LocalDate end) {
+        LocalDate s = start != null ? start : LocalDate.now().withDayOfMonth(1);
+        LocalDate e = end != null ? end : LocalDate.now();
+        return new LocalDateTime[] { s.atStartOfDay(), e.plusDays(1).atStartOfDay() };
+    }
+
+    private static PaymentStatus parsePaymentStatusFilter(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return switch (raw.trim().toLowerCase(Locale.ROOT)) {
+            case "completed", "payed" -> PaymentStatus.PAYED;
+            case "pending" -> PaymentStatus.PENDING;
+            case "cancelled" -> PaymentStatus.CANCELLED;
+            case "overdue" -> PaymentStatus.PENDING;
+            default -> null;
+        };
+    }
+
+    @GetMapping(value = "/summary", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Payment report summary for current user")
+    public ResponseEntity<PaymentReportSummaryResponse> getReportSummary(
+        @RequestParam(required = false) UUID dartId,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate startDate,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate endDate
+    ) {
+        UUID userId = securityUtils.requireCurrentUserId();
+        LocalDateTime[] range = resolveDateRange(startDate, endDate);
+        return ResponseEntity.ok(
+            paymentReportService.getSummary(userId, dartId, range[0], range[1])
+        );
+    }
+
+    @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Paginated payments for current user (reports)")
+    public ResponseEntity<PageResponse<PaymentReportItemResponse>> getMyPaymentsForReport(
+        @RequestParam(required = false) UUID dartId,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate startDate,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate endDate,
+        @RequestParam(required = false) String status,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        UUID userId = securityUtils.requireCurrentUserId();
+        LocalDateTime[] range = resolveDateRange(startDate, endDate);
+        PaymentStatus st = parsePaymentStatusFilter(status);
+        return ResponseEntity.ok(
+            paymentReportService.getPayments(
+                userId,
+                dartId,
+                range[0],
+                range[1],
+                st,
+                page,
+                size
+            )
+        );
+    }
+
+    @GetMapping(value = "/admin/summary", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Global payment report summary for admin")
+    public ResponseEntity<PaymentReportSummaryResponse> getAdminReportSummary(
+        @RequestParam(required = false) UUID dartId,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate startDate,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate endDate
+    ) {
+        LocalDateTime[] range = resolveDateRange(startDate, endDate);
+        return ResponseEntity.ok(
+            paymentReportService.getSummary(null, dartId, range[0], range[1])
+        );
+    }
+
+    @GetMapping(value = "/admin/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Global paginated payments for admin")
+    public ResponseEntity<PageResponse<PaymentReportItemResponse>> getAdminPaymentsForReport(
+        @RequestParam(required = false) UUID dartId,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate startDate,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate endDate,
+        @RequestParam(required = false) String status,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        LocalDateTime[] range = resolveDateRange(startDate, endDate);
+        PaymentStatus st = parsePaymentStatusFilter(status);
+        return ResponseEntity.ok(
+            paymentReportService.getPayments(
+                null,
+                dartId,
+                range[0],
+                range[1],
+                st,
+                page,
+                size
+            )
+        );
+    }
+
+    @GetMapping(value = "/chart/monthly", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Monthly contribution totals for charts")
+    public ResponseEntity<List<MonthlyChartPointResponse>> getMonthlyChart(
+        @RequestParam(required = false) UUID dartId,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate startDate,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate endDate
+    ) {
+        UUID userId = securityUtils.requireCurrentUserId();
+        LocalDateTime[] range = resolveDateRange(startDate, endDate);
+        return ResponseEntity.ok(
+            paymentReportService.getMonthlyChart(userId, dartId, range[0], range[1])
+        );
+    }
+
+    @GetMapping(value = "/export", produces = "text/csv")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Export payments as CSV (filtered)")
+    public ResponseEntity<byte[]> exportPaymentsCsv(
+        @RequestParam(required = false) UUID dartId,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate startDate,
+        @RequestParam(required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE
+        ) LocalDate endDate
+    ) {
+        UUID userId = securityUtils.requireCurrentUserId();
+        LocalDateTime[] range = resolveDateRange(startDate, endDate);
+        byte[] bytes =
+            paymentReportService.exportCsv(userId, dartId, range[0], range[1]);
+        return ResponseEntity.ok()
+            .header(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"payment-report.csv\""
+            )
+            .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+            .body(bytes);
+    }
 
     @GetMapping(value = "/can-pay", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")

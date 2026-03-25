@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TonTin Admin Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10B981",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221610",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 flex items-center justify-center bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">TonTin</h2>
+</div>
+<label class="flex flex-col min-w-40 h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-xl h-full border border-slate-200 dark:border-slate-700">
+<div class="text-slate-400 flex bg-slate-50 dark:bg-slate-800 items-center justify-center pl-4 rounded-l-xl">
+<span class="material-symbols-outlined text-xl">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border-none bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 px-4 rounded-r-xl text-sm font-normal focus:ring-0" placeholder="Search settings..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-xl h-10 w-10 bg-primary/10 text-primary">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="h-10 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-semibold leading-none">Alex Rivera</p>
+<p class="text-xs text-slate-500 mt-1">Super Admin</p>
+</div>
+<div class="bg-primary/20 rounded-full size-10 flex items-center justify-center overflow-hidden border-2 border-primary/20">
+<img alt="User avatar" data-alt="Profile avatar for administrator Alex Rivera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpq-eDo5zo9yw_wpk0iVghKfb9-W17YcsBJVgXX-G2bMErygokIkOX4aRNW9O2g5eraAk3QoQpdmCWmTTfFfUxKtQuu2QvBUgmWPOuMwbHItOLZW7wukaQ8ybUMeb7tu8rKjAE3DILHqDU1w3jKhxkFUqxBcYM5pj2DCx65thzZ-LohzvKhWeAATyHj9wz70wv3656E6iLBvDORUm5552k65aDjt7PnGvjWs1wEkBAo5JBimxzh3j9g4OS8xwaWy3kCmCYxqJCVG8"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden md:flex flex-col p-4 shrink-0">
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Members</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="text-sm font-medium">Dârs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-sm font-medium">Transactions</span>
+</a>
+<div class="py-4 px-3">
+<div class="h-px bg-slate-100 dark:bg-slate-800"></div>
+</div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary text-white shadow-sm shadow-primary/20" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="text-sm font-medium">Privacy</span>
+</a>
+</nav>
+<div class="mt-auto p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-sm">bolt</span>
+<span class="text-xs font-bold text-slate-500 uppercase tracking-wider">System Health</span>
+</div>
+<div class="w-full bg-slate-200 dark:bg-slate-700 h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[98%]"></div>
+</div>
+<p class="text-[10px] text-slate-400 mt-2">v2.4.0 - All systems operational</p>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-6">
+<div class="max-w-5xl mx-auto">
+<nav class="flex items-center gap-2 text-sm text-slate-500 mb-4">
+<a class="hover:text-primary transition-colors" href="#">Admin</a>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-200 font-medium">Settings</span>
+</nav>
+<div class="mb-8">
+<h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Configuration</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Control platform-wide parameters, security protocols, and financial structures.</p>
+</div>
+<div class="border-b border-slate-200 dark:border-slate-800 mb-8 overflow-x-auto">
+<div class="flex gap-8 min-w-max">
+<button class="flex flex-col items-center justify-center border-b-2 border-primary text-primary pb-3 font-semibold text-sm">
+                            General
+                        </button>
+<button class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-3 font-medium text-sm transition-all">
+                            Dâr Config
+                        </button>
+<button class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-3 font-medium text-sm transition-all">
+                            Payments
+                        </button>
+<button class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-3 font-medium text-sm transition-all">
+                            Trust Score
+                        </button>
+<button class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-3 font-medium text-sm transition-all">
+                            Security
+                        </button>
+<button class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 pb-3 font-medium text-sm transition-all">
+                            Admin Users
+                        </button>
+</div>
+</div>
+<div class="space-y-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+<h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">public</span>
+                            General Settings
+                        </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Platform Name</label>
+<input class="form-input rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-primary focus:ring-primary/20" type="text" value="TonTin Global"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Support Email</label>
+<input class="form-input rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-primary focus:ring-primary/20" type="email" value="support@tontin.com"/>
+</div>
+</div>
+<div>
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block">Platform Logo</label>
+<div class="flex items-center gap-4">
+<div class="size-20 bg-slate-100 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-400">image</span>
+</div>
+<div class="flex flex-col gap-2">
+<button class="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-all">Upload New</button>
+<button class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-semibold rounded-lg border border-slate-200 dark:border-slate-700">Remove</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">groups</span>
+                                Dâr &amp; Financial Rules
+                            </h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="space-y-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Member Limits</label>
+<div class="flex items-center gap-2">
+<input class="w-full form-input rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm" type="number" value="3"/>
+<span class="text-slate-400">to</span>
+<input class="w-full form-input rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm" type="number" value="24"/>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Contribution Caps ($)</label>
+<input class="form-input rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm" type="text" value="100 - 5,000"/>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Default Frequency</label>
+<select class="form-select rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+<option>Monthly</option>
+<option>Bi-Weekly</option>
+<option>Weekly</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+<h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">payments</span>
+                                Payment Gateway
+                            </h3>
+<div class="space-y-4">
+<div class="p-4 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-between border border-slate-200 dark:border-slate-700">
+<div class="flex items-center gap-3">
+<div class="size-8 bg-[#635BFF] rounded-md flex items-center justify-center text-white text-xs font-bold italic">S</div>
+<div>
+<p class="text-sm font-bold">Stripe Gateway</p>
+<p class="text-xs text-slate-500">Currently active in Live Mode</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="flex size-2 bg-primary rounded-full animate-pulse"></span>
+<span class="text-xs font-bold text-primary">Connected</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Platform Fee (%)</label>
+<div class="relative">
+<input class="w-full form-input rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm pr-8" type="number" value="1.5"/>
+<span class="absolute right-3 top-2.5 text-slate-400 text-sm">%</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+<h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">stars</span>
+                                Trust Score Weights
+                            </h3>
+<div class="space-y-5">
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold text-slate-500 uppercase">
+<span>Payment History</span>
+<span class="text-primary">50%</span>
+</div>
+<input class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary" type="range" value="50"/>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold text-slate-500 uppercase">
+<span>On-time Rate</span>
+<span class="text-primary">30%</span>
+</div>
+<input class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary" type="range" value="30"/>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold text-slate-500 uppercase">
+<span>Member Ratings</span>
+<span class="text-primary">20%</span>
+</div>
+<input class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary" type="range" value="20"/>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+<h3 class="text-lg font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">manage_accounts</span>
+                                Admin Users
+                            </h3>
+<button class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm shadow-primary/20 hover:bg-primary/90">
+<span class="material-symbols-outlined text-lg">add</span>
+                                Add Admin
+                            </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 uppercase text-[10px] font-black tracking-widest">
+<tr>
+<th class="px-6 py-4">Admin Name</th>
+<th class="px-6 py-4">Role</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Last Activity</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold">JD</div>
+<div class="text-sm font-semibold">Jane Doe</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold">Super Admin</span>
+</td>
+<td class="px-6 py-4 text-sm">
+<span class="flex items-center gap-1.5 text-primary font-medium">
+<span class="size-1.5 bg-primary rounded-full"></span> Active
+                                            </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">2 mins ago</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold">MS</div>
+<div class="text-sm font-semibold">Mike Smith</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-xs px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 font-bold">Finance</span>
+</td>
+<td class="px-6 py-4 text-sm">
+<span class="flex items-center gap-1.5 text-slate-400 font-medium">
+<span class="size-1.5 bg-slate-300 rounded-full"></span> Offline
+                                            </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">5 hours ago</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold">SK</div>
+<div class="text-sm font-semibold">Sarah Kim</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-xs px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 font-bold">Support</span>
+</td>
+<td class="px-6 py-4 text-sm">
+<span class="flex items-center gap-1.5 text-primary font-medium">
+<span class="size-1.5 bg-primary rounded-full"></span> Active
+                                            </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Just now</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="flex justify-end gap-3 pb-10">
+<button class="px-6 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold text-sm hover:bg-white dark:hover:bg-slate-900 transition-all">
+                            Discard Changes
+                        </button>
+<button class="px-8 py-2.5 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
+                            Save All Settings
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,98 +1,64 @@
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: tontin-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: tontin_test
-      POSTGRES_USER: happy
-      POSTGRES_PASSWORD: happy
+      POSTGRES_DB: ${POSTGRES_DB:-tontin_test}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - tontin-network
+      - tontin-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U happy -d tontin_test"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-tontin_test}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # Platform Backend (Spring Boot)
-  platform-back:
+  backend:
     build:
       context: ./platform-back
       dockerfile: Dockerfile
     container_name: tontin-backend
     restart: unless-stopped
-    ports:
-      - "9090:9090"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tontin_test
-      SPRING_DATASOURCE_USERNAME: happy
-      SPRING_DATASOURCE_PASSWORD: happy
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-noreply@tontin.com}
-      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-defaultpassword}
-      ENV: ${ENV:-development}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - tontin-network
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:9090/actuator/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+    environment:
+      SERVER_PORT: 9090
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-tontin_test}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      SECURITY_JWT_SECRET_KEY: ${SECURITY_JWT_SECRET_KEY:-72ccaf3126509f5ad2973e3f1c81fcbf24b3cac93114eba0754b94c4c02f10d9}
+      SECURITY_JWT_ISSUER: ${SECURITY_JWT_ISSUER:-tontin-platform}
+      SECURITY_JWT_ACCESS_TOKEN_EXPIRATION: ${SECURITY_JWT_ACCESS_TOKEN_EXPIRATION:-900000}
+      SECURITY_JWT_REFRESH_TOKEN_EXPIRATION: ${SECURITY_JWT_REFRESH_TOKEN_EXPIRATION:-2592000000}
+      SECURITY_PASSWORD_BCRYPT_STRENGTH: ${SECURITY_PASSWORD_BCRYPT_STRENGTH:-10}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-smtp.gmail.com}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      APP_MAIL_FROM: ${APP_MAIL_FROM:-}
+      APP_MAIL_SENDER_NAME: ${APP_MAIL_SENDER_NAME:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      ENV: ${ENV:-development}
+    ports:
+      - "9090:9090"
 
-  # Platform Frontend (Angular)
-  platform-front:
+  frontend:
     build:
       context: ./platform-front
       dockerfile: Dockerfile
     container_name: tontin-frontend
     restart: unless-stopped
-    ports:
-      - "80:80"
     depends_on:
-      - platform-back
-    networks:
-      - tontin-network
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:80/health",
-        ]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
-
-networks:
-  tontin-network:
-    driver: bridge
+      - backend
+    ports:
+      - "4200:80"
 
 volumes:
-  postgres_data:
-    driver: local
+  tontin-postgres-data:

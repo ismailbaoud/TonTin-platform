@@ -1,0 +1,103 @@
+<div class="p-6 lg:p-10">
+  <div class="flex items-start justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+        Transaction Management
+      </h1>
+      <p class="text-gray-500 mt-1">Review contributions, payouts and fees</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button
+        class="px-4 py-2 border border-gray-200 dark:border-gray-800 rounded-lg text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800"
+      >
+        Export Report
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 mb-4">
+    <div class="flex flex-col lg:flex-row gap-3">
+      <div class="flex-1">
+        <label class="text-gray-500 text-sm font-medium">Search</label>
+        <input
+          [(ngModel)]="search"
+          class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+          placeholder="Search by ID, user or Dâr name..."
+        />
+      </div>
+      <div class="lg:w-56">
+        <label class="text-gray-500 text-sm font-medium">Type</label>
+        <select
+          [(ngModel)]="typeFilter"
+          class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+        >
+          <option value="">All Types</option>
+          <option value="contribution">Contribution</option>
+          <option value="payout">Payout</option>
+          <option value="refund">Refund</option>
+        </select>
+      </div>
+      <div class="lg:w-56">
+        <label class="text-gray-500 text-sm font-medium">Status</label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="loadTransactions()"
+          class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+        >
+          <option value="">All Status</option>
+          <option value="completed">Success</option>
+          <option value="pending">Pending</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
+    <div *ngIf="errorMessage" class="p-4 text-sm text-red-600 dark:text-red-400">
+      {{ errorMessage }}
+    </div>
+    <table class="w-full text-left">
+      <thead>
+        <tr class="bg-gray-50 dark:bg-gray-950 text-gray-500 uppercase text-xs font-bold">
+          <th class="px-6 py-4">Transaction ID</th>
+          <th class="px-6 py-4">User</th>
+          <th class="px-6 py-4">Dâr Group</th>
+          <th class="px-6 py-4">Type</th>
+          <th class="px-6 py-4 text-right">Amount</th>
+          <th class="px-6 py-4">Status</th>
+          <th class="px-6 py-4">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="loading" class="border-t border-gray-100 dark:border-gray-800">
+          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300" colspan="7">
+            Loading transactions...
+          </td>
+        </tr>
+        <tr *ngFor="let payment of filteredPayments" class="border-t border-gray-100 dark:border-gray-800">
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ payment.id }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+            <div class="font-medium">{{ payment.payerUserName || "-" }}</div>
+            <div class="text-xs text-gray-500">{{ payment.payerEmail || "" }}</div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ payment.darName }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ payment.type }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 text-right">
+            {{ payment.amount | number }}
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ payment.status }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+            {{ payment.createdDate | date: "medium" }}
+          </td>
+        </tr>
+        <tr *ngIf="!loading && !filteredPayments.length" class="border-t border-gray-100 dark:border-gray-800">
+          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300" colspan="7">
+            No transactions found.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+

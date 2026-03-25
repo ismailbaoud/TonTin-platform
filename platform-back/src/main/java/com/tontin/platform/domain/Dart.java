@@ -74,10 +74,6 @@ public class Dart extends BaseEntity {
     @Builder.Default
     private List<Member> members = new ArrayList<>();
 
-    @OneToMany(mappedBy = "dart", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @Builder.Default
-    private List<DartMessage> messages = new ArrayList<>();
-
     // Business key equals/hashCode based on name and startDate
     @Override
     public boolean equals(Object o) {

@@ -1,110 +1,75 @@
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: tontin-postgres-dev
     restart: unless-stopped
     environment:
-      POSTGRES_DB: tontin_test
-      POSTGRES_USER: happy
-      POSTGRES_PASSWORD: happy
+      POSTGRES_DB: ${POSTGRES_DB:-tontin_test}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data_dev:/var/lib/postgresql/data
-    networks:
-      - tontin-network-dev
+      - tontin-postgres-dev-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U happy -d tontin_test"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-tontin_test}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # Platform Backend (Spring Boot) - Development Mode with Hot Reload
-  platform-back:
+  backend:
     build:
       context: ./platform-back
       dockerfile: Dockerfile.dev
     container_name: tontin-backend-dev
     restart: unless-stopped
-    ports:
-      - "9090:9090"
-      - "5005:5005" # Debug port
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tontin_test
-      SPRING_DATASOURCE_USERNAME: happy
-      SPRING_DATASOURCE_PASSWORD: happy
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
-      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
-      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
-    volumes:
-      # Mount source code for hot reload (if using Spring DevTools)
-      - ./platform-back/src:/app/src:ro
-      - ./platform-back/target:/app/target
-      - maven_cache:/root/.m2
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - tontin-network-dev
+    working_dir: /app
+    environment:
+      SERVER_PORT: 9090
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-tontin_test}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      SECURITY_JWT_SECRET_KEY: ${SECURITY_JWT_SECRET_KEY:-72ccaf3126509f5ad2973e3f1c81fcbf24b3cac93114eba0754b94c4c02f10d9}
+      SECURITY_JWT_ISSUER: ${SECURITY_JWT_ISSUER:-tontin-platform}
+      SECURITY_JWT_ACCESS_TOKEN_EXPIRATION: ${SECURITY_JWT_ACCESS_TOKEN_EXPIRATION:-900000}
+      SECURITY_JWT_REFRESH_TOKEN_EXPIRATION: ${SECURITY_JWT_REFRESH_TOKEN_EXPIRATION:-2592000000}
+      SECURITY_PASSWORD_BCRYPT_STRENGTH: ${SECURITY_PASSWORD_BCRYPT_STRENGTH:-10}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-smtp.gmail.com}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      APP_MAIL_FROM: ${APP_MAIL_FROM:-}
+      APP_MAIL_SENDER_NAME: ${APP_MAIL_SENDER_NAME:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      ENV: ${ENV:-development}
+    volumes:
+      - ./platform-back:/app
+      - tontin-back-m2:/root/.m2
+    ports:
+      - "9090:9090"
+      - "5005:5005"
 
-  # Platform Frontend (Angular) - Development Mode with Hot Reload
-  platform-front:
+  frontend:
     build:
       context: ./platform-front
       dockerfile: Dockerfile.dev
     container_name: tontin-frontend-dev
     restart: unless-stopped
-    ports:
-      - "4200:4200" # Angular dev server port
-    environment:
-      NODE_ENV: development
-    volumes:
-      # Mount source code for hot reload
-      - ./platform-front/src:/app/src
-      - ./platform-front/public:/app/public
-      - ./platform-front/angular.json:/app/angular.json
-      - ./platform-front/tsconfig.json:/app/tsconfig.json
-      - ./platform-front/tsconfig.app.json:/app/tsconfig.app.json
-      # Prevent node_modules from being overridden
-      - /app/node_modules
+    working_dir: /app
     depends_on:
-      - platform-back
-    networks:
-      - tontin-network-dev
-    command: npm start -- --host 0.0.0.0 --poll 2000
-
-  # pgAdmin for database management (optional)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: tontin-pgadmin-dev
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@tontin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-    ports:
-      - "5050:80"
+      - backend
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - tontin-network-dev
-    depends_on:
-      - postgres
-
-networks:
-  tontin-network-dev:
-    driver: bridge
+      - ./platform-front:/app
+      - tontin-front-node-modules:/app/node_modules
+    ports:
+      - "4200:4200"
 
 volumes:
-  postgres_data_dev:
-    driver: local
-  pgadmin_data:
-    driver: local
-  maven_cache:
-    driver: local
+  tontin-postgres-dev-data:
+  tontin-front-node-modules:
+  tontin-back-m2:

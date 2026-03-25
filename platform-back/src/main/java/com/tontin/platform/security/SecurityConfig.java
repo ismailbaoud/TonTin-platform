@@ -79,6 +79,12 @@ public class SecurityConfig {
                     // Stripe webhook - no auth (Stripe verifies with signature)
                     .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook")
                     .permitAll()
+                    // Stripe publishable key — public by design (same as in Stripe.js)
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/v1/payments/config/stripe-public"
+                    )
+                    .permitAll()
                     // Auth logout and profile - requires authentication (any role)
                     .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout")
                     .hasAnyRole("CLIENT", "ADMIN")

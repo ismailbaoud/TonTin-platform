@@ -2,6 +2,7 @@ package com.tontin.platform.repository;
 
 import com.tontin.platform.domain.Round;
 import com.tontin.platform.domain.enums.round.RoundStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -105,5 +106,61 @@ public interface RoundRepository extends JpaRepository<Round, UUID> {
     boolean existsByDartIdAndNumber(
         @Param("dartId") UUID dartId,
         @Param("number") Integer number
+    );
+
+    @Query(
+        """
+        SELECT COALESCE(SUM(r.amount), 0) FROM Round r
+        WHERE r.recipient.user.id = :userId AND r.status = :status
+        AND r.date >= :from AND r.date < :to
+        """
+    )
+    Double sumPayoutAmountForRecipient(
+        @Param("userId") UUID userId,
+        @Param("status") RoundStatus status,
+        @Param("from") LocalDateTime from,
+        @Param("to") LocalDateTime to
+    );
+
+    @Query(
+        """
+        SELECT COALESCE(SUM(r.amount), 0) FROM Round r
+        WHERE r.recipient.user.id = :userId AND r.dart.id = :dartId AND r.status = :status
+        AND r.date >= :from AND r.date < :to
+        """
+    )
+    Double sumPayoutAmountForRecipientAndDart(
+        @Param("userId") UUID userId,
+        @Param("dartId") UUID dartId,
+        @Param("status") RoundStatus status,
+        @Param("from") LocalDateTime from,
+        @Param("to") LocalDateTime to
+    );
+
+    @Query(
+        """
+        SELECT COALESCE(SUM(r.amount), 0) FROM Round r
+        WHERE r.status = :status
+        AND r.date >= :from AND r.date < :to
+        """
+    )
+    Double sumPayoutAmount(
+        @Param("status") RoundStatus status,
+        @Param("from") LocalDateTime from,
+        @Param("to") LocalDateTime to
+    );
+
+    @Query(
+        """
+        SELECT COALESCE(SUM(r.amount), 0) FROM Round r
+        WHERE r.dart.id = :dartId AND r.status = :status
+        AND r.date >= :from AND r.date < :to
+        """
+    )
+    Double sumPayoutAmountForDart(
+        @Param("dartId") UUID dartId,
+        @Param("status") RoundStatus status,
+        @Param("from") LocalDateTime from,
+        @Param("to") LocalDateTime to
     );
 }

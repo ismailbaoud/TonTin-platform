@@ -10,9 +10,7 @@ import com.tontin.platform.domain.Dart;
 import com.tontin.platform.domain.Member;
 import com.tontin.platform.domain.Payment;
 import com.tontin.platform.domain.Round;
-import com.tontin.platform.domain.enums.notification.NotificationType;
 import com.tontin.platform.domain.enums.payment.PaymentStatus;
-import com.tontin.platform.domain.enums.rank.PointAction;
 import com.tontin.platform.domain.enums.round.RoundStatus;
 import com.tontin.platform.dto.payment.request.CreatePaymentIntentRequest;
 import com.tontin.platform.dto.payment.response.CanPayResponse;
@@ -21,9 +19,7 @@ import com.tontin.platform.repository.DartRepository;
 import com.tontin.platform.repository.MemberRepository;
 import com.tontin.platform.repository.PaymentRepository;
 import com.tontin.platform.repository.RoundRepository;
-import com.tontin.platform.service.NotificationService;
 import com.tontin.platform.service.PaymentService;
-import com.tontin.platform.service.PointsService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,8 +49,6 @@ public class PaymentServiceImpl implements PaymentService {
     private final DartRepository dartRepository;
     private final RoundRepository roundRepository;
     private final PaymentRepository paymentRepository;
-    private final NotificationService notificationService;
-    private final PointsService pointsService;
 
     // -------------------------------------------------------------------------
     // Helpers
@@ -85,25 +79,6 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.save(payment);
         log.info("Payment {} marked as PAYED.", payment.getId());
 
-        // Notify the payer that their payment was received
-        Member payer = payment.getPayer();
-        if (payer != null && payer.getUser() != null) {
-            Round r = payment.getRound();
-            Dart d = r != null ? r.getDart() : null;
-            String dartName = d != null && d.getName() != null ? d.getName() : "the Dâr";
-            notificationService.create(
-                payer.getUser().getId(),
-                NotificationType.PAYMENT_RECEIVED,
-                "Payment received",
-                String.format("Your contribution for \"%s\" has been received.", dartName),
-                d != null ? "/dashboard/client/dar/" + d.getId() : null,
-                "View Dâr"
-            );
-            if (d != null) {
-                pointsService.addPoints(payer.getUser().getId(), PointAction.PAYMENT_ON_TIME, d.getId());
-            }
-        }
-
         // Check if all non-recipient members of this round have now paid.
         // Use DISTINCT payer count so a member who paid twice is only counted once.
         Round round = payment.getRound();
@@ -124,27 +99,6 @@ public class PaymentServiceImpl implements PaymentService {
                 round.getId(),
                 paidCount
             );
-            // Notify the round recipient that their payout is ready
-            Member recipient = round.getRecipient();
-            if (recipient != null && recipient.getUser() != null) {
-                UUID recipientUserId = recipient.getUser().getId();
-                String dartName = dart.getName() != null ? dart.getName() : "Your Dâr";
-                String title = "Payout ready";
-                String description = String.format(
-                    "All contributions for this round of \"%s\" have been received. Your payout is ready.",
-                    dartName
-                );
-                String actionUrl = "/dashboard/client/dar/" + dart.getId();
-                notificationService.create(
-                    recipientUserId,
-                    NotificationType.PAYOUT_READY,
-                    title,
-                    description,
-                    actionUrl,
-                    "View Dâr"
-                );
-                pointsService.addPoints(recipientUserId, PointAction.PAYOUT_RECEIVED, dart.getId());
-            }
         }
     }
 
@@ -192,6 +146,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         Round round = current.get(0);
 
+        // DEV: payment window disabled — pay anytime (re-enable by uncommenting below)
+        /*
         if (round.getDate() != null) {
             LocalDateTime paymentOpenDate = round.getDate().minusDays(5);
             if (LocalDateTime.now().isBefore(paymentOpenDate)) {
@@ -202,6 +158,7 @@ public class PaymentServiceImpl implements PaymentService {
                 );
             }
         }
+        */
 
         if (
             round.getRecipient() != null &&
@@ -210,6 +167,18 @@ public class PaymentServiceImpl implements PaymentService {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "You are receiving this round — no payment needed from you."
+            );
+        }
+
+        boolean alreadyPaid = paymentRepository.existsByRoundIdAndPayerIdAndPaymentStatus(
+            round.getId(),
+            payer.getId(),
+            PaymentStatus.PAYED
+        );
+        if (alreadyPaid) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "You have already paid for this round. You cannot pay again for the same tour."
             );
         }
 
@@ -259,6 +228,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         Round round = current.get(0);
 
+        // DEV: payment window disabled — pay anytime (re-enable by uncommenting below)
+        /*
         // Enforce payment window: members can only pay starting 5 days before the round date
         if (round.getDate() != null) {
             LocalDateTime paymentOpenDate = round.getDate().minusDays(5);
@@ -270,6 +241,7 @@ public class PaymentServiceImpl implements PaymentService {
                 );
             }
         }
+        */
 
         if (
             round.getRecipient() != null &&
@@ -282,10 +254,11 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // Block paying again in the same round
-        boolean alreadyPaid = paymentRepository
-            .findAllByRoundIdAndPaymentStatus(round.getId(), PaymentStatus.PAYED)
-            .stream()
-            .anyMatch(p -> p.getPayer().getId().equals(payer.getId()));
+        boolean alreadyPaid = paymentRepository.existsByRoundIdAndPayerIdAndPaymentStatus(
+            round.getId(),
+            payer.getId(),
+            PaymentStatus.PAYED
+        );
         if (alreadyPaid) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -306,6 +279,20 @@ public class PaymentServiceImpl implements PaymentService {
             amountCents = 50; // Stripe minimum
         }
 
+        String secretKey = getStripeSecretKey();
+        boolean stripeConfigured =
+            secretKey.length() > 0 &&
+            (secretKey.startsWith("sk_") || secretKey.startsWith("rk_"));
+        if (!stripeConfigured) {
+            throw new ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Stripe is not configured. Set STRIPE_SECRET_KEY in your environment " +
+                    "(e.g. platform-back/.env) or stripe.secret-key in application.properties. " +
+                    "Use a secret key from the Stripe Dashboard (sk_test_... or sk_live_...)."
+            );
+        }
+        Stripe.apiKey = secretKey;
+
         // Idempotent: reuse an existing PENDING payment for this payer/round
         Payment payment = null;
         List<Payment> existing =
@@ -318,11 +305,8 @@ public class PaymentServiceImpl implements PaymentService {
             if (!p.getPayer().getId().equals(payer.getId())) continue;
 
             String existingIntentId = p.getStripePaymentIntentId();
-            // Try to reuse a real (non-mock) Stripe intent
-            if (
-                existingIntentId != null &&
-                !existingIntentId.startsWith("pi_mock_")
-            ) {
+            // Try to reuse an existing open Stripe PaymentIntent
+            if (existingIntentId != null && !existingIntentId.startsWith("pi_mock_")) {
                 try {
                     PaymentIntent intent = PaymentIntent.retrieve(
                         existingIntentId
@@ -361,60 +345,43 @@ public class PaymentServiceImpl implements PaymentService {
             payment = paymentRepository.save(payment);
         }
 
-        String secretKey = getStripeSecretKey();
-        boolean isRealKey =
-            secretKey.length() > 0 &&
-            (secretKey.startsWith("sk_") || secretKey.startsWith("rk_"));
-
-        if (isRealKey) {
-            try {
-                Stripe.apiKey = secretKey;
-                PaymentIntent intent = PaymentIntent.create(
-                    new com.stripe.param.PaymentIntentCreateParams.Builder()
-                        .setAmount(amountCents)
-                        .setCurrency("usd")
-                        .putMetadata("paymentId", payment.getId().toString())
-                        .putMetadata("roundId", round.getId().toString())
-                        .putMetadata("dartId", dartId.toString())
-                        .setAutomaticPaymentMethods(
-                            com.stripe.param.PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
-                                .setEnabled(true)
-                                .build()
-                        )
-                        .build()
-                );
-                payment.setStripePaymentIntentId(intent.getId());
-                paymentRepository.save(payment);
-                return CreatePaymentIntentResponse.builder()
-                    .clientSecret(intent.getClientSecret())
-                    .paymentId(payment.getId())
-                    .build();
-            } catch (Exception e) {
-                log.error(
-                    "Stripe PaymentIntent create failed: {}",
-                    e.getMessage(),
-                    e
-                );
-                String msg =
-                    e.getMessage() != null &&
-                    e.getMessage().contains("Invalid API Key")
-                        ? "Stripe secret key is invalid. Check STRIPE_SECRET_KEY in .env."
-                        : "Could not create payment session. Try again.";
-                throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    msg
-                );
-            }
+        try {
+            PaymentIntent intent = PaymentIntent.create(
+                new com.stripe.param.PaymentIntentCreateParams.Builder()
+                    .setAmount(amountCents)
+                    .setCurrency("usd")
+                    .putMetadata("paymentId", payment.getId().toString())
+                    .putMetadata("roundId", round.getId().toString())
+                    .putMetadata("dartId", dartId.toString())
+                    .setAutomaticPaymentMethods(
+                        com.stripe.param.PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                            .setEnabled(true)
+                            .build()
+                    )
+                    .build()
+            );
+            payment.setStripePaymentIntentId(intent.getId());
+            paymentRepository.save(payment);
+            return CreatePaymentIntentResponse.builder()
+                .clientSecret(intent.getClientSecret())
+                .paymentId(payment.getId())
+                .build();
+        } catch (Exception e) {
+            log.error(
+                "Stripe PaymentIntent create failed: {}",
+                e.getMessage(),
+                e
+            );
+            String msg =
+                e.getMessage() != null &&
+                e.getMessage().contains("Invalid API Key")
+                    ? "Stripe secret key is invalid. Check STRIPE_SECRET_KEY or stripe.secret-key."
+                    : "Could not create payment session. Try again.";
+            throw new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                msg
+            );
         }
-
-        // Mock key — return a fake client secret so the frontend can render the form
-        String mockSecret = "pi_mock_" + payment.getId() + "_secret_mock";
-        payment.setStripePaymentIntentId("pi_mock_" + payment.getId());
-        paymentRepository.save(payment);
-        return CreatePaymentIntentResponse.builder()
-            .clientSecret(mockSecret)
-            .paymentId(payment.getId())
-            .build();
     }
 
     @Override
@@ -423,7 +390,7 @@ public class PaymentServiceImpl implements PaymentService {
         String webhookSecret =
             stripeWebhookSecret != null ? stripeWebhookSecret.trim() : "";
 
-        if (webhookSecret.isBlank() || webhookSecret.startsWith("whsec_mock")) {
+        if (webhookSecret.isBlank()) {
             log.warn(
                 "Stripe webhook secret not configured; skipping verification."
             );

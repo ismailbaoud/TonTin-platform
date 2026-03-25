@@ -196,6 +196,31 @@ ng test
 - VPS with Nginx
 - Spring Boot JAR deployment
 
+### Docker quick start
+
+1. Copy Docker env template:
+
+```bash
+cp .env.docker.example .env
+```
+
+2. Start production-like stack (Postgres + Backend + Frontend):
+
+```bash
+docker compose up --build
+```
+
+3. Access services:
+
+- Frontend: `http://localhost:4200`
+- Backend API: `http://localhost:9090/api`
+
+4. Start development stack with hot reload:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
 ---
 
 ## 📘 API Documentation

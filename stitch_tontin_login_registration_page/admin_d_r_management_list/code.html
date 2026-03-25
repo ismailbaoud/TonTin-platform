@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TonTin Admin | Dâr Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 bg-white dark:bg-slate-900 border-r border-primary/10 flex flex-col">
+<div class="p-6 flex items-center space-x-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-icons text-xl">account_balance_wallet</span>
+</div>
+<span class="font-bold text-xl tracking-tight text-primary">TonTin</span>
+</div>
+<nav class="flex-1 px-4 space-y-1 mt-4">
+<a class="flex items-center space-x-3 px-3 py-2.5 text-slate-500 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors" href="#">
+<span class="material-icons text-xl">dashboard</span>
+<span class="font-medium text-sm">Dashboard</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 bg-primary text-white rounded-lg shadow-md shadow-primary/20" href="#">
+<span class="material-icons text-xl">groups</span>
+<span class="font-medium text-sm">Dâr Management</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 text-slate-500 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors" href="#">
+<span class="material-icons text-xl">person</span>
+<span class="font-medium text-sm">Users</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 text-slate-500 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors" href="#">
+<span class="material-icons text-xl">analytics</span>
+<span class="font-medium text-sm">Reports</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 text-slate-500 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors" href="#">
+<span class="material-icons text-xl">settings</span>
+<span class="font-medium text-sm">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-primary/5">
+<div class="bg-primary/5 rounded-xl p-4 flex items-center space-x-3">
+<img alt="Admin" class="w-10 h-10 rounded-full border-2 border-primary/20" data-alt="Admin user profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeDDm13tSe447AWndl3kWnE7LJidCtwNhpkpUPaNHsYBtpRhHHInxUyRrmm7oeUCXSa7Ok7QNuCeNCZglPxtlBbHCpEOcK40YByZXdSFzzPnuBpT9wFPjaDC7O5MO4sQb7JuL3E2JHldoKFhWoP8BdFTGs4yVJThJ_dVbDBTRYbqJCHoEBcPzHRrAcLYjhX73d_ogg8QYiJdSN5p6c0T59xa0UCox1kKkorMi1i42MbJRnmRd-_1wTb5MBdvxkvD9ibU6nIesDUTg"/>
+<div class="flex-1 overflow-hidden">
+<p class="text-xs font-bold truncate">Alex Morgan</p>
+<p class="text-[10px] text-slate-500 truncate uppercase tracking-widest">Super Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-hidden">
+<!-- Top Header -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-primary/5 flex items-center justify-between px-8">
+<div>
+<h1 class="text-lg font-bold">Dâr Management</h1>
+<nav class="flex text-[11px] text-slate-400 font-medium">
+<span>Admin</span>
+<span class="mx-2">/</span>
+<span class="text-primary">Dârs</span>
+</nav>
+</div>
+<div class="flex items-center space-x-4">
+<div class="relative">
+<span class="material-icons text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-lg">search</span>
+<input class="pl-10 pr-4 py-2 bg-background-light dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary" placeholder="Global search..." type="text"/>
+</div>
+<button class="w-10 h-10 rounded-lg bg-background-light dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 relative">
+<span class="material-icons text-xl">notifications</span>
+<span class="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+</button>
+<button class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2">
+<span class="material-icons text-sm">add</span>
+<span>New Dâr Configuration</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-primary/5 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-icons">diversity_3</span>
+</div>
+<span class="text-xs font-bold text-green-500">+12%</span>
+</div>
+<p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Total Active Dârs</p>
+<h3 class="text-2xl font-bold mt-1">1,248</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-primary/5 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-orange-100 rounded-lg text-orange-600">
+<span class="material-icons">hourglass_empty</span>
+</div>
+<span class="text-xs font-bold text-orange-500">Action Required</span>
+</div>
+<p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Pending Approvals</p>
+<h3 class="text-2xl font-bold mt-1">42</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-primary/5 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-green-100 rounded-lg text-green-600">
+<span class="material-icons">payments</span>
+</div>
+<span class="text-xs font-bold text-green-500">+8.4%</span>
+</div>
+<p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Contribution Volume</p>
+<h3 class="text-2xl font-bold mt-1">$452,000.00</h3>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-primary/5 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+<span class="material-icons">task_alt</span>
+</div>
+</div>
+<p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Completed Dârs</p>
+<h3 class="text-2xl font-bold mt-1">8,902</h3>
+</div>
+</div>
+<!-- Filters Bar -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-primary/5 shadow-sm mb-6 flex flex-wrap items-center gap-4">
+<div class="flex-1 min-w-[200px] relative">
+<span class="material-icons text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-lg">filter_alt</span>
+<input class="pl-10 pr-4 py-2.5 bg-background-light dark:bg-slate-800 border-none rounded-lg text-sm w-full focus:ring-1 focus:ring-primary/40" placeholder="Filter by Dâr Name or Organizer..." type="text"/>
+</div>
+<select class="bg-background-light dark:bg-slate-800 border-none rounded-lg text-sm py-2.5 px-4 focus:ring-1 focus:ring-primary/40 min-w-[140px]">
+<option>Status: All</option>
+<option>Active</option>
+<option>Pending</option>
+<option>Completed</option>
+<option>Paused</option>
+</select>
+<div class="flex items-center space-x-2 bg-background-light dark:bg-slate-800 px-4 py-2.5 rounded-lg border-none">
+<span class="text-xs text-slate-500 font-bold uppercase">Volume:</span>
+<input class="accent-primary w-24" type="range"/>
+<span class="text-xs font-medium">$1k - $50k</span>
+</div>
+<button class="bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2.5 rounded-lg text-sm font-bold flex items-center space-x-2 transition-colors">
+<span class="material-icons text-sm">download</span>
+<span>Export CSV</span>
+</button>
+</div>
+<!-- Table Container -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-primary/5 shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 uppercase text-[10px] font-bold tracking-widest border-b border-primary/5">
+<th class="px-6 py-4">Dâr Name</th>
+<th class="px-6 py-4">Organizer</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Members</th>
+<th class="px-6 py-4">Contribution</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-primary/5">
+<!-- Row 1 -->
+<tr class="hover:bg-primary/[0.02] transition-colors group">
+<td class="px-6 py-4">
+<p class="font-bold text-sm">Monthly Tech Innovators</p>
+<p class="text-[10px] text-slate-400">ID: TN-49021</p>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center space-x-3">
+<img alt="User" class="w-8 h-8 rounded-full" data-alt="User avatar for Sarah Jenkins" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXK4ousHQs59cqtXqAvzMXIAX7NOMVCl-4pU_SGrRSdqHDk4oa1HrKG7EVeoepTVyHDGJqSpf73IqEOPMQX3UeupjQ8bO0D7Smgmmq1-2qO_MGaDzZpqXlUiA-LdPZDj-MOOFqowhFJtSR-ydXICS6_i-QVqvjJYCcu6-VsQr8CkWFOCpcQA7pAacpUYOkAJ7jvKFktlHBIH7bvYUBiUAxUuhdnd65E0yEHmSIfxWzB3fNetFVXGjt4lGwE2TcKabfOzpKvWGQdIQ"/>
+<div class="text-sm">
+<p class="font-semibold">Sarah Jenkins</p>
+<p class="text-[10px] text-slate-400">sarah.j@example.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded uppercase">Active</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium">12/12</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">$1,500.00</td>
+<td class="px-6 py-4">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10">
+<span class="material-icons text-lg">visibility</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50">
+<span class="material-icons text-lg">pause</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
+<span class="material-icons text-lg">close</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary/[0.02] transition-colors group">
+<td class="px-6 py-4">
+<p class="font-bold text-sm">Cairo Entrepreneurs Hub</p>
+<p class="text-[10px] text-slate-400">ID: TN-88210</p>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center space-x-3">
+<img alt="User" class="w-8 h-8 rounded-full" data-alt="User avatar for Ahmed Hassan" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBr2jod0MB_TYofbOP-guHTS4O_CcxNzl_dbQVlIQkg8oza2f5Ui7g2boPPG7sKMdeghKUx05yh87fFdhx3Nqvj8jg8ZXnoAmoZTyXRHtmH6ZyxM1zUSfnv0roI2C3zWn9w0ZZ5T8vHgRCvr7wl6CPLR3BU4q5E_tEKvXNj-iEH1YbfFislGzjDhtkjuHOIb3r4RdlxKDGcRkD8b0vSST7jTrnVWoIO1kQZmaU75FxRPTHu-5u6NR0i4_bDNGeF37opgu5ttwiwSKM"/>
+<div class="text-sm">
+<p class="font-semibold">Ahmed Hassan</p>
+<p class="text-[10px] text-slate-400">ahmed.h@example.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold rounded uppercase">Pending</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium">8/20</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">$5,000.00</td>
+<td class="px-6 py-4">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10">
+<span class="material-icons text-lg">visibility</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50">
+<span class="material-icons text-lg">check_circle</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
+<span class="material-icons text-lg">close</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-primary/[0.02] transition-colors group">
+<td class="px-6 py-4">
+<p class="font-bold text-sm">Family Savings Circle</p>
+<p class="text-[10px] text-slate-400">ID: TN-11234</p>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center space-x-3">
+<img alt="User" class="w-8 h-8 rounded-full" data-alt="User avatar for Maria Garcia" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiHbB3Lmzar94xU34UFcxpRe86xa0wJf9PAH9PUgdv8WXsSEbUG5SCLzW8ANcEpo15U8-6lhLN3hp53nlaYnT6lMQmJcPwrO1nEAbQYeQcoqF8RGoflBraor5_xQcDfLD0h7wX-zXthTZJpQVLh5wpgVZrWqkgZNYDCoDMrdHZ0Zc7Irqu-_3L6Wy1eVBPW1lOO3YlWl6vqq3cME67_ND7C8LmJvR8DrCdR3hRbjOUf8hhisJe5EHyf3roTJa1mlTvYeuepU8V2yw"/>
+<div class="text-sm">
+<p class="font-semibold">Maria Garcia</p>
+<p class="text-[10px] text-slate-400">maria.g@example.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase">Completed</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium">10/10</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">$800.00</td>
+<td class="px-6 py-4">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10">
+<span class="material-icons text-lg">visibility</span>
+</button>
+<button class="p-2 text-slate-400 cursor-not-allowed">
+<span class="material-icons text-lg opacity-30">pause</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
+<span class="material-icons text-lg">archive</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-primary/[0.02] transition-colors group">
+<td class="px-6 py-4">
+<p class="font-bold text-sm">Startup Growth Fund</p>
+<p class="text-[10px] text-slate-400">ID: TN-55612</p>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center space-x-3">
+<img alt="User" class="w-8 h-8 rounded-full" data-alt="User avatar for David Chen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA28zwmxah6w0G1JMiTlB4QWqMaTyMEq8jJ_aAW2emKT6_was-ifDQ0Mbgm7wf8bvM0KfMuB12Xex7pu__Y4oxogdB4DvFx_3dxkjrW8HeCJSqvn8XVcUkCIrBoQGG6K6rF4_16TS172HLEy2xy-SV_TvjNSyNBgwsSSmdPKiDx78PEOuLTOSO7wU6N-zpTMA06qzoq8IivzmDSwCGiJ8kC-_x6WVGa5pYqnDQ_L1XU2fE26IN7RSfk1EY1uscIA7gG7Jcd0w2_vUo"/>
+<div class="text-sm">
+<p class="font-semibold">David Chen</p>
+<p class="text-[10px] text-slate-400">d.chen@example.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase">Paused</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium">15/25</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">$12,000.00</td>
+<td class="px-6 py-4">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10">
+<span class="material-icons text-lg">visibility</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-green-500 transition-colors rounded-lg hover:bg-green-50">
+<span class="material-icons text-lg">play_arrow</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
+<span class="material-icons text-lg">close</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-primary/[0.02] transition-colors group">
+<td class="px-6 py-4">
+<p class="font-bold text-sm">Real Estate Pool B</p>
+<p class="text-[10px] text-slate-400">ID: TN-99003</p>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center space-x-3">
+<img alt="User" class="w-8 h-8 rounded-full" data-alt="User avatar for Elena Rossi" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBg9v17h-ufuHu8MUxZqeFYfsKjhGssjEEw328DEa8aPfNDHoXQUEh2OHcpGwq9pkwottUgY_q6cNZPmzokLvN5MUqfzZ9auC3VYbpbnX9_68bPoOka1LxZm144JxlDZPrNmEEtT57xNBdgwM2CgrP8OpbRLUmCn1j25bRkKbB_v8EQLudteexH_ieOMr06iy-nCGOoK5eDxGr38JOOhoEc_ddhCLyiLS8tttqhGqqlulpVUsAoJMaPlAqBBOdhYeBEVe6pZz3CWtc"/>
+<div class="text-sm">
+<p class="font-semibold">Elena Rossi</p>
+<p class="text-[10px] text-slate-400">elena.r@example.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded uppercase">Active</span>
+</td>
+<td class="px-6 py-4 text-sm font-medium">48/50</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">$25,000.00</td>
+<td class="px-6 py-4">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10">
+<span class="material-icons text-lg">visibility</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50">
+<span class="material-icons text-lg">pause</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
+<span class="material-icons text-lg">close</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 flex items-center justify-between border-t border-primary/5 bg-slate-50 dark:bg-slate-800/30">
+<p class="text-xs text-slate-500 font-medium">Showing 1 to 5 of 1,248 entries</p>
+<div class="flex items-center space-x-1">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-primary/10 text-slate-400 hover:bg-primary hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400" disabled="">
+<span class="material-icons text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-xs font-bold">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-primary/10 text-xs font-bold text-slate-600 hover:bg-primary/5">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-primary/10 text-xs font-bold text-slate-600 hover:bg-primary/5">3</button>
+<span class="px-1 text-slate-400">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-primary/10 text-xs font-bold text-slate-600 hover:bg-primary/5">250</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-primary/10 text-slate-400 hover:bg-primary hover:text-white transition-all">
+<span class="material-icons text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Summary Footer Info -->
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-primary/5 p-4 rounded-xl flex items-center space-x-4 border border-primary/10">
+<div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+<span class="material-icons">info</span>
+</div>
+<div>
+<h4 class="text-sm font-bold">System Status</h4>
+<p class="text-xs text-slate-500">All Dâr processing engines are running optimally. Next synchronization in 14m 20s.</p>
+</div>
+</div>
+<div class="bg-primary p-4 rounded-xl flex items-center justify-between text-white shadow-lg shadow-primary/20">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+<span class="material-icons">rocket_launch</span>
+</div>
+<div>
+<h4 class="text-sm font-bold">Auto-Approve Active</h4>
+<p class="text-xs text-white/80">Pending Dârs with &lt;$500 volume are auto-approved.</p>
+</div>
+</div>
+<button class="bg-white text-primary px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest">Settings</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Map Tooltip Example (Hidden by default, used for data-location requirement) -->
+<div class="hidden" data-location="Cairo, Egypt" style=""></div>
+</body></html>

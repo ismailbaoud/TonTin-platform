@@ -9,7 +9,10 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.Key;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,9 +55,7 @@ public class JwtService {
      *
      * <p>The key must be at least 256 bits (32 bytes) for HS256 algorithm.</p>
      */
-    @Value(
-        "${security.jwt.secret-key:72ccaf3126509f5ad2973e3f1c81fcbf24b3cac93114eba0754b94c4c02f10d9}"
-    )
+    @Value("${security.jwt.secret-key}")
     private String secretKey;
 
     /**
@@ -342,7 +343,66 @@ public class JwtService {
      * @return the signing key
      */
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = ensureMinHs256KeyLength(decodeSecretKey(secretKey));
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private byte[] decodeSecretKey(String configuredSecretKey) {
+        if (configuredSecretKey == null || configuredSecretKey.isBlank()) {
+            throw new IllegalStateException(
+                "security.jwt.secret-key must not be empty"
+            );
+        }
+
+        // 1) Try standard Base64 first.
+        try {
+            return Decoders.BASE64.decode(configuredSecretKey);
+        } catch (Exception ignored) {}
+
+        // 2) Try URL-safe Base64 (common in env-managed secrets).
+        try {
+            return Decoders.BASE64URL.decode(configuredSecretKey);
+        } catch (Exception ignored) {}
+
+        // 3) Try hexadecimal.
+        if (configuredSecretKey.matches("^[0-9a-fA-F]+$")) {
+            try {
+                return decodeHex(configuredSecretKey);
+            } catch (Exception ignored) {}
+        }
+
+        // 4) Fallback to raw string bytes.
+        return configuredSecretKey.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private byte[] decodeHex(String hex) {
+        int length = hex.length();
+        if (length % 2 != 0) {
+            throw new IllegalArgumentException("Invalid hex secret length");
+        }
+
+        byte[] data = new byte[length / 2];
+        for (int i = 0; i < length; i += 2) {
+            int high = Character.digit(hex.charAt(i), 16);
+            int low = Character.digit(hex.charAt(i + 1), 16);
+            if (high < 0 || low < 0) {
+                throw new IllegalArgumentException("Invalid hex character");
+            }
+            data[i / 2] = (byte) ((high << 4) + low);
+        }
+        return data;
+    }
+
+    private byte[] ensureMinHs256KeyLength(byte[] keyBytes) {
+        if (keyBytes.length >= 32) {
+            return keyBytes;
+        }
+
+        try {
+            // Derive a stable 256-bit key from weak/short configured secrets.
+            return MessageDigest.getInstance("SHA-256").digest(keyBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
     }
 }

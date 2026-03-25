@@ -8,6 +8,7 @@
     </div>
     <nav class="flex-1 px-4 py-4 gap-2 flex flex-col overflow-y-auto">
       <a
+        *ngIf="!isAdmin()"
         routerLink="/dashboard/client"
         routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
         [routerLinkActiveOptions]="{ exact: true }"
@@ -16,7 +17,7 @@
         <span class="material-symbols-outlined">dashboard</span>
         <span class="text-sm font-semibold">Dashboard</span>
       </a>
-      <div class="pt-4 pb-2">
+      <div class="pt-4 pb-2" *ngIf="!isAdmin()">
         <p
           class="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider"
         >
@@ -24,6 +25,7 @@
         </p>
       </div>
       <a
+        *ngIf="!isAdmin()"
         routerLink="/dashboard/client/my-dars"
         routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
         class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
@@ -35,6 +37,7 @@
         <span class="text-sm font-medium">My Dârs</span>
       </a>
       <a
+        *ngIf="!isAdmin()"
         routerLink="/dashboard/client/create-dar"
         routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
         class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
@@ -46,6 +49,7 @@
         <span class="text-sm font-medium">Create Dâr</span>
       </a>
       <a
+        *ngIf="!isAdmin()"
         routerLink="/dashboard/client/reports"
         routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
         class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
@@ -56,6 +60,54 @@
         >
         <span class="text-sm font-medium">Reports</span>
       </a>
+      <a
+        *ngIf="isAdmin()"
+        routerLink="/dashboard/admin"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >admin_panel_settings</span
+        >
+        <span class="text-sm font-medium">Admin Dashboard</span>
+      </a>
+      <a
+        *ngIf="isAdmin()"
+        routerLink="/dashboard/admin/users"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >people</span
+        >
+        <span class="text-sm font-medium">User Management</span>
+      </a>
+      <a
+        *ngIf="isAdmin()"
+        routerLink="/dashboard/admin/dars"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >receipt_long</span
+        >
+        <span class="text-sm font-medium">Dâr Management</span>
+      </a>
+      <a
+        *ngIf="isAdmin()"
+        routerLink="/dashboard/admin/transactions"
+        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+      >
+        <span
+          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+          >history</span
+        >
+        <span class="text-sm font-medium">Transactions</span>
+      </a>
       <div class="pt-4 pb-2">
         <p
           class="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider"
@@ -63,32 +115,6 @@
           Account
         </p>
       </div>
-      <a
-        routerLink="/dashboard/client/notifications"
-        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
-        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
-      >
-        <span
-          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
-          >notifications</span
-        >
-        <span class="text-sm font-medium">Notifications</span>
-        <span
-          class="ml-auto inline-flex items-center justify-center rounded-full bg-red-500 text-white px-1.5 py-0.5 text-xs font-bold min-w-[1.25rem]"
-          >4</span
-        >
-      </a>
-      <a
-        routerLink="/dashboard/client/trust-rankings"
-        routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
-        class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
-      >
-        <span
-          class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
-          >leaderboard</span
-        >
-        <span class="text-sm font-medium">Trust Rankings</span>
-      </a>
       <a
         routerLink="/dashboard/client/profile"
         routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
@@ -147,15 +173,6 @@
         </div>
       </div>
       <div class="flex items-center gap-4">
-        <button
-          routerLink="/dashboard/client/notifications"
-          class="relative p-2 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-        >
-          <span class="material-symbols-outlined">notifications</span>
-          <span
-            class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-900"
-          ></span>
-        </button>
         <button
           class="p-2 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
@@ -221,6 +238,7 @@
       </div>
       <nav class="flex-1 px-4 py-4 gap-2 flex flex-col overflow-y-auto">
         <a
+          *ngIf="!isAdmin()"
           routerLink="/dashboard/client"
           routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
           [routerLinkActiveOptions]="{ exact: true }"
@@ -230,7 +248,7 @@
           <span class="material-symbols-outlined">dashboard</span>
           <span class="text-sm font-semibold">Dashboard</span>
         </a>
-        <div class="pt-4 pb-2">
+        <div class="pt-4 pb-2" *ngIf="!isAdmin()">
           <p
             class="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider"
           >
@@ -238,6 +256,7 @@
           </p>
         </div>
         <a
+          *ngIf="!isAdmin()"
           routerLink="/dashboard/client/my-dars"
           routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
           (click)="closeMobileMenu()"
@@ -250,6 +269,7 @@
           <span class="text-sm font-medium">My Dârs</span>
         </a>
         <a
+          *ngIf="!isAdmin()"
           routerLink="/dashboard/client/create-dar"
           routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
           (click)="closeMobileMenu()"
@@ -262,6 +282,7 @@
           <span class="text-sm font-medium">Create Dâr</span>
         </a>
         <a
+          *ngIf="!isAdmin()"
           routerLink="/dashboard/client/reports"
           routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
           (click)="closeMobileMenu()"
@@ -273,6 +294,58 @@
           >
           <span class="text-sm font-medium">Reports</span>
         </a>
+        <a
+          *ngIf="isAdmin()"
+          routerLink="/dashboard/admin"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >admin_panel_settings</span
+          >
+          <span class="text-sm font-medium">Admin Dashboard</span>
+        </a>
+        <a
+          *ngIf="isAdmin()"
+          routerLink="/dashboard/admin/users"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >people</span
+          >
+          <span class="text-sm font-medium">User Management</span>
+        </a>
+        <a
+          *ngIf="isAdmin()"
+          routerLink="/dashboard/admin/dars"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >receipt_long</span
+          >
+          <span class="text-sm font-medium">Dâr Management</span>
+        </a>
+        <a
+          *ngIf="isAdmin()"
+          routerLink="/dashboard/admin/transactions"
+          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
+          (click)="closeMobileMenu()"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
+            >history</span
+          >
+          <span class="text-sm font-medium">Transactions</span>
+        </a>
         <div class="pt-4 pb-2">
           <p
             class="px-3 text-xs font-bold text-gray-500 uppercase tracking-wider"
@@ -280,30 +353,6 @@
             Account
           </p>
         </div>
-        <a
-          routerLink="/dashboard/client/notifications"
-          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
-          (click)="closeMobileMenu()"
-          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
-        >
-          <span
-            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
-            >notifications</span
-          >
-          <span class="text-sm font-medium">Notifications</span>
-        </a>
-        <a
-          routerLink="/dashboard/client/trust-rankings"
-          routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"
-          (click)="closeMobileMenu()"
-          class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
-        >
-          <span
-            class="material-symbols-outlined text-gray-500 group-hover:text-primary transition-colors"
-            >leaderboard</span
-          >
-          <span class="text-sm font-medium">Trust Rankings</span>
-        </a>
         <a
           routerLink="/dashboard/client/profile"
           routerLinkActive="bg-primary/10 text-gray-900 dark:text-primary"

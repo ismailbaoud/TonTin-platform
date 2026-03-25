@@ -121,11 +121,11 @@ export const environment = {
     trackingId: "",
   },
 
-  // External Services (replace with real keys in production; set in .env or here)
+  // External Services — Stripe publishable key is served by GET /v1/payments/config/stripe-public
+  // (STRIPE_PUBLISHABLE_KEY in platform-back/.env). Optional fallback if the API is unavailable:
   external: {
     googleMapsApiKey: "",
-    stripePublishableKey:
-      "pk_test_51T2atJKY7titwMaw32Q3dSngKgpuQP5BwerBwo3kypOvIzrGoBEeZXJegFBjhDoa2KujjnZPDydVcsMIFvbJ85Jz00YsnHQia0",
+    stripePublishableKey: "",
   },
 };
 

@@ -2,14 +2,17 @@ import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { Router, RouterModule } from "@angular/router";
 import { FormsModule } from "@angular/forms";
+import {
+  AuthService,
+  UserProfileUpdateRequest,
+  UserResponse,
+} from "../../../../auth/services/auth.service";
+import { ThemeService } from "../../../../../core/services/theme.service";
 
 interface UserProfile {
-  firstName: string;
-  lastName: string;
+  userName: string;
   email: string;
-  phone: string;
   avatar: string;
-  trustPoints: number;
 }
 
 interface SecuritySettings {
@@ -19,12 +22,10 @@ interface SecuritySettings {
 }
 
 interface AppSettings {
-  emailNotifications: boolean;
-  darInvites: boolean;
   darkMode: boolean;
 }
 
-type SettingsTab = "profile" | "security" | "notifications" | "appearance";
+type SettingsTab = "profile" | "security" | "appearance";
 
 @Component({
   selector: "app-profile",
@@ -41,13 +42,9 @@ export class ProfileComponent implements OnInit {
 
   // User profile data
   userProfile: UserProfile = {
-    firstName: "Alex",
-    lastName: "Doe",
-    email: "alex.doe@example.com",
-    phone: "+1 (555) 000-0000",
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCdZOnZcE-XXa4KNlRVn6VLR8LfWhklrw5WihLxwW_rl8K_EEX5_EQwEv2pvJCxOGRiIv7F4OzeG1C5HnHKx5ohLPq0tnLBElfmXBcnyMkhBMjLbzBUjgIC2iaB7Jebcg1mnpOPCJ1U4Dk8v6W8ElJTPh6L-3Pj-P7HbYq9rxT_Z7GRsS43EihyGdDttXd2koR2GCQXF0_9wHw4Wg7QH8I56N-VaxeB4yQoQYp4pVwAAQb7BcIKwQqPD1t_SNcnN8FQiMTYaWqjxo4",
-    trustPoints: 750,
+    userName: "",
+    email: "",
+    avatar: "",
   };
 
   // Security settings
@@ -59,31 +56,50 @@ export class ProfileComponent implements OnInit {
 
   // App settings
   appSettings: AppSettings = {
-    emailNotifications: true,
-    darInvites: true,
     darkMode: false,
   };
 
   // Backup for cancel functionality
   private originalProfile: UserProfile = { ...this.userProfile };
   private originalAppSettings: AppSettings = { ...this.appSettings };
+  private currentUser: UserResponse | null = null;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private themeService: ThemeService,
+  ) {}
 
   ngOnInit(): void {
-    // TODO: Load user profile from service
+    const storedUser = this.authService.getStoredUser();
+    if (storedUser) {
+      this.currentUser = storedUser;
+      this.userProfile = this.mapUserToProfile(storedUser);
+      this.originalProfile = { ...this.userProfile };
+    }
     this.loadUserProfile();
     this.loadAppSettings();
   }
 
   loadUserProfile(): void {
-    // TODO: Call API to get user profile
-    console.log("Loading user profile...");
+    this.isLoading = true;
+    this.authService.getCurrentUser().subscribe({
+      next: (user) => {
+        this.currentUser = user;
+        this.userProfile = this.mapUserToProfile(user);
+        this.originalProfile = { ...this.userProfile };
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.isLoading = false;
+        alert(error?.message || "Failed to load profile.");
+      },
+    });
   }
 
   loadAppSettings(): void {
-    // TODO: Call API to get app settings
-    console.log("Loading app settings...");
+    this.appSettings.darkMode = this.themeService.isDarkMode();
+    this.originalAppSettings = { ...this.appSettings };
   }
 
   setTab(tab: SettingsTab): void {
@@ -101,7 +117,6 @@ export class ProfileComponent implements OnInit {
         }
       };
       reader.readAsDataURL(this.avatarFile);
-      console.log("Avatar changed:", this.avatarFile.name);
     }
   }
 
@@ -113,8 +128,6 @@ export class ProfileComponent implements OnInit {
     ) {
       this.userProfile.avatar = "";
       this.avatarFile = null;
-      console.log("Avatar removed");
-      // TODO: Call API to remove avatar
     }
   }
 
@@ -135,31 +148,33 @@ export class ProfileComponent implements OnInit {
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Saving changes:", {
-        profile: this.userProfile,
-        security: this.securitySettings,
-        settings: this.appSettings,
+    this.buildUpdateRequest()
+      .then((request) => {
+        this.authService.updateCurrentUserProfile(request).subscribe({
+          next: (updatedUser) => {
+            this.currentUser = updatedUser;
+            this.userProfile = this.mapUserToProfile(updatedUser);
+            this.lastSaved = new Date();
+            this.originalProfile = { ...this.userProfile };
+            this.originalAppSettings = { ...this.appSettings };
+            this.securitySettings = {
+              currentPassword: "",
+              newPassword: "",
+              confirmPassword: "",
+            };
+            this.isLoading = false;
+            alert("Changes saved successfully.");
+          },
+          error: (error) => {
+            this.isLoading = false;
+            alert(error?.message || "Failed to save profile changes.");
+          },
+        });
+      })
+      .catch((error) => {
+        this.isLoading = false;
+        alert(error?.message || "Failed to process avatar image.");
       });
-
-      // TODO: Call API to save changes
-      // API calls here...
-
-      this.lastSaved = new Date();
-      this.originalProfile = { ...this.userProfile };
-      this.originalAppSettings = { ...this.appSettings };
-
-      // Clear password fields
-      this.securitySettings = {
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      };
-
-      this.isLoading = false;
-      alert("Changes saved successfully!");
-    }, 1000);
   }
 
   onCancel(): void {
@@ -176,7 +191,6 @@ export class ProfileComponent implements OnInit {
           newPassword: "",
           confirmPassword: "",
         };
-        console.log("Changes cancelled");
       }
     }
   }
@@ -186,8 +200,6 @@ export class ProfileComponent implements OnInit {
       'Are you sure you want to delete your account? This action cannot be undone. Type "DELETE" to confirm.',
     );
     if (confirmation === "DELETE") {
-      console.log("Delete account requested");
-      // TODO: Call API to delete account
       alert(
         "Account deletion request submitted. You will receive a confirmation email.",
       );
@@ -204,34 +216,21 @@ export class ProfileComponent implements OnInit {
         return;
       }
     }
-    console.log("Sign out clicked");
-    // TODO: Call auth service to log out
-    this.router.navigate(["/auth/login"]);
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(["/auth/login"]);
+      },
+      error: () => {
+        this.router.navigate(["/auth/login"]);
+      },
+    });
   }
 
   toggleDarkMode(): void {
-    this.appSettings.darkMode = !this.appSettings.darkMode;
-    // TODO: Apply dark mode to the application
-    console.log("Dark mode toggled:", this.appSettings.darkMode);
+    this.themeService.setDarkMode(this.appSettings.darkMode);
   }
 
   validateForm(): boolean {
-    // Validate email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.userProfile.email)) {
-      alert("Please enter a valid email address.");
-      return false;
-    }
-
-    // Validate phone (basic)
-    if (
-      this.userProfile.phone &&
-      this.userProfile.phone.length < 10
-    ) {
-      alert("Please enter a valid phone number.");
-      return false;
-    }
-
     // Validate password if changing
     if (this.securitySettings.newPassword) {
       if (!this.securitySettings.currentPassword) {
@@ -247,6 +246,10 @@ export class ProfileComponent implements OnInit {
         this.securitySettings.confirmPassword
       ) {
         alert("New passwords do not match.");
+        return false;
+      }
+      if (this.securitySettings.currentPassword === this.securitySettings.newPassword) {
+        alert("New password must be different from current password.");
         return false;
       }
     }
@@ -287,10 +290,60 @@ export class ProfileComponent implements OnInit {
   }
 
   get fullName(): string {
-    return `${this.userProfile.firstName} ${this.userProfile.lastName}`;
+    return this.userProfile.userName || "";
   }
 
   get initials(): string {
-    return `${this.userProfile.firstName.charAt(0)}${this.userProfile.lastName.charAt(0)}`.toUpperCase();
+    const parts = (this.userProfile.userName || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    const first = parts[0]?.charAt(0) || "";
+    const second = parts[1]?.charAt(0) || "";
+    return `${first}${second}`.toUpperCase() || "U";
+  }
+
+  private mapUserToProfile(user: UserResponse): UserProfile {
+    const avatar = user.picture ? `data:image/jpeg;base64,${user.picture}` : "";
+    return {
+      userName: user.userName || "",
+      email: user.email || "",
+      avatar,
+    };
+  }
+
+  private buildUsername(): string {
+    return this.userProfile.userName.trim() || this.currentUser?.userName || "";
+  }
+
+  private async buildUpdateRequest(): Promise<UserProfileUpdateRequest> {
+    const request: UserProfileUpdateRequest = {
+      userName: this.buildUsername(),
+    };
+
+    if (this.securitySettings.newPassword) {
+      request.currentPassword = this.securitySettings.currentPassword;
+      request.password = this.securitySettings.newPassword;
+    }
+
+    if (this.avatarFile) {
+      request.picture = await this.readFileAsNumberArray(this.avatarFile);
+    } else if (!this.userProfile.avatar && this.currentUser?.picture) {
+      request.picture = [];
+    }
+
+    return request;
+  }
+
+  private readFileAsNumberArray(file: File): Promise<number[]> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const buffer = reader.result as ArrayBuffer;
+        resolve(Array.from(new Uint8Array(buffer)));
+      };
+      reader.onerror = () => reject(new Error("Could not read file."));
+      reader.readAsArrayBuffer(file);
+    });
   }
 }

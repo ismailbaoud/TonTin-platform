@@ -27,6 +27,7 @@ export class LoginComponent implements OnInit {
   showPassword = false;
   isSubmitting = false;
   errorMessage: string | null = null;
+  successMessage: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -40,6 +41,7 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     console.log("LoginComponent ngOnInit called");
     this.initializeForm();
+    this.handleEmailVerificationRedirect();
   }
 
   private initializeForm(): void {
@@ -48,6 +50,16 @@ export class LoginComponent implements OnInit {
       password: ["", [Validators.required]],
     });
     console.log("Login form initialized:", this.loginForm);
+  }
+
+  private handleEmailVerificationRedirect(): void {
+    const verified = this.route.snapshot.queryParams["verified"];
+    const message = this.route.snapshot.queryParams["message"];
+
+    if (verified === "true" && message) {
+      this.successMessage = String(message).replace(/\s+/g, " ").trim();
+      this.errorMessage = null;
+    }
   }
 
   togglePasswordVisibility(): void {

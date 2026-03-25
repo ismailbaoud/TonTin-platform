@@ -149,26 +149,6 @@ export const routes: Routes = [
         },
       },
       {
-        path: "notifications",
-        loadComponent: () =>
-          import("./features/dashboard/features/notifications/pages/notifications.component").then(
-            (m) => m.NotificationsComponent,
-          ),
-        data: {
-          title: "Notifications - TonTin",
-        },
-      },
-      {
-        path: "trust-rankings",
-        loadComponent: () =>
-          import("./features/dashboard/features/trust-rankings/pages/trust-rankings.component").then(
-            (m) => m.TrustRankingsComponent,
-          ),
-        data: {
-          title: "Trust Rankings - TonTin",
-        },
-      },
-      {
         path: "profile",
         loadComponent: () =>
           import("./features/dashboard/features/profile/pages/profile.component").then(
@@ -183,14 +163,76 @@ export const routes: Routes = [
   {
     path: "dashboard/admin",
     loadComponent: () =>
-      import("./features/dashboard/features/admin/pages/admin.component").then(
-        (m) => m.AdminComponent,
+      import("./shared/layouts/client-layout/client-layout.component").then(
+        (m) => m.ClientLayoutComponent,
       ),
     canActivate: [authGuard, roleGuard],
     data: {
       title: "Admin Dashboard - TonTin",
       roles: ["ROLE_ADMIN"],
     },
+    children: [
+      {
+        path: "",
+        loadComponent: () =>
+          import(
+            "./features/dashboard/features/admin/pages/admin.component"
+          ).then((m) => m.AdminComponent),
+        data: {
+          title: "Admin Dashboard - TonTin",
+        },
+      },
+      {
+        path: "users",
+        loadComponent: () =>
+          import(
+            "./features/dashboard/features/admin/pages/admin-users.component"
+          ).then((m) => m.AdminUsersComponent),
+        data: {
+          title: "User Management - TonTin",
+        },
+      },
+      {
+        path: "dars",
+        loadComponent: () =>
+          import(
+            "./features/dashboard/features/admin/pages/admin-dars.component"
+          ).then((m) => m.AdminDarsComponent),
+        data: {
+          title: "Dâr Management - TonTin",
+        },
+      },
+      {
+        path: "transactions",
+        loadComponent: () =>
+          import(
+            "./features/dashboard/features/admin/pages/admin-transactions.component"
+          ).then((m) => m.AdminTransactionsComponent),
+        data: {
+          title: "Transaction Management - TonTin",
+        },
+      },
+      {
+        path: "payments",
+        loadComponent: () =>
+          import(
+            "./features/dashboard/features/admin/pages/admin-payments.component"
+          ).then((m) => m.AdminPaymentsComponent),
+        data: {
+          title: "Payments - TonTin",
+        },
+      },
+      {
+        path: "settings",
+        loadComponent: () =>
+          import(
+            "./features/dashboard/features/admin/pages/admin-settings.component"
+          ).then((m) => m.AdminSettingsComponent),
+        data: {
+          title: "Admin Settings - TonTin",
+        },
+      },
+    ],
   },
   {
     path: "**",

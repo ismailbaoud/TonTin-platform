@@ -35,6 +35,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * REST Controller for authentication and user management operations.
@@ -57,6 +59,8 @@ public class AuthController {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final SecurityUtils securityUtils;
+    @Value("${app.frontend-url:http://localhost:4200}")
+    private String frontendUrl;
 
     /**
      * Authenticates a user and returns JWT tokens.
@@ -163,7 +167,7 @@ public class AuthController {
      * @param code the verification code sent to the user's email
      * @return success message if verification is successful
      */
-    @GetMapping(value = "/verify", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/verify")
     @Operation(
         summary = "Verify email",
         description = "Verifies a user's email address using the code sent via email"
@@ -181,7 +185,7 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "User not found"),
         }
     )
-    public ResponseEntity<MessageResponse> verify(
+    public ResponseEntity<Void> verify(
         @RequestParam("code") @NotBlank(
             message = "Verification code is required"
         ) @Parameter(
@@ -193,7 +197,30 @@ public class AuthController {
         log.info("Email verification attempt with code: {}", code);
         String message = authService.verify(code);
         log.info("Email verification successful for code: {}", code);
-        return ResponseEntity.ok(new MessageResponse(message));
+
+        // Keep redirect URL valid: query params must not contain control characters/newlines.
+        String safeMessage =
+            message == null
+                ? ""
+                : message
+                    // Remove control chars that can break URI parsing.
+                    .replaceAll("[\\u0000-\\u001F\\u007F]", " ")
+                    // Normalize whitespace.
+                    .replaceAll("\\s+", " ")
+                    .trim();
+
+        java.net.URI redirectUri = UriComponentsBuilder
+            .fromUriString(frontendUrl)
+            .path("/auth/login")
+            .queryParam("verified", "true")
+            .queryParam("message", safeMessage)
+            .build()
+            .toUri();
+
+        return ResponseEntity
+            .status(HttpStatus.FOUND)
+            .location(redirectUri)
+            .build();
     }
 
     /**

@@ -6,10 +6,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record StartDartRequest(
     @Schema(
         description = "If true, start the dart even with pending members; pending members will be removed (status set to LEAVED) and not included in rounds.",
-        example = "false"
+        example = "false",
+        nullable = true
     )
-    boolean startAnyway
+    Boolean startAnyway
 ) {
+    /**
+     * Normalize JSON null / omitted to false (Jackson cannot bind null to primitive boolean).
+     */
+    public StartDartRequest {
+        startAnyway = Boolean.TRUE.equals(startAnyway);
+    }
+
     /** Default: do not start if there are pending members. */
     public static StartDartRequest defaultRequest() {
         return new StartDartRequest(false);

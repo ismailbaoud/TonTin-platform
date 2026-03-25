@@ -10,7 +10,6 @@ import {
   Member,
   Tour,
   Transaction,
-  Message,
   CreateDarRequest,
   UpdateDarRequest,
   InviteMemberRequest,
@@ -30,7 +29,6 @@ export type {
   Member,
   Tour,
   Transaction,
-  Message,
   CreateDarRequest,
   UpdateDarRequest,
   InviteMemberRequest,
@@ -101,8 +99,6 @@ export class DarService {
       .get<PaginatedResponse<Dar>>(`${this.apiUrl}/my-dars`, { params })
       .pipe(
         tap((response) => {
-          console.log(response);
-          
           if (page === 0) {
             this.darsSubject.next(response.content);
           }
@@ -251,33 +247,6 @@ export class DarService {
   }
 
   /**
-   * Get Dâr messages
-   */
-  getMessages(
-    darId: string,
-    page: number = 0,
-    size: number = DAR_PAGINATION.MESSAGES_PAGE_SIZE,
-  ): Observable<PaginatedResponse<Message>> {
-    const params = new HttpParams()
-      .set("page", page.toString())
-      .set("size", size.toString());
-
-    return this.http.get<PaginatedResponse<Message>>(
-      `${this.apiUrl}/${darId}/messages`,
-      { params },
-    );
-  }
-
-  /**
-   * Send message to Dâr
-   */
-  sendMessage(darId: string, content: string): Observable<Message> {
-    return this.http.post<Message>(`${this.apiUrl}/${darId}/messages`, {
-      content,
-    });
-  }
-
-  /**
    * Generate new invite code (organizer only)
    */
   generateInviteCode(darId: string): Observable<GenerateInviteCodeResponse> {
@@ -313,6 +282,13 @@ export class DarService {
    */
   startDar(darId: string): Observable<Dar> {
     return this.http.post<Dar>(`${this.apiUrl}/${darId}/start`, {});
+  }
+
+  /**
+   * Finish a Dâr (organizer/Admin workflow)
+   */
+  finishDar(darId: string): Observable<Dar> {
+    return this.http.post<Dar>(`${this.apiUrl}/${darId}/finish`, {});
   }
 
   /**

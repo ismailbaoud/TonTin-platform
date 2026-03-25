@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Observable, throwError } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
-import { environment } from "../../../../environments/environment.development";
+import { environment } from "../../../../environments/environment";
 
 /**
  * Authentication Service
@@ -57,6 +57,13 @@ export interface UserResponse {
   status: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserProfileUpdateRequest {
+  userName?: string;
+  currentPassword?: string;
+  password?: string;
+  picture?: number[];
 }
 
 export interface RefreshTokenRequest {
@@ -207,6 +214,22 @@ export class AuthService {
   }
 
   /**
+   * Update current authenticated user profile.
+   */
+  updateCurrentUserProfile(
+    request: UserProfileUpdateRequest,
+  ): Observable<UserResponse> {
+    return this.http
+      .put<UserResponse>(`${this.apiUrl}/v1/auth/me`, request)
+      .pipe(
+        tap((user) => {
+          this.storeUser(user);
+        }),
+        catchError(this.handleError),
+      );
+  }
+
+  /**
    * Check if user is authenticated
    *
    * @returns true if user has valid token
@@ -350,7 +373,9 @@ export class AuthService {
           errorMessage = "Resource not found.";
           break;
         case 409:
-          errorMessage = "User already exists with this email or username.";
+          if (!error.error || !error.error.message) {
+            errorMessage = "User already exists with this email or username.";
+          }
           break;
         case 500:
           errorMessage = "Server error. Please try again later.";

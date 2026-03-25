@@ -131,6 +131,38 @@
             {{ error }}
           </div>
 
+          <div
+            *ngIf="!showStripeCard && !stripePublishableKeyReady"
+            class="mb-4 flex items-center gap-2 text-text-secondary text-sm"
+          >
+            <span class="material-symbols-outlined animate-spin text-xl"
+              >progress_activity</span
+            >
+            Loading payment configuration…
+          </div>
+
+          <div
+            *ngIf="!showStripeCard && showStripeConfigHint"
+            class="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm"
+          >
+            Stripe is not configured. Set
+            <code class="text-xs bg-amber-100/50 dark:bg-amber-900/40 px-1 rounded"
+              >STRIPE_PUBLISHABLE_KEY</code
+            >
+            in
+            <code class="text-xs bg-amber-100/50 dark:bg-amber-900/40 px-1 rounded"
+              >platform-back/.env</code
+            >
+            (same Stripe account as
+            <code class="text-xs bg-amber-100/50 dark:bg-amber-900/40 px-1 rounded"
+              >STRIPE_SECRET_KEY</code
+            >), restart the API, or set
+            <code class="text-xs bg-amber-100/50 dark:bg-amber-900/40 px-1 rounded"
+              >external.stripePublishableKey</code
+            >
+            in the Angular environment as a fallback.
+          </div>
+
           <!-- Step 1: Pay with Stripe button -->
           <div *ngIf="!showStripeCard && canPayWithStripe">
             <button
@@ -169,7 +201,8 @@
                 </span>
               </button>
               <button
-                (click)="showStripeCard = false; clientSecret = null"
+                type="button"
+                (click)="cancelPaymentFlow()"
                 [disabled]="isSubmitting"
                 class="px-4 h-12 rounded-lg border border-border-light text-text-primary font-medium hover:bg-background-light"
               >

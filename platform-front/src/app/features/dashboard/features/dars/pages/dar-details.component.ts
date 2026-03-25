@@ -45,7 +45,12 @@ interface DarDetails {
   progress: number;
   totalMembers: number;
   monthlyPot: number;
+  monthlyContribution: number;
   nextPayout: string;
+  description?: string;
+  paymentFrequency?: string;
+  orderMethod?: "FIXED_ORDER" | "RANDOM_ONCE" | "BIDDING_MODEL" | "DYNAMIQUE_RANDOM";
+  customRules?: string;
   members: Member[];
 }
 
@@ -60,7 +65,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   // UI State
-  activeTab: "members" | "tours" | "messages" | "settings" = "members";
+  activeTab: "members" | "tours" | "settings" = "members";
   searchQuery = "";
   darId: string | null = null; // UUID from route params
   isLoading = false;
@@ -80,6 +85,21 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
 
   // Data
   darDetails: DarDetails | null = null;
+  settingsForm = {
+    name: "",
+    description: "",
+    monthlyContribution: 0,
+    paymentFrequency: "MONTH",
+    orderMethod: "FIXED_ORDER" as
+      | "FIXED_ORDER"
+      | "RANDOM_ONCE"
+      | "BIDDING_MODEL"
+      | "DYNAMIQUE_RANDOM",
+    customRules: "",
+    image: "",
+  };
+  imageFile: File | null = null;
+  isSavingSettings = false;
   isOrganizer = false;
   rounds: Round[] = [];
   currentRound: Round | null = null;
@@ -203,6 +223,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
 
           console.log("\n🔄 MAPPING API DATA TO COMPONENT FORMAT...");
           this.darDetails = this.mapApiDataToComponent(data);
+          this.syncSettingsFormFromDar();
 
           console.log(
             "╔═══════════════════════════════════════════════════════════╗",
@@ -517,10 +538,15 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
           : 0,
       totalMembers: apiData.memberCount || 0,
       monthlyPot: apiData.totalMonthlyPool || 0,
+      monthlyContribution: Number(apiData.monthlyContribution || 0),
       nextPayout: apiData.nextPayoutDate
         ? new Date(apiData.nextPayoutDate).toLocaleDateString()
         : "TBD",
       members: [], // Will be loaded separately
+      description: apiData.description || "",
+      paymentFrequency: apiData.paymentFrequency || "MONTH",
+      orderMethod: apiData.orderMethod || "FIXED_ORDER",
+      customRules: apiData.customRules || "",
     };
 
     console.log("📤 OUTPUT to component:");
@@ -561,8 +587,103 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   /**
    * Switch active tab
    */
-  setTab(tab: "members" | "tours" | "messages" | "settings"): void {
+  setTab(tab: "members" | "tours" | "settings"): void {
     this.activeTab = tab;
+  }
+
+  private syncSettingsFormFromDar(): void {
+    if (!this.darDetails) return;
+    this.settingsForm = {
+      name: this.darDetails.name,
+      description: this.darDetails.description || "",
+      monthlyContribution: this.darDetails.monthlyContribution || 0,
+      paymentFrequency: this.darDetails.paymentFrequency || "MONTH",
+      orderMethod: this.darDetails.orderMethod || "FIXED_ORDER",
+      customRules: this.darDetails.customRules || "",
+      image: this.darDetails.image || this.getDefaultDarImage(),
+    };
+    this.imageFile = null;
+  }
+
+  onDarImageChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files[0]) return;
+    this.imageFile = input.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.settingsForm.image = (reader.result as string) || this.settingsForm.image;
+    };
+    reader.readAsDataURL(this.imageFile);
+  }
+
+  onRemoveDarImage(): void {
+    this.imageFile = null;
+    this.settingsForm.image = this.getDefaultDarImage();
+  }
+
+  async saveDarSettings(): Promise<void> {
+    if (!this.darId || !this.darDetails) return;
+    if (!this.settingsForm.name.trim()) {
+      alert("Dâr name is required.");
+      return;
+    }
+    if (this.settingsForm.monthlyContribution <= 0) {
+      alert("Monthly contribution must be greater than zero.");
+      return;
+    }
+
+    this.isSavingSettings = true;
+    try {
+      const request: any = {
+        name: this.settingsForm.name.trim(),
+        monthlyContribution: this.settingsForm.monthlyContribution,
+        orderMethod: this.settingsForm.orderMethod,
+        customRules: this.settingsForm.customRules.trim() || undefined,
+        description: this.settingsForm.description.trim() || undefined,
+        paymentFrequency: this.settingsForm.paymentFrequency,
+      };
+
+      if (this.imageFile) {
+        request.picture = await this.readFileAsNumberArray(this.imageFile);
+      } else if (
+        this.settingsForm.image === this.getDefaultDarImage() &&
+        this.darDetails.image &&
+        this.darDetails.image !== this.getDefaultDarImage()
+      ) {
+        request.picture = [];
+      }
+
+      this.darService
+        .updateDar(this.darId, request)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.isSavingSettings = false)),
+        )
+        .subscribe({
+          next: () => {
+            alert("Dâr settings updated successfully.");
+            this.loadDarDetails();
+          },
+          error: (err) => {
+            alert(err?.error?.message || "Failed to update Dâr settings.");
+          },
+        });
+    } catch {
+      this.isSavingSettings = false;
+      alert("Could not read selected image file.");
+    }
+  }
+
+  private readFileAsNumberArray(file: File): Promise<number[]> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const buffer = reader.result as ArrayBuffer;
+        resolve(Array.from(new Uint8Array(buffer)));
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsArrayBuffer(file);
+    });
   }
 
   /**

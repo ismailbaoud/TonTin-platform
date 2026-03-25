@@ -108,7 +108,7 @@ public class RoundServiceImpl implements RoundService {
     ) {
         log.info("Creating rounds for dart with ID: {}", request.dartId());
 
-        Dart dart = findDartById(request.dartId());
+        Dart dart = findDartByIdWithMembers(request.dartId());
 
         if (dart.getStartDate() == null) {
             log.warn(
@@ -383,6 +383,18 @@ public class RoundServiceImpl implements RoundService {
     private Dart findDartById(UUID dartId) {
         return dartRepository
             .findById(dartId)
+            .orElseThrow(() -> {
+                log.warn("Dart not found with id: {}", dartId);
+                return new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Dart not found with id: " + dartId
+                );
+            });
+    }
+
+    private Dart findDartByIdWithMembers(UUID dartId) {
+        return dartRepository
+            .findByIdWithMembers(dartId)
             .orElseThrow(() -> {
                 log.warn("Dart not found with id: {}", dartId);
                 return new ResponseStatusException(

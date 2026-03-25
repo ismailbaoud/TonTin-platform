@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size;
  * is still enforced when a field is provided.</p>
  *
  * @param userName New display name for the user (optional)
+ * @param currentPassword Current password used to verify identity before password change (optional)
  * @param password New password for the user (optional)
  * @param picture  Profile picture as a binary payload (optional)
  */
@@ -27,6 +28,17 @@ public record UserProfileUpdateRequest(
         message = "Username must be between 3 and 50 characters"
     )
     String userName,
+
+    @Schema(
+        description = "Current password (required when changing password)",
+        example = "CurrentP@ss123",
+        minLength = 8
+    )
+    @Size(
+        min = 8,
+        message = "Current password must contain at least 8 characters"
+    )
+    String currentPassword,
 
     @Schema(
         description = "New password for the account",

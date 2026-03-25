@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,6 +44,13 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final JavaMailSender mailSender;
     private final SecurityUtils securityUtils;
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+    @Value("${app.mail.from:}")
+    private String mailFrom;
+
+    @Value("${app.mail.sender-name:}")
+    private String mailSenderName;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -69,10 +77,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserResponse register(RegisterRequest request, String siteURL) {
-        if (userRepository.findByEmail(request.email()).isPresent()) {
+        String normalizedEmail = request.email() != null
+            ? request.email().trim().toLowerCase()
+            : "";
+        if (normalizedEmail.isEmpty()) {
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "An account with this email already exists."
+                HttpStatus.BAD_REQUEST,
+                "Email is required."
             );
         }
         String userName = request.userName() != null ? request.userName().trim() : "";
@@ -82,23 +93,49 @@ public class AuthServiceImpl implements AuthService {
                 "Username is required."
             );
         }
-        if (userRepository.findByUserNameIgnoreCase(userName).isPresent()) {
+        User existingByEmail = userRepository.findByEmail(normalizedEmail).orElse(null);
+        User existingByUserName = userRepository.findByUserNameIgnoreCase(userName).orElse(null);
+
+        // If username belongs to a different account, reject.
+        if (
+            existingByUserName != null &&
+            (existingByEmail == null || !existingByUserName.getId().equals(existingByEmail.getId()))
+        ) {
             throw new ResponseStatusException(
                 HttpStatus.CONFLICT,
                 "Username already taken."
             );
         }
-        User user = new User();
-        user.setEmail(request.email());
+
+        User user;
+        if (existingByEmail != null) {
+            // Allow retry registration for non-active accounts.
+            if (
+                existingByEmail.getStatus() == UserStatus.ACTIVE ||
+                existingByEmail.getStatus() == UserStatus.SUSPENDED ||
+                existingByEmail.getStatus() == UserStatus.DISABLED
+            ) {
+                throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "An account with this email already exists."
+                );
+            }
+            user = existingByEmail;
+        } else {
+            user = new User();
+            user.setCreationDate(LocalDateTime.now().toString());
+            user.setAccountAccessFileCount(0);
+            user.setResetPasswordDate(null);
+            user.setPicture(null);
+        }
+
+        user.setEmail(normalizedEmail);
         user.setRole(UserRole.ROLE_CLIENT);
         user.setStatus(UserStatus.PENDING);
         user.setUserName(userName);
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setCreationDate(LocalDateTime.now().toString());
         user.setEmailConfirmed(Boolean.FALSE);
-        user.setAccountAccessFileCount(0);
-        user.setResetPasswordDate(null);
-        user.setPicture(null);
+        user.setPoints(0);
         String randomCode = TokenUtil.generate(64);
         user.setVerificationCode(randomCode);
         User userRes = userRepository.save(user);
@@ -144,6 +181,21 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (request.password() != null && !request.password().isBlank()) {
+            if (
+                request.currentPassword() == null ||
+                request.currentPassword().isBlank()
+            ) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Current password is required to change password."
+                );
+            }
+            if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Current password is incorrect."
+                );
+            }
             user.setPassword(passwordEncoder.encode(request.password()));
             user.setResetPasswordDate(LocalDateTime.now());
             updated = true;
@@ -172,20 +224,36 @@ public class AuthServiceImpl implements AuthService {
     private void sendVerificationEmail(User user, String siteURL)
         throws MessagingException, UnsupportedEncodingException {
         String toAddress = user.getEmail();
-        String fromAddress = "example@example.com";
-        String senderName = "TonTin";
+        String fromAddress =
+            (mailFrom != null && !mailFrom.isBlank())
+                ? mailFrom.trim()
+                : (mailUsername != null && !mailUsername.isBlank() ? mailUsername.trim() : "");
+        if (fromAddress.isEmpty()) {
+            throw new IllegalStateException(
+                "Mail sender is not configured. Set APP_MAIL_FROM or SPRING_MAIL_USERNAME in your environment."
+            );
+        }
+        String senderName =
+            mailSenderName != null && !mailSenderName.isBlank()
+                ? mailSenderName.trim()
+                : fromAddress;
         String subject = "Please verify your registration";
         String content =
             "Dear [[name]],<br>" +
             "Please click the link below to verify your registration:<br>" +
             "<h3><a href=\"[[URL]]\" target=\"_self\">VERIFY</a></h3>" +
             "Thank you,<br>" +
-            "TonTin.";
+            senderName +
+            ".";
 
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message);
 
-        helper.setFrom(fromAddress, senderName);
+        if (senderName != null && !senderName.equals(fromAddress)) {
+            helper.setFrom(fromAddress, senderName);
+        } else {
+            helper.setFrom(fromAddress);
+        }
         helper.setTo(toAddress);
         helper.setSubject(subject);
 
@@ -202,10 +270,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String verify(String code) {
-        User user = userRepository.findByVerificationCode(code).orElseThrow();
-        if (user == null) {
-            return "User not found";
-        } else if (user.getStatus() == UserStatus.ACTIVE) {
+        User user = userRepository.findByVerificationCode(code).orElseThrow(
+            () ->
+                new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid or expired verification code"
+                )
+        );
+
+        if (user.getStatus() == UserStatus.ACTIVE) {
             return "User is already activated";
         }
 
@@ -213,9 +286,7 @@ public class AuthServiceImpl implements AuthService {
         user.setStatus(UserStatus.ACTIVE);
         user.setEmailConfirmed(Boolean.TRUE);
         userRepository.save(user);
-        return (
-            "User activated succussfully ! \n welcome Mr." + user.getUserName()
-        );
+        return "User activated successfully. Welcome " + user.getUserName();
     }
 
     @Override

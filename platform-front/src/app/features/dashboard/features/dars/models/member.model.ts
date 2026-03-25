@@ -53,8 +53,6 @@ export interface Member {
   /** Scheduled date for this member's turn to receive the pot */
   turnDate?: string;
 
-  /** Trust score of this member (0-100) - optional */
-  trustScore?: number;
 }
 
 /**

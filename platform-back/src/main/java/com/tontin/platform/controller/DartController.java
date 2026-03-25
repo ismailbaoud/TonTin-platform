@@ -1,14 +1,11 @@
 package com.tontin.platform.controller;
 
 import com.tontin.platform.domain.enums.dart.DartStatus;
-import com.tontin.platform.dto.dart.request.AddReactionRequest;
-import com.tontin.platform.dto.dart.request.CreateMessageRequest;
 import com.tontin.platform.dto.dart.request.DartRequest;
+import com.tontin.platform.dto.dart.request.AdminCreateDartRequest;
 import com.tontin.platform.dto.dart.request.StartDartRequest;
 import com.tontin.platform.dto.dart.response.DartResponse;
-import com.tontin.platform.dto.dart.response.MessageResponse;
 import com.tontin.platform.dto.dart.response.PageResponse;
-import com.tontin.platform.service.DartMessageService;
 import com.tontin.platform.service.DartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -59,7 +56,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class DartController {
 
     private final DartService dartService;
-    private final DartMessageService dartMessageService;
 
     /**
      * Get all darts for the authenticated user.
@@ -122,6 +118,25 @@ public class DartController {
         log.info(
             "Retrieved {} darts for current user",
             response.getContent().size()
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/admin/all", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+        summary = "Admin list all darts",
+        description = "Retrieves all darts for admin dashboard views"
+    )
+    public ResponseEntity<PageResponse<DartResponse>> getAllDartsForAdmin(
+        @RequestParam(required = false) DartStatus status,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<DartResponse> response = dartService.getAllDartsForAdmin(
+            status,
+            page,
+            size
         );
         return ResponseEntity.ok(response);
     }
@@ -217,6 +232,26 @@ public class DartController {
         log.info("Creating new dart with name: {}", request.name());
         DartResponse response = dartService.createDart(request);
         log.info("Dart created successfully with ID: {}", response.id());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping(
+        value = "/admin/create",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+        summary = "Admin create dart for organizer",
+        description = "Creates a new dart and assigns organizer role to selected user"
+    )
+    public ResponseEntity<DartResponse> createDartForOrganizer(
+        @Valid @RequestBody AdminCreateDartRequest request
+    ) {
+        DartResponse response = dartService.createDartForAdmin(
+            request.dart(),
+            request.organizerUserId()
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -327,134 +362,7 @@ public class DartController {
     }
 
     /**
-     * Get messages for a dart. Only members can read messages.
-     *
-     * @param id   dart id
-     * @param page page number (0-based)
-     * @param size page size
-     * @return paginated messages
-     */
-    @GetMapping(
-        value = "/{id}/messages",
-        produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    @Operation(
-        summary = "Get dart messages",
-        description = "Retrieves paginated messages for a dart. Only members of the dart can access."
-    )
-    @ApiResponses(
-        value = {
-            @ApiResponse(
-                responseCode = "200",
-                description = "Messages retrieved successfully",
-                content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = PageResponse.class)
-                )
-            ),
-            @ApiResponse(responseCode = "403", description = "Not a member of this dart"),
-            @ApiResponse(responseCode = "404", description = "Dart not found"),
-        }
-    )
-    public ResponseEntity<PageResponse<MessageResponse>> getMessages(
-        @Parameter(description = "Dart id", required = true) @PathVariable("id") UUID id,
-        @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-        @Parameter(description = "Page size") @RequestParam(defaultValue = "50") int size
-    ) {
-        PageResponse<MessageResponse> response = dartMessageService.getMessages(id, page, size);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Send a message in a dart. Only active members can send.
-     *
-     * @param id      dart id
-     * @param request message content
-     * @return created message
-     */
-    @PostMapping(
-        value = "/{id}/messages",
-        consumes = MediaType.APPLICATION_JSON_VALUE,
-        produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    @Operation(
-        summary = "Send message",
-        description = "Posts a message in the dart chat. Only active members can send messages."
-    )
-    @ApiResponses(
-        value = {
-            @ApiResponse(
-                responseCode = "201",
-                description = "Message created",
-                content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = MessageResponse.class)
-                )
-            ),
-            @ApiResponse(responseCode = "400", description = "Invalid content"),
-            @ApiResponse(responseCode = "403", description = "Not a member or not active"),
-            @ApiResponse(responseCode = "404", description = "Dart not found"),
-        }
-    )
-    public ResponseEntity<MessageResponse> sendMessage(
-        @Parameter(description = "Dart id", required = true) @PathVariable("id") UUID id,
-        @Valid @RequestBody CreateMessageRequest request
-    ) {
-        MessageResponse response = dartMessageService.createMessage(id, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    /**
-     * Add a reaction (emoji) to a message.
-     */
-    @PostMapping(
-        value = "/{id}/messages/{messageId}/reactions",
-        consumes = MediaType.APPLICATION_JSON_VALUE
-    )
-    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    @Operation(summary = "Add reaction", description = "Add an emoji reaction to a message. Idempotent.")
-    @ApiResponses(
-        value = {
-            @ApiResponse(responseCode = "204", description = "Reaction added"),
-            @ApiResponse(responseCode = "403", description = "Not a member"),
-            @ApiResponse(responseCode = "404", description = "Dart or message not found"),
-        }
-    )
-    public ResponseEntity<Void> addReaction(
-        @Parameter(description = "Dart id", required = true) @PathVariable("id") UUID id,
-        @Parameter(description = "Message id", required = true) @PathVariable("messageId") UUID messageId,
-        @Valid @RequestBody AddReactionRequest request
-    ) {
-        dartMessageService.addReaction(id, messageId, request.emoji());
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Remove a reaction from a message.
-     */
-    @DeleteMapping(value = "/{id}/messages/{messageId}/reactions/{emoji}")
-    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
-    @Operation(summary = "Remove reaction", description = "Remove your emoji reaction from a message.")
-    @ApiResponses(
-        value = {
-            @ApiResponse(responseCode = "204", description = "Reaction removed"),
-            @ApiResponse(responseCode = "403", description = "Not a member"),
-            @ApiResponse(responseCode = "404", description = "Dart or message not found"),
-        }
-    )
-    public ResponseEntity<Void> removeReaction(
-        @Parameter(description = "Dart id", required = true) @PathVariable("id") UUID id,
-        @Parameter(description = "Message id", required = true) @PathVariable("messageId") UUID messageId,
-        @Parameter(description = "Emoji to remove", required = true) @PathVariable("emoji") String emoji
-    ) {
-        dartMessageService.removeReaction(id, messageId, emoji);
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Mark a dart as finished (organizer only). All chat messages are deleted.
+     * Mark a dart as finished (organizer only).
      *
      * @param id dart id
      * @return updated dart
@@ -466,7 +374,7 @@ public class DartController {
     @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
     @Operation(
         summary = "Finish dart",
-        description = "Marks a dart as finished and deletes all its messages. Only organizers can finish a dart."
+        description = "Marks a dart as finished. Only organizers can finish a dart."
     )
     @ApiResponses(
         value = {

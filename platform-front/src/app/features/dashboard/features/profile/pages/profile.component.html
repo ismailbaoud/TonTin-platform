@@ -26,14 +26,6 @@
               <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ fullName }}</h2>
               <p class="text-sm text-gray-600 dark:text-gray-400">{{ userProfile.email }}</p>
             </div>
-            <!-- Trust Points Badge -->
-            <div class="mt-2 flex items-center gap-2 bg-primary/10 dark:bg-primary/20 px-4 py-2 rounded-full border border-primary/20">
-              <span class="material-symbols-outlined text-primary text-xl">verified_user</span>
-              <div class="flex flex-col items-start">
-                <span class="text-xs text-gray-600 dark:text-gray-300 uppercase tracking-wider font-bold">Trust Points</span>
-                <span class="text-primary font-black leading-none text-lg">{{ userProfile.trustPoints }}</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -60,17 +52,6 @@
           >
             <span class="material-symbols-outlined">lock</span>
             Security
-          </a>
-          <a
-            (click)="setTab('notifications')"
-            [ngClass]="{
-              'bg-primary text-gray-900 font-medium shadow-sm ring-1 ring-primary/50': activeTab === 'notifications',
-              'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium': activeTab !== 'notifications'
-            }"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer"
-          >
-            <span class="material-symbols-outlined">notifications</span>
-            Notifications
           </a>
           <a
             (click)="setTab('appearance')"
@@ -144,19 +125,10 @@
               </div>
             </div>
 
-            <div class="space-y-1.5">
-              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">First Name</label>
+            <div class="space-y-1.5 md:col-span-2">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">User Name</label>
               <input
-                [(ngModel)]="userProfile.firstName"
-                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
-                type="text"
-              />
-            </div>
-
-            <div class="space-y-1.5">
-              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Last Name</label>
-              <input
-                [(ngModel)]="userProfile.lastName"
+                [(ngModel)]="userProfile.userName"
                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
                 type="text"
               />
@@ -170,21 +142,11 @@
                   [(ngModel)]="userProfile.email"
                   class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
                   type="email"
+                  readonly
                 />
               </div>
             </div>
 
-            <div class="space-y-1.5 md:col-span-2">
-              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Phone Number</label>
-              <div class="relative">
-                <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400">call</span>
-                <input
-                  [(ngModel)]="userProfile.phone"
-                  class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
-                  type="tel"
-                />
-              </div>
-            </div>
           </div>
         </section>
 
@@ -226,51 +188,6 @@
                 type="password"
                 placeholder="Re-enter new password"
               />
-            </div>
-          </div>
-        </section>
-
-        <!-- Notifications Settings -->
-        <section
-          *ngIf="activeTab === 'notifications'"
-          class="bg-white dark:bg-gray-900 rounded-xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-sm"
-        >
-          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary">notifications_active</span>
-            Notification Preferences
-          </h2>
-          <div class="space-y-6">
-            <!-- Toggle Item -->
-            <div class="flex items-center justify-between">
-              <div class="flex flex-col">
-                <span class="font-semibold text-gray-900 dark:text-white">Email Notifications</span>
-                <span class="text-sm text-gray-600 dark:text-gray-400">Receive monthly Dâr summaries and updates.</span>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input
-                  [(ngModel)]="appSettings.emailNotifications"
-                  type="checkbox"
-                  class="sr-only peer"
-                />
-                <div class="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
-            <hr class="border-gray-200 dark:border-gray-800" />
-
-            <!-- Toggle Item -->
-            <div class="flex items-center justify-between">
-              <div class="flex flex-col">
-                <span class="font-semibold text-gray-900 dark:text-white">New Dâr Invites</span>
-                <span class="text-sm text-gray-600 dark:text-gray-400">Allow others to invite you to new savings circles.</span>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input
-                  [(ngModel)]="appSettings.darInvites"
-                  type="checkbox"
-                  class="sr-only peer"
-                />
-                <div class="w-11 h-6 bg-gray-300 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
             </div>
           </div>
         </section>

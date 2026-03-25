@@ -1,0 +1,110 @@
+<div class="p-6 lg:p-10">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+      Admin Settings
+    </h1>
+    <p class="text-gray-500 mt-1">
+      Configure platform rules, payments and security policies
+    </p>
+  </div>
+
+  <div class="border-b border-gray-200 dark:border-gray-800 mb-6">
+    <div class="flex gap-6 overflow-x-auto">
+      <button class="pb-3 px-1 border-b-2 border-primary text-primary font-semibold">
+        General
+      </button>
+      <button class="pb-3 px-1 text-gray-500 hover:text-gray-700 font-semibold">
+        Dâr Config
+      </button>
+      <button class="pb-3 px-1 text-gray-500 hover:text-gray-700 font-semibold">
+        Payments
+      </button>
+      <button class="pb-3 px-1 text-gray-500 hover:text-gray-700 font-semibold">
+        Trust Score
+      </button>
+      <button class="pb-3 px-1 text-gray-500 hover:text-gray-700 font-semibold">
+        Security
+      </button>
+      <button class="pb-3 px-1 text-gray-500 hover:text-gray-700 font-semibold">
+        Admin Users
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="successMessage" class="mb-4 rounded-lg bg-green-50 text-green-700 px-4 py-3 text-sm">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="mb-4 rounded-lg bg-red-50 text-red-700 px-4 py-3 text-sm">
+    {{ errorMessage }}
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        General Settings
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="text-gray-500 text-sm font-medium">Platform Name</label>
+          <input
+            [(ngModel)]="platformName"
+            class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+          />
+        </div>
+        <div>
+          <label class="text-gray-500 text-sm font-medium">Support Email</label>
+          <input
+            [(ngModel)]="supportEmail"
+            class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+          />
+        </div>
+        <div>
+          <label class="text-gray-500 text-sm font-medium">Admin Username</label>
+          <input
+            [(ngModel)]="adminUserName"
+            class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        Payment Gateway
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="text-gray-500 text-sm font-medium">Platform Fee (%)</label>
+          <input
+            [(ngModel)]="platformFee"
+            class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+          />
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600 dark:text-gray-300 text-sm font-medium">
+            Stripe Gateway
+          </span>
+          <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
+            Connected
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3 mt-8">
+    <button
+      class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+    >
+      Discard Changes
+    </button>
+    <button
+      [disabled]="loading"
+      (click)="saveSettings()"
+      class="px-6 py-2.5 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+    >
+      {{ loading ? "Saving..." : "Save All Settings" }}
+    </button>
+  </div>
+</div>
+

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TonTin - Admin Members</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec13",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102210",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden md:flex flex-col">
+<div class="p-6 flex flex-col gap-8 h-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-slate-900 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">rocket_launch</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-lg font-bold leading-none">TonTin</h1>
+<p class="text-primary text-xs font-semibold uppercase tracking-wider mt-1">Admin Console</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-slate-900 dark:text-white border border-primary/20 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">group</span>
+<span class="text-sm font-bold">Members</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">ads_click</span>
+<span class="text-sm font-medium">Darts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">verified_user</span>
+<span class="text-sm font-medium">Permissions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3 px-3">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+<img alt="Admin Profile" data-alt="Admin user profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCEZZ6WDby0q9AkTLe_piY6u8sT4NYH8u2XKMXmbL2Rhqz5UiXWDEGnQ3mCpGuY-JeL8mZOdF0U-hB68UCcgvJtzGaRt8KVLdAfpLZGTl1LaiCHQVE08e7IBdeMqw7n9xxsWNpOv-ve4WHDuCg8nCTq-bW-2GKpcpt5K9DUacUQwHoLuXkwo3mRor7NknX_kyXwXZlThJmdVsxSDAuLkJaF4gvnbA_xjoPR0oM0R9L6iXHsRyYZ8f_heZI4gnwKRYEqK5hv_vgKbY"/>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold truncate">Alex Morgan</span>
+<span class="text-xs text-slate-500">Super Admin</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-hidden">
+<!-- Header & Breadcrumbs -->
+<header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 py-6">
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2 text-sm">
+<a class="text-slate-500 hover:text-primary transition-colors" href="#">Admin</a>
+<span class="text-slate-300">/</span>
+<span class="text-slate-900 dark:text-slate-100 font-semibold">Members</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex flex-col">
+<h2 class="text-3xl font-extrabold tracking-tight">Members Management</h2>
+<p class="text-slate-500 text-sm mt-1">Efficiently manage your organization's members and their specific dart assignments.</p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-slate-900 font-bold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-md shadow-primary/10">
+<span class="material-symbols-outlined">person_add</span>
+                        Add New Member
+                    </button>
+</div>
+</div>
+</header>
+<!-- Search and Filters -->
+<div class="px-8 py-6 flex flex-col gap-6">
+<div class="flex flex-col lg:flex-row gap-4 items-center">
+<div class="relative flex-1 w-full">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm shadow-sm" placeholder="Search by name, email or ID..." type="text"/>
+</div>
+<div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+<div class="relative group">
+<button class="flex items-center justify-between gap-4 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:border-primary transition-all shadow-sm">
+<span class="flex items-center gap-2">Dart: <span class="text-primary">All</span></span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</button>
+</div>
+<div class="relative group">
+<button class="flex items-center justify-between gap-4 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:border-primary transition-all shadow-sm">
+<span class="flex items-center gap-2">Status: <span class="text-primary">Active</span></span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</button>
+</div>
+<div class="relative group">
+<button class="flex items-center justify-between gap-4 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:border-primary transition-all shadow-sm">
+<span class="flex items-center gap-2">Permission: <span class="text-primary">All</span></span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Table Section -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-primary transition-colors">
+<div class="flex items-center gap-1">Member ID <span class="material-symbols-outlined text-sm">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-primary transition-colors">
+<div class="flex items-center gap-1">User <span class="material-symbols-outlined text-sm">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-primary transition-colors">
+<div class="flex items-center gap-1">Dart Name <span class="material-symbols-outlined text-sm">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-primary transition-colors">
+<div class="flex items-center gap-1">Permission <span class="material-symbols-outlined text-sm">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-primary transition-colors">
+<div class="flex items-center gap-1">Status <span class="material-symbols-outlined text-sm">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 cursor-pointer hover:text-primary transition-colors">
+<div class="flex items-center gap-1">Joined At <span class="material-symbols-outlined text-sm">unfold_more</span></div>
+</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 text-sm font-mono text-slate-500">#TT-8291</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-slate-900 text-xs">JD</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Jane Doe</span>
+<span class="text-xs text-slate-500">jane.doe@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">QuickFire Alpha</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium">Editor</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Oct 12, 2023</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-all">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+<button class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+<span class="material-symbols-outlined text-xl">person_remove</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 text-sm font-mono text-slate-500">#TT-1024</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Member Avatar" class="w-9 h-9 rounded-full object-cover" data-alt="Male user portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5ZqABhZ-D3oloHH1gsvcvaNwnH8FNQqLQVe4NTQtuMrmk8EoDNM7n0UbZL3SrppB3nGWODYCYgHn0lcNx3Gan8O8hV88Jo_B3xANMNl7LVacILbpYZWb9m8S5lDW7bNui6DRqNbPb3J-krMNAt7LgHDXtAyGtvkvzmzKJHYHAwuIxI7iXkEiPSUrnxHISo3g3Hirg0VMqxEx7svuuiEKXC7CLCzdWMTuG4jLvnilJtcPxtMyST2wyooybpQ1rDqh4ZAk7rALOleo"/>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Marcus Smith</span>
+<span class="text-xs text-slate-500">marcus@dartlabs.io</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Project Zephyr</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium">Admin</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Dec 05, 2023</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-all">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+<button class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+<span class="material-symbols-outlined text-xl">person_remove</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 text-sm font-mono text-slate-500">#TT-5512</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center font-bold text-slate-900 text-xs">EL</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Elena Laine</span>
+<span class="text-xs text-slate-500">elena.l@tontin.com</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Nova Spark</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium">Viewer</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive
+                                    </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Jan 22, 2024</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-all">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+<button class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+<span class="material-symbols-outlined text-xl">person_remove</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 text-sm font-mono text-slate-500">#TT-0043</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img alt="Member Avatar" class="w-9 h-9 rounded-full object-cover" data-alt="Female user portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPJnsJjSonOpdF4YXj3r-68-DmYLfTK8swWqbsnSKUkp5FW2i_dXpK4n_qPELnvkxFWRj-rC2bGGIYAGzLRNfWbI68CCECk6taVmDHWIjnu_PyJCGHDRaSMgPQO4s8bSMIFUE-glDELzeIM7Gxpo9rEYnQMAbGfRtLRyFxebI_iZOsuzCBz3Z2U-btHltPYLh5J6ob-5NvOeyikpbNf3MoHQLq_JCU5B-Auwc0RHmZ2Eo6DLg3Mj9JEoIF3O9_pnyJw_TPjoNUnsU"/>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Sarah Jenkins</span>
+<span class="text-xs text-slate-500">s.jenkins@creative.co</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Design Sprint</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium">Editor</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400">
+<span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Pending
+                                    </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Feb 11, 2024</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-all">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+<button class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+<span class="material-symbols-outlined text-xl">person_remove</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+<p class="text-sm text-slate-500">Showing <span class="font-bold text-slate-900 dark:text-white">1</span> to <span class="font-bold text-slate-900 dark:text-white">4</span> of <span class="font-bold text-slate-900 dark:text-white">128</span> results</p>
+<div class="flex items-center gap-2">
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-white dark:hover:bg-slate-700 disabled:opacity-50 transition-all" disabled="">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<div class="flex items-center">
+<button class="w-9 h-9 rounded-lg bg-primary text-slate-900 font-bold text-sm">1</button>
+<button class="w-9 h-9 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-medium text-sm">2</button>
+<button class="w-9 h-9 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-medium text-sm">3</button>
+<span class="px-2 text-slate-400">...</span>
+<button class="w-9 h-9 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-medium text-sm">32</button>
+</div>
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-all">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Mobile Bottom Nav (Visual Only) -->
+<div class="md:hidden mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex justify-around">
+<button class="text-primary"><span class="material-symbols-outlined">group</span></button>
+<button class="text-slate-400"><span class="material-symbols-outlined">dashboard</span></button>
+<button class="text-slate-400"><span class="material-symbols-outlined">ads_click</span></button>
+<button class="text-slate-400"><span class="material-symbols-outlined">settings</span></button>
+</div>
+</main>
+</div>
+</body></html>

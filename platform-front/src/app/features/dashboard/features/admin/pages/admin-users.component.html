@@ -1,0 +1,231 @@
+<div class="p-6 lg:p-10">
+  <div class="flex items-start justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+        User Management
+      </h1>
+      <p class="text-gray-500 mt-1">Manage users and enable/disable accounts</p>
+    </div>
+    <button
+      (click)="openCreateUserModal()"
+      class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold shadow-sm shadow-primary/20"
+    >
+      {{ createLoading ? "Creating..." : "Add New User" }}
+    </button>
+  </div>
+
+  <!-- Create User Modal -->
+  <div
+    *ngIf="showCreateUserModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+  >
+    <div
+      class="w-full max-w-lg rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg"
+    >
+      <div class="p-5 border-b border-gray-200 dark:border-gray-800">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+              Create User
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Add a new admin/client account.
+            </p>
+          </div>
+          <button
+            (click)="closeCreateUserModal()"
+            class="p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
+            aria-label="Close"
+            type="button"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-5">
+        <div
+          *ngIf="errorMessage"
+          class="mb-4 rounded-lg bg-amber-50 text-amber-800 px-4 py-3 text-sm"
+        >
+          {{ errorMessage }}
+        </div>
+        <div
+          *ngIf="successMessage"
+          class="mb-4 rounded-lg bg-green-50 text-green-700 px-4 py-3 text-sm"
+        >
+          {{ successMessage }}
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 mb-4">
+          <input
+            [(ngModel)]="newUserName"
+            class="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            placeholder="New user name"
+            type="text"
+          />
+          <input
+            [(ngModel)]="newUserEmail"
+            class="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            placeholder="New user email"
+            type="email"
+          />
+          <input
+            [(ngModel)]="newUserPassword"
+            type="password"
+            class="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            placeholder="New user password"
+          />
+        </div>
+      </div>
+
+      <div class="p-5 border-t border-gray-200 dark:border-gray-800 flex gap-3 justify-end">
+        <button
+          (click)="closeCreateUserModal()"
+          class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          type="button"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="createUser()"
+          [disabled]="createLoading"
+          class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold shadow-sm shadow-primary/20 disabled:opacity-60"
+          type="button"
+        >
+          {{ createLoading ? "Creating..." : "Create User" }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+      <p class="text-gray-500 text-sm font-medium">Total Active Users</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+        {{ totalUsers }}
+      </p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+      <p class="text-gray-500 text-sm font-medium">Verified KYC</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+        {{ verifiedUsers }}
+      </p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+      <p class="text-gray-500 text-sm font-medium">Flagged Accounts</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+        {{ flaggedUsers }}
+      </p>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 mb-4">
+    <div class="flex flex-col lg:flex-row gap-3">
+      <div class="flex-1">
+        <label class="text-gray-500 text-sm font-medium">Search</label>
+        <input
+          [ngModel]="searchTerm"
+          (ngModelChange)="onSearchChange($event)"
+          class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+          placeholder="Search by name, email or ID..."
+        />
+      </div>
+      <div class="lg:w-56">
+        <label class="text-gray-500 text-sm font-medium">Role</label>
+        <select
+          [(ngModel)]="roleFilter"
+          class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+        >
+          <option>All</option>
+          <option>Admin</option>
+          <option>Client</option>
+        </select>
+      </div>
+      <div class="lg:w-56">
+        <label class="text-gray-500 text-sm font-medium">Account Status</label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="loadUsers()"
+          class="mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-white"
+        >
+          <option value="">All</option>
+          <option value="ACTIVE">Active</option>
+          <option value="PENDING">Pending</option>
+          <option value="SUSPENDED">Suspended</option>
+          <option value="DISABLED">Disabled</option>
+          <option value="DELETED">Deleted</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-x-auto">
+    <div *ngIf="errorMessage" class="p-4 text-sm text-red-600 dark:text-red-400">
+      {{ errorMessage }}
+    </div>
+    <table class="w-full text-left">
+      <thead>
+        <tr class="bg-gray-50 dark:bg-gray-950 text-gray-500 uppercase text-xs font-bold">
+          <th class="px-6 py-4">User Details</th>
+          <th class="px-6 py-4">Role</th>
+          <th class="px-6 py-4">Status</th>
+          <th class="px-6 py-4 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="loading" class="border-t border-gray-100 dark:border-gray-800">
+          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+            Loading users...
+          </td>
+          <td class="px-6 py-4"></td>
+          <td class="px-6 py-4"></td>
+          <td class="px-6 py-4 text-right"></td>
+        </tr>
+        <tr *ngFor="let user of users" class="border-t border-gray-100 dark:border-gray-800">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-gray-200 overflow-hidden">
+                <img
+                  *ngIf="user.avatar"
+                  [src]="'data:image/png;base64,' + user.avatar"
+                  alt="avatar"
+                  class="w-full h-full object-cover"
+                />
+                <span *ngIf="!user.avatar">{{ user.userName.slice(0, 2).toUpperCase() }}</span>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ user.userName }}</p>
+                <p class="text-xs text-gray-500">{{ user.email }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ user.role || "-" }}</td>
+          <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ user.status || "-" }}</td>
+          <td class="px-6 py-4 text-right text-sm">
+            <button
+              (click)="setUserStatus(user, (user.status || '').toUpperCase() === 'ACTIVE' ? 'DISABLED' : 'ACTIVE')"
+              [disabled]="actionLoadingUserId === user.id"
+              class="rounded-lg px-3 py-1 text-xs font-semibold disabled:opacity-60"
+              [ngClass]="(user.status || '').toUpperCase() === 'ACTIVE'
+                ? 'border border-amber-300 text-amber-700 hover:bg-amber-50'
+                : 'border border-green-300 text-green-700 hover:bg-green-50'"
+            >
+              {{
+                actionLoadingUserId === user.id
+                  ? "Updating..."
+                  : ((user.status || "").toUpperCase() === "ACTIVE" ? "Disable" : "Enable")
+              }}
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="!loading && !users.length" class="border-t border-gray-100 dark:border-gray-800">
+          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300" colspan="4">
+            Type at least 2 characters to search users.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+

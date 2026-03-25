@@ -30,7 +30,7 @@ export class ClientLayoutComponent implements OnInit {
   private loadUserData(): void {
     this.currentUser = this.authService.getStoredUser();
 
-    if (!this.currentUser) {
+    if (!this.currentUser || !this.currentUser.role) {
       // If no stored user, try to fetch from API
       this.isLoading = true;
       this.authService.getCurrentUser().subscribe({
@@ -100,5 +100,13 @@ export class ClientLayoutComponent implements OnInit {
       return "Client";
     }
     return this.currentUser.role || "Unknown";
+  }
+
+  isAdmin(): boolean {
+    const role = (this.currentUser?.role ?? "")
+      .toString()
+      .trim()
+      .toUpperCase();
+    return role === "ROLE_ADMIN" || role === "ADMIN";
   }
 }

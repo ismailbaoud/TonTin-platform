@@ -76,13 +76,11 @@
       </label>
       <div class="relative">
         <select
-          [(ngModel)]="selectedDar"
+          [(ngModel)]="selectedDartId"
           class="w-full bg-gray-50 text-slate-900 border border-slate-200 rounded-lg py-2.5 pl-3 pr-10 text-sm focus:ring-primary focus:border-primary appearance-none"
         >
-          <option>All Groups</option>
-          <option>Family Tontine</option>
-          <option>Work Colleagues</option>
-          <option>Neighbors Circle</option>
+          <option [ngValue]="null">All Groups</option>
+          <option *ngFor="let d of dars" [ngValue]="d.id">{{ d.name }}</option>
         </select>
         <span
           class="material-symbols-outlined absolute right-3 top-2.5 text-slate-600 pointer-events-none"
@@ -151,7 +149,7 @@
       </div>
       <div>
         <p class="text-slate-600 text-sm font-medium">{{ card.title }}</p>
-        <h3 class="text-slate-900 text-3xl font-bold mt-1">{{ card.value }}</h3>
+        <h3 class="text-slate-900 text-3xl font-bold mt-1">${{ card.value }}</h3>
         <p *ngIf="card.subtext" class="text-xs text-slate-500 mt-1">
           {{ card.subtext }}
         </p>
@@ -205,8 +203,14 @@
       </div>
 
       <!-- Month labels -->
-      <div class="flex justify-between text-xs text-slate-600 mt-4 px-2">
-        <span *ngFor="let data of chartData" [class.text-primary]="data.month === 'Jun'" [class.font-bold]="data.month === 'Jun'">
+      <div class="flex justify-between gap-1 text-xs text-slate-600 mt-4 px-2">
+        <span
+          *ngFor="let data of chartData"
+          class="flex-1 text-center truncate"
+          [class.text-primary]="data.value > 0 && data.value === maxChartValue"
+          [class.font-bold]="data.value > 0 && data.value === maxChartValue"
+          [title]="data.month"
+        >
           {{ data.month }}
         </span>
       </div>
@@ -220,13 +224,13 @@
       <div class="flex-1 flex items-center justify-center relative">
         <div
           class="donut-chart relative w-48 h-48 rounded-full"
-          style="background: conic-gradient(#13ec5b 0% 65%, #f1f5f9 65% 85%, #fbbf24 85% 100%)"
+          [style.background]="donutGradient"
         >
           <div
             class="absolute inset-4 bg-white rounded-full flex items-center justify-center flex-col shadow-inner"
           >
-            <span class="text-2xl font-bold text-slate-900">65%</span>
-            <span class="text-xs text-slate-600">On Time</span>
+            <span class="text-2xl font-bold text-slate-900">{{ paymentStatus[0].percentage }}%</span>
+            <span class="text-xs text-slate-600">{{ paymentStatus[0].label }}</span>
           </div>
         </div>
       </div>

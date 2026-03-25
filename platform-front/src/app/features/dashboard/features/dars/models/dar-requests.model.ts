@@ -33,19 +33,29 @@ export interface CreateDarRequest {
  */
 export interface UpdateDarRequest {
   /** Updated name of the Dâr */
-  name?: string;
+  name: string;
+
+  /** Updated monthly contribution amount */
+  monthlyContribution: number;
+
+  /** Updated order method */
+  orderMethod:
+    | "FIXED_ORDER"
+    | "RANDOM_ONCE"
+    | "BIDDING_MODEL"
+    | "DYNAMIQUE_RANDOM";
+
+  /** Updated custom rules and terms */
+  customRules?: string;
 
   /** Updated description */
   description?: string;
 
-  /** Updated cover image URL */
-  image?: string;
+  /** Updated payment frequency */
+  paymentFrequency: string;
 
-  /** Updated custom rules and terms */
-  rules?: string;
-
-  /** Updated visibility level */
-  visibility?: "public" | "private" | "invite-only";
+  /** Updated cover image as bytes */
+  picture?: number[];
 }
 
 /**
@@ -107,14 +117,6 @@ export interface ReportMemberRequest {
 
   /** Reason for the report */
   reason: string;
-}
-
-/**
- * Request payload for sending a message in a Dâr
- */
-export interface SendMessageRequest {
-  /** Message content/text */
-  content: string;
 }
 
 /**

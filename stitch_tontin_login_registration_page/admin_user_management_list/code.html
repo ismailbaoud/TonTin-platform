@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TonTin Admin | User Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-800 dark:text-slate-100 transition-colors duration-200">
+<!-- Sidebar Navigation (Hidden on mobile usually, but keeping desktop focus) -->
+<div class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-slate-900 border-r border-primary/10 hidden lg:block z-50">
+<div class="p-6">
+<div class="flex items-center gap-2 mb-10">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-icons text-white text-xl">account_balance_wallet</span>
+</div>
+<span class="text-xl font-bold tracking-tight">TonTin <span class="text-primary">Admin</span></span>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:bg-primary/5 hover:text-primary transition-all" href="#">
+<span class="material-icons">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 text-primary border-l-4 border-primary transition-all" href="#">
+<span class="material-icons">group</span>
+<span class="font-medium">User Management</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:bg-primary/5 hover:text-primary transition-all" href="#">
+<span class="material-icons">security</span>
+<span class="font-medium">KYC Approvals</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:bg-primary/5 hover:text-primary transition-all" href="#">
+<span class="material-icons">receipt_long</span>
+<span class="font-medium">Transactions</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 hover:bg-primary/5 hover:text-primary transition-all" href="#">
+<span class="material-icons">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+</nav>
+</div>
+</div>
+<!-- Main Content -->
+<main class="lg:ml-64 p-8">
+<!-- Header -->
+<header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+<div>
+<nav aria-label="Breadcrumb" class="flex text-sm text-slate-400 mb-1">
+<ol class="flex items-center space-x-2">
+<li><a class="hover:text-primary transition-colors" href="#">Admin</a></li>
+<li><span class="material-icons text-sm">chevron_right</span></li>
+<li><span class="text-slate-600 dark:text-slate-300 font-medium">User Management</span></li>
+</ol>
+</nav>
+<h1 class="text-3xl font-extrabold text-slate-900 dark:text-white">User Management</h1>
+</div>
+<button class="flex items-center justify-center gap-2 bg-primary hover:bg-opacity-90 text-white font-bold py-2.5 px-6 rounded-lg transition-all shadow-lg shadow-primary/20">
+<span class="material-icons">add</span>
+                Add New User
+            </button>
+</header>
+<!-- Metrics Overview -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-primary/10 shadow-sm flex items-center justify-between">
+<div>
+<p class="text-slate-500 text-sm font-medium mb-1">Total Active Users</p>
+<h3 class="text-2xl font-bold">12,842</h3>
+</div>
+<div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+<span class="material-icons">people</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-primary/10 shadow-sm flex items-center justify-between">
+<div>
+<p class="text-slate-500 text-sm font-medium mb-1">Verified KYC</p>
+<h3 class="text-2xl font-bold">8,920</h3>
+</div>
+<div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+<span class="material-icons">verified</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-primary/10 shadow-sm flex items-center justify-between">
+<div>
+<p class="text-slate-500 text-sm font-medium mb-1">Flagged Accounts</p>
+<h3 class="text-2xl font-bold text-red-500">42</h3>
+</div>
+<div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+<span class="material-icons">report_problem</span>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-t-xl border-x border-t border-primary/10 flex flex-col lg:flex-row items-center gap-4">
+<div class="relative w-full lg:w-96">
+<span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-background-light dark:bg-slate-800 border-transparent focus:border-primary focus:ring-0 rounded-lg text-sm transition-all" placeholder="Search by name, email or ID..." type="text"/>
+</div>
+<div class="flex items-center gap-3 w-full lg:w-auto">
+<select class="bg-background-light dark:bg-slate-800 border-none rounded-lg text-sm font-medium focus:ring-1 focus:ring-primary py-2 px-4 cursor-pointer">
+<option>Role: All</option>
+<option>Admin</option>
+<option>Moderator</option>
+<option>Member</option>
+</select>
+<select class="bg-background-light dark:bg-slate-800 border-none rounded-lg text-sm font-medium focus:ring-1 focus:ring-primary py-2 px-4 cursor-pointer">
+<option>KYC: All Status</option>
+<option>Verified</option>
+<option>Pending</option>
+<option>Unverified</option>
+</select>
+<select class="bg-background-light dark:bg-slate-800 border-none rounded-lg text-sm font-medium focus:ring-1 focus:ring-primary py-2 px-4 cursor-pointer">
+<option>Trust Score: High</option>
+<option>Medium</option>
+<option>Low</option>
+</select>
+<button class="ml-auto lg:ml-0 flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-primary transition-colors text-sm font-bold">
+<span class="material-icons text-lg">filter_list</span>
+                    More
+                </button>
+</div>
+<div class="hidden lg:block ml-auto">
+<button class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold hover:bg-slate-200 transition-all">
+<span class="material-icons text-lg">file_download</span>
+                    Export CSV
+                </button>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-b-xl overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-primary/10 text-slate-400 uppercase text-[11px] font-bold tracking-widest">
+<th class="px-6 py-4 w-12 text-center"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></th>
+<th class="px-6 py-4">User Details</th>
+<th class="px-6 py-4">Role</th>
+<th class="px-6 py-4">Trust Score</th>
+<th class="px-6 py-4 text-center">KYC Status</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 text-center"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Professional headshot of a male user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgoFaYIfmbili2FkwpYsYSviclMMRtKlSbjqicRr64MKj1jZDiplQ5S8FVZGGJg_FSAvSx6lugTeEpH30pNg62E21KgKgxDxvqHYK4COqn6NW8-3TY780y9PzqJTBI4L0-UL21YTIsmsHnCuJjrhhuYoCXZ5_vFz1bO71_ZA31bUS3lwgouHipaSS86zcf8_uHyNgxdycYC00Eb6MIgBRolj45NpMek4bhNpWVkvGEi7Itb6OQRoqOzKSUoVPaaqDWQ0vO1vXCiFA"/>
+<div>
+<p class="font-bold text-slate-900 dark:text-white leading-tight">Marcus Sterling</p>
+<p class="text-xs text-slate-400">m.sterling@example.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 text-[11px] font-bold bg-primary/10 text-primary rounded-full uppercase">Admin</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[60px]">
+<span class="block h-full bg-primary" style="width: 95%"></span>
+</span>
+<span class="px-2 py-0.5 text-[10px] font-bold bg-primary text-white rounded">9.5</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="material-icons text-primary" title="Verified">check_circle</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 text-center"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait of a smiling female executive" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCh1s1iL_6R22JoN3LlNAkZlrsVrTW5ObfHjhyDc28Ce_a_u_k8Va8W1YSO72-wdox7MqYhe26nYa-DtMv9TrrAc1Q19OjhwI5GKEnJjFjnQ1_6HBJeK8hJjAPBjfeQSyx3bXmn-AUKM6AnKOwSMhnHihNHvLKOgk0aDnnSkSp_SjjoD4VEx45FnzK2XsC0m8Jl6aWaNrADsVmQcZU5g759jmUaFdoMACusyB_c2kT84qhz9qjVyn_RvvcQA2r_bhdiZjIUb0MELj8"/>
+<div>
+<p class="font-bold text-slate-900 dark:text-white leading-tight">Sarah Al-Fayed</p>
+<p class="text-xs text-slate-400">sarah.f@global.net</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 text-[11px] font-bold bg-blue-100 text-blue-600 rounded-full uppercase">Moderator</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[60px]">
+<span class="block h-full bg-primary" style="width: 82%"></span>
+</span>
+<span class="px-2 py-0.5 text-[10px] font-bold bg-primary text-white rounded">8.2</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="material-icons text-primary" title="Verified">check_circle</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 text-center"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 font-bold">JB</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white leading-tight">James Bennett</p>
+<p class="text-xs text-slate-400">jb99@gmail.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full uppercase">Member</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[60px]">
+<span class="block h-full bg-yellow-400" style="width: 54%"></span>
+</span>
+<span class="px-2 py-0.5 text-[10px] font-bold bg-yellow-400 text-white rounded">5.4</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="material-icons text-amber-500" title="Pending">pending</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 text-center"><input class="rounded border-slate-300 text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Headshot of a modern creative professional woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9Jd4URZwbtS7KDG0TZQamANiH-HIGDDUYn0bBnibrtrlCpqOAZ19Xcu9sP2zIomMu9sJ69Gk8oLlgYDe9M_7Y4UMlZWyhxwE8FXxqPA3MAeWbQtTFMgdEvEYjachpkrom5CCDx9gbZIgucAoMtkn1gs7jbto682_wlS3qnNo1dnjNQJfdT0Rb3hiNUendeu6EOMVju9XVCiScvUN0F5NWAG7bGqFMPG98O-5TOmklyGq2U46CHRUuvIuTiRiux8P-NObO0ErrOS8"/>
+<div>
+<p class="font-bold text-slate-900 dark:text-white leading-tight">Elena Rodriguez</p>
+<p class="text-xs text-slate-400">elena.rod@tontin.com</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full uppercase">Member</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden min-w-[60px]">
+<span class="block h-full bg-red-500" style="width: 28%"></span>
+</span>
+<span class="px-2 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded">2.8</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="material-icons text-slate-300" title="Unverified">cancel</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination -->
+<div class="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between border-t border-primary/10">
+<span class="text-xs font-medium text-slate-500">Showing 1 to 10 of 12,842 users</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-white dark:hover:bg-slate-800 transition-all">
+<span class="material-icons text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-slate-500 hover:bg-primary/5 transition-all text-xs font-bold">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-slate-500 hover:bg-primary/5 transition-all text-xs font-bold">3</button>
+<span class="px-1 text-slate-400">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-transparent text-slate-500 hover:bg-primary/5 transition-all text-xs font-bold">1284</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-white dark:hover:bg-slate-800 transition-all">
+<span class="material-icons text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Sticky Selection Footer (Hidden by default, shown when items are selected) -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 lg:left-[calc(50%+128px)] bg-slate-900 dark:bg-primary text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-6 z-[60] opacity-0 pointer-events-none transform translate-y-10 transition-all">
+<p class="text-sm font-bold"><span id="selected-count">2</span> users selected</p>
+<div class="h-6 w-px bg-white/20"></div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1 text-sm font-medium hover:text-red-400 transition-colors">
+<span class="material-icons text-lg">delete</span>
+                    Delete
+                </button>
+<button class="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
+<span class="material-icons text-lg">edit</span>
+                    Edit Role
+                </button>
+<button class="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
+<span class="material-icons text-lg">mail</span>
+                    Send Invite
+                </button>
+</div>
+</div>
+</main>
+<!-- Map Contextual Element (Data Location Example) -->
+<div class="hidden" data-location="London" style=""></div>
+</body></html>

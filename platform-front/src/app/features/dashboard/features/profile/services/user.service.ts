@@ -18,7 +18,6 @@ export interface User {
   language: string;
   timezone: string;
   role: 'ROLE_CLIENT' | 'ROLE_ADMIN';
-  trustScore: number;
   isVerified: boolean;
   emailVerified: boolean;
   phoneVerified: boolean;
@@ -78,52 +77,13 @@ export interface Badge {
 
 export interface Activity {
   id: number;
-  type: 'dar_joined' | 'dar_created' | 'payment_made' | 'payout_received' | 'badge_earned' | 'trust_score_updated';
+  type: 'dar_joined' | 'dar_created' | 'payment_made' | 'payout_received' | 'badge_earned';
   title: string;
   description: string;
   timestamp: string;
   icon?: string;
   relatedEntityType?: string;
   relatedEntityId?: number;
-}
-
-export interface TrustScore {
-  userId: number;
-  score: number;
-  rank: number;
-  totalUsers: number;
-  percentile: number;
-  breakdown: TrustScoreBreakdown;
-  history: TrustScoreHistory[];
-  lastUpdated: string;
-}
-
-export interface TrustScoreBreakdown {
-  paymentHistory: number;
-  darParticipation: number;
-  communityReputation: number;
-  accountAge: number;
-  verificationLevel: number;
-  penaltyDeductions: number;
-}
-
-export interface TrustScoreHistory {
-  date: string;
-  score: number;
-  change: number;
-  reason?: string;
-}
-
-export interface TrustRanking {
-  userId: number;
-  userName: string;
-  avatar?: string;
-  trustScore: number;
-  rank: number;
-  badgeCount: number;
-  activeDars: number;
-  location?: string;
-  isFollowing?: boolean;
 }
 
 export interface UpdateProfileRequest {
@@ -175,17 +135,12 @@ export interface PaginatedResponse<T> {
 export class UserService {
   private apiUrl = `${environment.apiUrl}/users`;
   private profileApiUrl = `${environment.apiUrl}/profile`;
-  private trustApiUrl = `${environment.apiUrl}/trust`;
-  private rankingsApiUrl = `${environment.apiUrl}/rankings`;
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
   public userProfile$ = this.userProfileSubject.asObservable();
-
-  private trustScoreSubject = new BehaviorSubject<TrustScore | null>(null);
-  public trustScore$ = this.trustScoreSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -311,59 +266,6 @@ export class UserService {
    */
   disableTwoFactor(password: string): Observable<void> {
     return this.http.post<void>(`${this.profileApiUrl}/2fa/disable`, { password });
-  }
-
-  /**
-   * Get user's trust score
-   */
-  getTrustScore(userId?: number): Observable<TrustScore> {
-    const url = userId
-      ? `${this.trustApiUrl}/${userId}`
-      : `${this.trustApiUrl}/me`;
-
-    return this.http.get<TrustScore>(url).pipe(
-      tap(trustScore => {
-        if (!userId) {
-          this.trustScoreSubject.next(trustScore);
-        }
-      })
-    );
-  }
-
-  /**
-   * Get trust score history
-   */
-  getTrustScoreHistory(
-    userId?: number,
-    period: 'week' | 'month' | 'year' | 'all' = 'month'
-  ): Observable<TrustScoreHistory[]> {
-    const url = userId
-      ? `${this.trustApiUrl}/${userId}/history`
-      : `${this.trustApiUrl}/me/history`;
-
-    const params = new HttpParams().set('period', period);
-    return this.http.get<TrustScoreHistory[]>(url, { params });
-  }
-
-  /**
-   * Get trust rankings (leaderboard)
-   */
-  getTrustRankings(
-    page: number = 0,
-    size: number = 20,
-    region?: string,
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all-time' = 'all-time'
-  ): Observable<PaginatedResponse<TrustRanking>> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString())
-      .set('timeframe', timeframe);
-
-    if (region) {
-      params = params.set('region', region);
-    }
-
-    return this.http.get<PaginatedResponse<TrustRanking>>(this.rankingsApiUrl, { params });
   }
 
   /**
@@ -614,7 +516,6 @@ export class UserService {
   clearCache(): void {
     this.currentUserSubject.next(null);
     this.userProfileSubject.next(null);
-    this.trustScoreSubject.next(null);
   }
 
   /**

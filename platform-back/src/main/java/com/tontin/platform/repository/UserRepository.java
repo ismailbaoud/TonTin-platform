@@ -37,13 +37,25 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             @Param("username") String username,
             @Param("status") UserStatus status);
 
-    /**
-     * Find users ordered by points descending (for leaderboard). Only active users.
-     */
-    Page<User> findByStatusOrderByPointsDesc(UserStatus status, Pageable pageable);
+    Page<User> findAllByStatus(UserStatus status, Pageable pageable);
 
-    /**
-     * Find all users ordered by points descending (for leaderboard). Includes all statuses.
-     */
-    Page<User> findAllByOrderByPointsDesc(Pageable pageable);
+    @Query("""
+            SELECT u
+            FROM User u
+            WHERE LOWER(u.userName) LIKE LOWER(CONCAT('%', :query, '%'))
+            """)
+    Page<User> searchByUserName(
+            @Param("query") String query,
+            Pageable pageable);
+
+    @Query("""
+            SELECT u
+            FROM User u
+            WHERE LOWER(u.userName) LIKE LOWER(CONCAT('%', :query, '%'))
+            AND u.status = :status
+            """)
+    Page<User> searchByUserNameAndStatus(
+            @Param("query") String query,
+            @Param("status") UserStatus status,
+            Pageable pageable);
 }

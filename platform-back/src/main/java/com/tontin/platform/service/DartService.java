@@ -9,6 +9,7 @@ import java.util.UUID;
 
 public interface DartService {
     DartResponse createDart(DartRequest request);
+    DartResponse createDartForAdmin(DartRequest request, UUID organizerUserId);
     DartResponse updateDart(DartRequest request, UUID id);
     DartResponse getDartDetails(UUID id);
     DartResponse deleteDart(UUID id);
@@ -39,8 +40,14 @@ public interface DartService {
         int size
     );
 
+    PageResponse<DartResponse> getAllDartsForAdmin(
+        DartStatus status,
+        int page,
+        int size
+    );
+
     /**
-     * Mark a dart as finished (organizer only). All messages are deleted when the dart is completed.
+     * Mark a dart as finished (organizer only).
      *
      * @param id dart id
      * @return the updated dart
