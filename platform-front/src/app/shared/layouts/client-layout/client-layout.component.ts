@@ -15,7 +15,8 @@ import {
 })
 export class ClientLayoutComponent implements OnInit {
   currentUser: UserResponse | null = null;
-  isLoading = false;
+  isLoadingUser = false;
+  isLoggingOut = false;
   isMobileMenuOpen = false;
 
   constructor(
@@ -32,15 +33,15 @@ export class ClientLayoutComponent implements OnInit {
 
     if (!this.currentUser || !this.currentUser.role) {
       // If no stored user, try to fetch from API
-      this.isLoading = true;
+      this.isLoadingUser = true;
       this.authService.getCurrentUser().subscribe({
         next: (user) => {
           this.currentUser = user;
-          this.isLoading = false;
+          this.isLoadingUser = false;
         },
         error: (error) => {
           console.error("Failed to load user data:", error);
-          this.isLoading = false;
+          this.isLoadingUser = false;
           // Redirect to login if user data cannot be loaded
           this.router.navigate(["/auth/login"]);
         },
@@ -49,21 +50,22 @@ export class ClientLayoutComponent implements OnInit {
   }
 
   onLogout(): void {
+    if (this.isLoggingOut) return;
+
     if (confirm("Are you sure you want to logout?")) {
-      this.isLoading = true;
-      this.authService.logout().subscribe({
-        next: () => {
-          console.log("✅ Logout successful");
-          this.router.navigate(["/auth/login"]);
-        },
-        error: (error) => {
-          console.error("Logout error:", error);
-          // Even if API fails, redirect to login
-          this.router.navigate(["/auth/login"]);
-        },
-        complete: () => {
-          this.isLoading = false;
-        },
+      this.isLoggingOut = true;
+      this.closeMobileMenu();
+
+      // Clear local session first so guards treat user as logged out immediately.
+      this.authService.clearLocalAuth();
+      this.router.navigateByUrl("/auth/login", { replaceUrl: true }).finally(() => {
+        // Hard fallback in case router navigation is interrupted by stale state.
+        setTimeout(() => {
+          if (!window.location.pathname.startsWith("/auth/login")) {
+            window.location.assign("/auth/login");
+          }
+          this.isLoggingOut = false;
+        }, 100);
       });
     }
   }

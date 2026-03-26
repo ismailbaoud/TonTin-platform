@@ -172,6 +172,14 @@ export class AuthService {
   }
 
   /**
+   * Clears local authentication data immediately.
+   * Useful when UI must redirect to login without waiting for API responses.
+   */
+  clearLocalAuth(): void {
+    this.clearTokens();
+  }
+
+  /**
    * Refresh authentication token
    *
    * @param refreshToken The refresh token

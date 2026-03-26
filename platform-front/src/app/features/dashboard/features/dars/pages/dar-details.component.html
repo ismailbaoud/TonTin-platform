@@ -178,13 +178,6 @@
               >
               Invite Member
             </button>
-            <button
-              (click)="shareLink()"
-              class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-white dark:bg-white/5 border border-border-light dark:border-border-dark px-5 py-2.5 text-sm font-semibold text-text-light dark:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
-            >
-              <span class="material-symbols-outlined text-[20px]">share</span>
-              Share Link
-            </button>
             <!-- Pay contribution button — visible for non-recipients when a current round exists
                  and the payment window is open (≤ 5 days before round date). -->
             <button
@@ -525,7 +518,7 @@
                   </td>
 
                   <td class="px-6 py-4 text-right">
-                    <div class="flex items-center justify-end gap-2">
+                    <div class="flex items-center justify-end gap-2 relative">
                       <button
                         *ngIf="member.status === 'PENDING' && isOrganizer"
                         (click)="remindMember(member.id)"
@@ -539,6 +532,26 @@
                       >
                         <span class="material-symbols-outlined">more_vert</span>
                       </button>
+
+                      <!-- 3-dots dropdown actions -->
+                      <div
+                        *ngIf="openMemberMenuId === member.id"
+                        class="absolute right-0 top-8 z-20 min-w-[180px] rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-[#1a2c20] shadow-lg p-1"
+                      >
+                        <button
+                          *ngIf="isOrganizer && member.status === 'PENDING'"
+                          (click)="cancelInvitation(member)"
+                          class="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          Cancel invitation
+                        </button>
+                        <div
+                          *ngIf="!(isOrganizer && member.status === 'PENDING')"
+                          class="px-3 py-2 text-xs text-gray-500"
+                        >
+                          No actions available
+                        </div>
+                      </div>
                     </div>
                   </td>
                 </tr>

@@ -70,6 +70,7 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
   darId: string | null = null; // UUID from route params
   isLoading = false;
   error: string | null = null;
+  openMemberMenuId: string | null = null;
 
   // Invite modal state
   showInviteModal = false;
@@ -847,16 +848,6 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Share Dâr link
-   */
-  shareLink(): void {
-    console.log("Share link clicked");
-    // TODO: Implement share functionality
-    // Example: Copy link to clipboard, show share modal, etc.
-    alert("Share link functionality coming soon!");
-  }
-
   // -------------------------------------------------------------------------
   // Payment status helpers
   // -------------------------------------------------------------------------
@@ -1018,9 +1009,31 @@ export class DarDetailsComponent implements OnInit, OnDestroy {
    * Open member options menu
    */
   openMemberOptions(memberId: string): void {
-    console.log("Open options for member:", memberId);
-    // TODO: Implement options menu
-    // Example: Show dropdown with actions like remove, make admin, etc.
+    this.openMemberMenuId = this.openMemberMenuId === memberId ? null : memberId;
+  }
+
+  cancelInvitation(member: Member): void {
+    if (!this.darId || !this.isOrganizer) return;
+    if (member.status !== MemberStatus.PENDING) {
+      alert("Only pending invitations can be cancelled.");
+      return;
+    }
+    if (!confirm(`Cancel invitation for ${member.name}?`)) return;
+
+    this.darService
+      .cancelInvitation(this.darId, member.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.openMemberMenuId = null;
+          alert("Invitation cancelled successfully.");
+          this.loadMembers();
+        },
+        error: (err) => {
+          this.openMemberMenuId = null;
+          alert(err?.error?.message || "Unable to cancel invitation.");
+        },
+      });
   }
 
   /**
