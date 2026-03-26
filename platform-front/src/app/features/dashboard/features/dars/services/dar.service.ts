@@ -213,6 +213,17 @@ export class DarService {
   }
 
   /**
+   * Cancel pending invitation (organizer only)
+   */
+  cancelInvitation(darId: string, memberId: string): Observable<{ message: string }> {
+    const params = new HttpParams().set("dartId", darId);
+    return this.http.delete<{ message: string }>(
+      `${environment.apiUrl}/v1/member/${memberId}/cancel-invitation`,
+      { params },
+    );
+  }
+
+  /**
    * Get Dâr members
    */
   getMembers(darId: string): Observable<Member[]> {

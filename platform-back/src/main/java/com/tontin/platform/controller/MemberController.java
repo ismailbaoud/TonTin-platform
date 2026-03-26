@@ -370,6 +370,23 @@ public class MemberController {
         return ResponseEntity.ok(new MessageResponse(message));
     }
 
+    @DeleteMapping(
+        value = "/{memberId}/cancel-invitation",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @Operation(
+        summary = "Cancel pending invitation",
+        description = "Cancels a pending invitation for a member in a dart. Only organizers can perform this action."
+    )
+    public ResponseEntity<MessageResponse> cancelInvitation(
+        @PathVariable("memberId") UUID memberId,
+        @RequestParam("dartId") UUID dartId
+    ) {
+        String message = memberService.cancelInvitation(memberId, dartId);
+        return ResponseEntity.ok(new MessageResponse(message));
+    }
+
     /**
      * Accept invitation to join a dart (change member status from PENDING to ACTIVE)
      *

@@ -26,6 +26,7 @@ public interface MemberService {
     MemberResponse getMember(UUID id, UUID dartId);
     List<MemberResponse> getAllMembersOfDart(UUID dartId);
     String deleteMember(UUID id, UUID dartId);
+    String cancelInvitation(UUID id, UUID dartId);
 
     /**
      * Accept invitation to join a dart (change member status from PENDING to ACTIVE)

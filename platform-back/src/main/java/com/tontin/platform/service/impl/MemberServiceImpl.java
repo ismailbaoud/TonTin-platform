@@ -300,6 +300,28 @@ public class MemberServiceImpl implements MemberService {
         return "Member removed successfully";
     }
 
+    @Override
+    @Transactional
+    public String cancelInvitation(UUID id, UUID dartId) {
+        log.info("Cancelling invitation for member {} in dart {}", id, dartId);
+        validateUuid(id, "memberId");
+        validateUuid(dartId, "dartId");
+        requireOrganizer(dartId);
+
+        Member member = getMemberOrThrow(id, dartId);
+
+        if (member.getStatus() != MemberStatus.PENDING) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Only pending invitations can be cancelled."
+            );
+        }
+
+        memberRepository.delete(member);
+        log.debug("Pending invitation cancelled for member {} in dart {}", id, dartId);
+        return "Invitation cancelled successfully";
+    }
+
     private void validateRequest(MemberRequest request) {
         if (request == null) {
             throw new ResponseStatusException(

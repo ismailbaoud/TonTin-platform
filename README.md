@@ -1,262 +1,306 @@
-# 📘 TonTin - Rotation Management Platform
+# TonTin Platform
 
-[TontTin specifications](https://1drv.ms/w/c/f4fee283c02594e2/IQAcW0ZWdf7_QLAgHjDEWnOxAVboQS-zoPOA4mpw47VxErU?e=xCDVtN)
-
-## 📝 Overview
-
-TonTin is a full-stack web platform designed to manage **rotation-based group systems** inspired by the Moroccan concept of *Dâr*, without focusing on savings or money handling.
-
-The platform helps groups organize members, manage turns, coordinate cycles, and communicate transparently — **no financial transactions are processed or tracked**.
-
-TonTin focuses on organization, fairness, and visibility, making it suitable for community groups, associations, cooperatives, or any structured rotation-based collaboration.
+TonTin Platform is a full-stack web application for managing rotating savings groups (called **Dâr** in the project vocabulary).  
+It provides role-based workspaces for members and administrators, handles round lifecycle, contribution tracking, and payment reporting, and is packaged for local development and CI/CD deployment.
 
 ---
 
-## 🎯 Objectives
+## 1. Application Overview
 
-- Digitize the management of rotation-based groups
-- Provide transparent rotation and cycle tracking
-- Enable role-based group coordination
-- Improve internal communication
-- Ensure fair and non-repetitive turn assignment
+The platform solves a common operational problem in tontine-like communities: organizing participants, running fair rounds, and keeping contributions visible and auditable.
 
----
+Instead of managing rounds manually in chat threads or spreadsheets, TonTin offers:
 
-## 🚀 Core Features
-
-### 🔐 1. User Management
-
-- User registration & login (JWT-based)
-- Profile management
-- View all groups the user participates in
-- A user can be:
-  - Organizer in one group
-  - Member in another
-  - Organizer & Member across multiple groups
+- a structured **member + organizer model**
+- controlled **Dâr lifecycle** (pending, active, finished, cancelled)
+- **round-level contribution tracking**
+- **admin-level visibility** across users, dârs, and payments
+- API-first backend with a modern Angular frontend
 
 ---
 
-### 🏘️ 2. Group Management
+## 2. Main User Roles
 
-- Create and configure a group with:
-  - Number of participants
-  - Cycle duration
-  - Start date
-  - Rotation generation mode (automatic / manual)
-- Invite members via code or link
-- Manage join requests
-- Activate or pause a group
+### Client (`ROLE_CLIENT`)
 
----
+A client can:
+- register, verify email, and login
+- view personal dashboard and joined dârs
+- create/manage their own dâr (when organizer)
+- view rounds and contribution status
+- pay contribution when eligible
+- view personal reports and profile
 
-### 👥 3. Member Management
+### Admin (`ROLE_ADMIN`)
 
-- Request to join a group
-- Organizer approval or rejection
-- Remove or suspend members
-- Track member status per group
-
----
-
-### 🔄 4. Rotation Management
-
-- Automatic rotation generation
-- Manual editing for exceptions
-- Guaranteed non-repetition
-- Track previous, current, and future turns
-- Clear visibility of assigned participants per cycle
+An admin can:
+- access dedicated admin dashboard
+- list and filter users globally
+- enable/disable user accounts
+- create dârs for other users (organizer can be selected)
+- start/finish/cancel dârs from admin tools
+- view global payments/transactions and summaries
 
 ---
 
-### 💬 5. Communication
+## 3. Functional Modules
 
-- Group chat
-- Organizer announcements
-- Notifications for:
-  - Join request updates
-  - Cycle start
-  - Turn assignments
-  - Group state changes
+### Authentication & Profile
+- registration with email verification
+- login + refresh token flow
+- logout
+- get/update current user profile
 
----
+### Dâr Management
+- create/update/delete dâr
+- list user dârs and admin global dârs
+- start dâr with validations
+- finish dâr lifecycle
 
-### 📊 6. Dashboard
+### Membership
+- join dâr membership model (`Member`)
+- organizer/member permissions
+- status transitions (pending/active/leaved)
 
-- Group overview
-- Member list
-- Rotation calendar
-- Activity timeline
-- Cycle progress tracking
+### Rounds
+- round creation and ordering strategy
+- recipient assignment per round
+- round payment status progression
 
----
+### Payments
+- payment intent generation
+- eligibility checks (cannot pay twice in same round, recipient cannot pay own round)
+- payment confirmation and reporting
+- admin global payment summary/list endpoints
 
-## 🏛️ System Architecture
-
-### 🖥 Backend — Spring Boot
-
-- Spring Boot 3
-- Spring Security (JWT)
-- JPA / Hibernate
-- PostgreSQL
-- Layered architecture (Controller / Service / DTO / Repository)
-- Centralized exception handling
-- Group-based role authorization
-
----
-
-### 💻 Frontend — Angular
-
-- Angular 17
-- Angular Material / PrimeNG
-- RxJS state management
-- Modular architecture
-- Reusable shared components
-- Responsive UI
+### Admin Operations
+- user moderation (enable/disable)
+- admin-created dâr with selected organizer
+- global reporting and transaction consultation
 
 ---
 
-## 🧱 Database Structure
+## 4. Architecture
 
-### Main Tables
+### Backend (`platform-back`)
+- Java 21, Spring Boot
+- Spring Security + JWT
+- JPA/Hibernate with PostgreSQL
+- layered structure: Controller -> Service -> Repository
+- DTO + Mapper boundary for API payload safety
 
-- Users
-- Groups
-- GroupMembers
-- Rotations
-- Messages
-- Notifications
+### Frontend (`platform-front`)
+- Angular 18 + TypeScript
+- role-based routes/guards
+- dashboard domains for client/admin
+- API integration via services and interceptors
 
-User permissions are defined **per group**, not globally.
-
----
-
-## 📂 Project Structure
-
-TonTin/
- ├── backend/
- │    ├── src/
- │    ├── pom.xml
- │    └── application.properties
- │
- ├── frontend/
- │    ├── src/
- │    ├── angular.json
- │    └── package.json
- │
- └── README.md
+### Infra / DevOps
+- Docker + Docker Compose (prod-like and dev)
+- GitHub Actions CI/CD
+- GHCR image publishing on `main`
 
 ---
 
-## ⚙️ Installation & Setup
+## 5. Repository Structure
+
+```text
+TonTin-platform/
+├── platform-back/                    # Spring Boot API
+│   ├── src/main/java/com/tontin/platform
+│   ├── src/main/resources
+│   ├── src/test
+│   ├── Dockerfile
+│   └── Dockerfile.dev
+├── platform-front/                   # Angular client
+│   ├── src/app
+│   ├── Dockerfile
+│   └── Dockerfile.dev
+├── docker-compose.yml                # production-like local stack
+├── docker-compose.dev.yml            # hot-reload development stack
+├── .env.docker.example               # Docker environment template
+└── .github/workflows/                # CI/CD workflows
+```
+
+---
+
+## 6. Data Model
+
+Core business entities:
+
+- `users`
+- `darts`
+- `members`
+- `rounds`
+- `payments`
+
+Supporting entities:
+
+- `notifications`
+- `dart_messages`
+- `dart_message_reactions`
+- `logs`
+
+For the detailed ER/class representation with fields and relations, see:
+
+- `platform-back/DB_CLASS_DIAGRAM.md`
+
+---
+
+## 7. Key API Domains
+
+Base API path: `/api/v1`
+
+- `/auth` -> register/login/verify/refresh/me/logout
+- `/dart` -> dâr lifecycle + admin dâr listing/creation
+- `/member` -> membership operations
+- `/round` -> round operations
+- `/payments` -> contribution payment + reports + admin summaries
+- `/user` -> user administration/search/status updates
+
+Swagger:
+
+- `http://localhost:9090/swagger-ui/index.html`
+- `http://localhost:9090/v3/api-docs`
+
+---
+
+## 8. Email Verification UX Flow
+
+1. User registers.
+2. Backend sends verification email with:
+   - `GET /api/v1/auth/verify?code=...`
+3. Backend verifies account and redirects to frontend login:
+   - `/auth/login?verified=true&message=...`
+4. Login page shows verification success message.
+
+This avoids plain JSON-only verify pages and returns users to app UI.
+
+---
+
+## 9. Local Development (without Docker)
 
 ### Backend
 
-cd backend  
-mvn clean install  
-mvn spring-boot:run  
+```bash
+cd platform-back
+./mvnw -q -DskipTests compile
+./mvnw spring-boot:run
+```
 
-Default port: 8080
-
----
-
-### Frontend
-
-cd frontend  
-npm install  
-ng serve  
-
-Default port: 4200
-
----
-
-## 🔍 Testing
-
-### Backend
-
-- JUnit 5
-- Mockito
-
-mvn test
-
----
+Backend URL: `http://localhost:9090`
 
 ### Frontend
 
-- Jasmine
-- Karma
+```bash
+cd platform-front
+npm ci
+npm start
+```
 
-ng test
+Frontend URL: `http://localhost:4200`
 
 ---
 
-## 🚀 Deployment
+## 10. Docker Development & Deployment
 
-- Docker
-- Railway / Render / Heroku
-- VPS with Nginx
-- Spring Boot JAR deployment
-
-### Docker quick start
-
-1. Copy Docker env template:
+### Production-like stack
 
 ```bash
 cp .env.docker.example .env
-```
-
-2. Start production-like stack (Postgres + Backend + Frontend):
-
-```bash
 docker compose up --build
 ```
 
-3. Access services:
+- frontend: `http://localhost:4200`
+- backend: `http://localhost:9090/api`
+- postgres: `localhost:5432`
 
-- Frontend: `http://localhost:4200`
-- Backend API: `http://localhost:9090/api`
-
-4. Start development stack with hot reload:
+### Development stack (hot reload)
 
 ```bash
+cp .env.docker.example .env
 docker compose -f docker-compose.dev.yml up --build
+```
+
+Includes mounted volumes for backend/frontend source and Maven/npm caches.
+
+---
+
+## 11. Environment Configuration
+
+### Required security/database variables
+
+- `SECURITY_JWT_SECRET_KEY` (required)
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+
+### Mail
+
+- `SPRING_MAIL_HOST`
+- `SPRING_MAIL_PORT`
+- `SPRING_MAIL_USERNAME`
+- `SPRING_MAIL_PASSWORD`
+- `APP_MAIL_FROM` (recommended)
+- `APP_MAIL_SENDER_NAME` (optional display name)
+
+### Stripe (optional for local development)
+
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+
+---
+
+## 12. Quality & Testing
+
+### Backend
+
+```bash
+cd platform-back
+./mvnw -q test
+```
+
+### Frontend
+
+```bash
+cd platform-front
+npm run test
 ```
 
 ---
 
-## 📘 API Documentation
+## 13. CI/CD
 
-Swagger UI:
+### CI (`.github/workflows/ci.yml`)
+- backend compile + tests
+- frontend install + production build
+- docker compose file validation
 
-/swagger-ui.html
-
----
-
-## 🛡️ Security
-
-- JWT authentication
-- Group-based role access
-- Input validation
-- OWASP best practices
-- No financial processing
+### CD (`.github/workflows/cd.yml`)
+- triggered on `main` push (or manual dispatch)
+- builds backend/frontend Docker images
+- publishes images to GHCR
 
 ---
 
-## 🤝 Contribution
+## 14. Security Notes
 
-- Fork the repository
-- Create a feature branch
-- Commit changes
-- Open a pull request
-
----
-
-## 🖊️ Author
-
-TonTin Project — v2  
-Rotation Management Platform  
-Spring Boot + Angular
+- Never commit `.env` files or secrets.
+- JWT secret must be strong and private.
+- Use app passwords for SMTP providers.
+- Prefer environment variables/secrets manager in production.
+- Review role guards and endpoint authorization for every new feature.
 
 ---
-## 📄 License
 
-MIT License
+## 15. Current Product Status
+
+The current codebase includes:
+
+- active admin management features in both backend and frontend
+- payment report APIs for user and global admin views
+- redirect-based verification flow integrated with login UX
+- Dockerized runtime and CI/CD scaffolding
+
+This README reflects the implemented system structure and runtime flow in the repository.
